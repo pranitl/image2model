@@ -52,12 +52,13 @@ node_modules/
 *.sw?
 # OS specific
 
-# Task files
-tasks.json
-tasks/ 
-
 # .env
 .env
 
 *.cursor
 *.taskmaster
+CLAUDE.MD
+
+# Task files
+# tasks.json
+# tasks/ 
