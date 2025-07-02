@@ -62,16 +62,13 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
             meta={"current": 25, "total": 100, "status": "Uploading image to Tripo3D..."}
         )
         
-        # Convert quality setting to texture setting for Tripo3D
-        texture_setting = "standard"
-        if quality == "high":
-            texture_setting = "HD" if texture_enabled else "no"
-        elif quality == "low" or not texture_enabled:
-            texture_setting = "no"
+        # Quality is now handled directly in FAL.AI client
+        # The texture setting is passed through the texture_enabled parameter
+        logger.info(f"Processing with quality: {quality}, texture_enabled: {texture_enabled}")
         
         # Process the image using FAL.AI client
         import asyncio
-        result = asyncio.run(process_single_image(file_path, face_limit=None))
+        result = asyncio.run(process_single_image(file_path, face_limit=None, texture_enabled=texture_enabled))
         
         if result["status"] == "success":
             current_task.update_state(

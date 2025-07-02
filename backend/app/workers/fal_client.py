@@ -141,6 +141,7 @@ class FalAIClient:
         self, 
         file_path: str, 
         face_limit: Optional[int] = None,
+        texture_enabled: bool = True,
         progress_callback: Optional[callable] = None
     ) -> Dict[str, Any]:
         """
@@ -163,76 +164,48 @@ class FalAIClient:
                 if progress_callback:
                     progress_callback("Uploading image to FAL.AI...", 15)
                 
-                # Upload file and get URL
+                # Upload file and get URL using correct API
                 file_url = fal.upload_file(file_path)
                 logger.info(f"File uploaded to FAL.AI: {file_url}")
                 
                 # Prepare input data for FAL.AI API according to their documentation
                 input_data = {
                     "image_url": file_url,
-                    "texture": "standard",  # Default texture setting
-                    "pbr": True  # Enable physically-based rendering
+                    "texture": "standard" if texture_enabled else "no",
+                    "texture_alignment": "original_image",  # Per documentation
+                    "orientation": "default"  # Per documentation
                 }
                 
-                # Add face_limit if specified
-                if face_limit is not None:
+                # Add face_limit if specified (only works with quad=True)
+                if face_limit is not None and face_limit > 0:
+                    input_data["quad"] = True
                     input_data["face_limit"] = face_limit
-                    logger.info(f"Using face_limit: {face_limit}")
+                    logger.info(f"Using face_limit: {face_limit} with quad mesh")
                 
-                # Submit the job to FAL.AI
+                # Submit the job to FAL.AI using correct API method
                 logger.info("Submitting job to FAL.AI API...")
                 if progress_callback:
-                    progress_callback("Submitting job to FAL.AI API...", 10)
+                    progress_callback("Submitting job to FAL.AI API...", 25)
                 
                 async with monitor_fal_api_call("submit_job") as monitor_logger:
-                    handler = fal.submit(
+                    # Use the correct fal_client.run method for synchronous execution
+                    # This will handle the queue/progress automatically
+                    result = fal.run(
                         self.model_endpoint,
                         arguments=input_data
                     )
+                    
                     monitor_logger.logger.info(
-                        "FAL.AI job submitted successfully",
+                        "FAL.AI job completed successfully",
                         model_endpoint=self.model_endpoint,
                         image_path=file_path,
-                        face_limit=face_limit
-                    )
-                
-                # Track progress with timeout
-                logger.info("Tracking job progress...")
-                if progress_callback:
-                    progress_callback("Processing image with FAL.AI...", 30)
-                
-                progress_counter = 30
-                start_time = time.time()
-                
-                for event in handler.iter_events():
-                    # Check for overall timeout
-                    elapsed = time.time() - start_time
-                    if elapsed > self.max_wait_time:
-                        raise FalAITimeoutError(f"Job exceeded maximum wait time of {self.max_wait_time} seconds")
-                    
-                    if isinstance(event, fal.InProgress):
-                        if hasattr(event, 'logs') and event.logs:
-                            logger.info(f"Processing progress: {event.logs}")
-                            if progress_callback:
-                                progress_counter = min(80, progress_counter + 10)
-                                progress_callback(f"FAL.AI Progress: {event.logs}", progress_counter)
-                        else:
-                            logger.info("Processing in progress...")
-                            if progress_callback:
-                                progress_counter = min(80, progress_counter + 5)
-                                progress_callback("FAL.AI processing in progress...", progress_counter)
-                
-                # Get the final result
-                logger.info("Retrieving job result...")
-                if progress_callback:
-                    progress_callback("Retrieving generated model...", 85)
-                
-                async with monitor_fal_api_call("get_result") as monitor_logger:
-                    result = handler.get()
-                    monitor_logger.logger.info(
-                        "FAL.AI job result retrieved successfully",
+                        face_limit=face_limit,
                         result_keys=list(result.keys()) if isinstance(result, dict) else None
                     )
+                    
+                    logger.info("FAL.AI processing completed")
+                    if progress_callback:
+                        progress_callback("FAL.AI processing completed", 80)
                 
                 if not result:
                     raise FalAIAPIError("No result received from FAL.AI API")

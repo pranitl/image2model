@@ -20,7 +20,7 @@ class ModelGenerationRequest(BaseModel):
     """Request model for 3D model generation."""
     file_id: str
     model_type: str = "tripo3d"
-    quality: str = "medium"  # low, medium, high
+    quality: str = "standard"  # standard, low, high
     texture_enabled: bool = True
 
 
