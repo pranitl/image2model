@@ -3,8 +3,9 @@ import HomePage from '@/pages/HomePage'
 import UploadPage from '@/pages/UploadPage'
 import ResultsPage from '@/pages/ResultsPage'
 import AdminPage from '@/pages/AdminPage'
+import ComponentShowcase from '@/pages/ComponentShowcase'
 import { Layout } from '@/components/Layout'
-import { ProcessingPage } from '@/components'
+import { ProcessingPage, Toaster } from '@/components'
 import ErrorBoundary from '@/components/ErrorBoundary'
 import { ToastProvider } from '@/components/Toast'
 import { ErrorProvider } from '@/contexts/ErrorContext'
@@ -23,8 +24,10 @@ function App() {
               <Route path="/processing/:taskId" element={<ProcessingPage />} />
               <Route path="/results/:jobId" element={<ResultsPage />} />
               <Route path="/admin" element={<AdminPage />} />
+              <Route path="/showcase" element={<ComponentShowcase />} />
             </Routes>
           </Layout>
+          <Toaster />
         </ErrorProvider>
       </ToastProvider>
     </ErrorBoundary>

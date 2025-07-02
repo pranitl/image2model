@@ -103,13 +103,14 @@ export interface CardTitleProps
 
 const CardTitle = React.forwardRef<HTMLHeadingElement, CardTitleProps>(
   ({ className, level = 3, ...props }, ref) => {
-    const Comp = `h${level}` as keyof JSX.IntrinsicElements
-    return (
-      <Comp
-        ref={ref}
-        className={cn(cardTitleVariants({ level, className }))}
-        {...props}
-      />
+    const HeadingTag = `h${level}` as keyof Pick<JSX.IntrinsicElements, 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6'>
+    return React.createElement(
+      HeadingTag,
+      {
+        ref,
+        className: cn(cardTitleVariants({ level, className })),
+        ...props
+      }
     )
   }
 )
