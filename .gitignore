@@ -394,3 +394,5 @@ user_uploads/
 *.exe
 *.out
 *.app 
+
+.mcp.json
