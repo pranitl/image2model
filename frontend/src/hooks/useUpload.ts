@@ -45,32 +45,39 @@ export const useUpload = (): UseUploadReturn => {
       // Prepare form data
       const formData = new FormData()
       
-      // For single file upload, use 'file' parameter
+      // Choose endpoint based on file count
+      let endpoint: string
       if (files.length === 1) {
+        // Single file upload - use /api/v1/upload/image
+        endpoint = '/api/v1/upload/image'
         formData.append('file', files[0])
       } else {
-        // For multiple files, append each as 'file'
+        // Multiple files upload - use /api/v1/upload/batch
+        endpoint = '/api/v1/upload/batch'
         files.forEach((file) => {
-          formData.append('file', file)
+          formData.append('files', file)
         })
+        
+        // Add face_limit from options if specified
+        if (options.faceLimit) {
+          formData.append('face_limit', options.faceLimit.toString())
+        }
       }
-      
-      // Add generation options
-      formData.append('options', JSON.stringify(options))
 
       // Upload files with progress tracking
       const response = await apiRequest.upload<UploadJob>(
-        '/v1/upload/image',
+        endpoint,
         formData,
         (progress) => {
           setUploadProgress(progress)
         }
       )
 
-      if (response.data.success && response.data.data) {
-        return response.data.data
+      // Backend returns direct response, not wrapped in ApiResponse
+      if (response.data) {
+        return response.data as UploadJob
       } else {
-        throw new Error(response.data.error || 'Upload failed')
+        throw new Error('Upload failed - no response data')
       }
     } catch (err: any) {
       const errorMessage = handleApiError(err)
