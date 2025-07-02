@@ -11,6 +11,7 @@ export interface UploadResponse {
 export interface BatchUploadResponse {
   batch_id: string
   job_id: string
+  task_id?: string  // Actual Celery task ID for status tracking
   uploaded_files: UploadResponse[]
   face_limit?: number
   total_files: number

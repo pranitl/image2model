@@ -72,9 +72,10 @@ export const useUpload = (): UseUploadReturn => {
           ? (response.data as any).data as UploadJob
           : response.data as UploadJob
         
-        // Always using batch endpoint, so extract job_id for SSE streaming
+        // Always using batch endpoint, so extract task_id for SSE streaming
         if ('job_id' in uploadJob) {
-          const taskId = uploadJob.job_id
+          // Prefer task_id if available (actual Celery task ID), fallback to job_id for backward compatibility
+          const taskId = uploadJob.task_id || uploadJob.job_id
           
           return {
             taskId,
