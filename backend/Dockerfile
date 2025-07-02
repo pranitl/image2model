@@ -53,13 +53,12 @@ WORKDIR /app
 # Copy requirements and install Python dependencies (including dev dependencies)
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir watchdog[watchmedo] pytest pytest-asyncio httpx
 
 # Create directories
 RUN mkdir -p /app/uploads /app/results /app/models
 
 # Copy application code
-COPY . .
+COPY backend/ .
 
 # Expose port
 EXPOSE 8000

@@ -41,8 +41,8 @@ services:
   # FastAPI backend
   backend:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./backend/Dockerfile
       target: production
     container_name: image2model-backend
     ports:
@@ -77,8 +77,8 @@ services:
   # Celery worker for background tasks
   worker:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./backend/Dockerfile
       target: production
     container_name: image2model-worker
     environment:
@@ -109,8 +109,8 @@ services:
   # Celery monitoring (optional)
   flower:
     build:
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./backend/Dockerfile
       target: production
     container_name: image2model-flower
     ports:

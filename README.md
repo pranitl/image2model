@@ -289,8 +289,8 @@ The Image2Model platform includes a comprehensive integration and end-to-end tes
 #### Quick Start
 
 ```bash
-# Install test dependencies
-pip install -r tests/requirements.txt
+# Install all dependencies (includes test dependencies)
+pip install -r requirements.txt
 
 # Quick smoke test (30 seconds)
 python tests/run_tests.py smoke

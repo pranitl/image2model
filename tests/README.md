@@ -41,8 +41,8 @@ tests/
 2. **Dependencies**: Install test dependencies
 
 ```bash
-# Install test dependencies
-pip install -r tests/requirements.txt
+# Install all dependencies (includes test dependencies)
+pip install -r requirements.txt
 
 # Or set up complete test environment
 python tests/run_tests.py --setup
@@ -312,8 +312,8 @@ docker compose logs redis
 #### Test Dependencies
 
 ```bash
-# Reinstall test dependencies
-pip install -r tests/requirements.txt --force-reinstall
+# Reinstall all dependencies
+pip install -r requirements.txt --force-reinstall
 ```
 
 #### Permission Issues
