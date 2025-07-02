@@ -1,5 +1,6 @@
 export interface UploadJob {
   id: string
+  taskId?: string  // Added for tracking Celery task
   status: 'pending' | 'processing' | 'completed' | 'failed'
   progress: number
   inputImages: UploadedImage[]

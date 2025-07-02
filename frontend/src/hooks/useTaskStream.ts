@@ -74,7 +74,7 @@ export const useTaskStream = (
     updateState({ isConnecting: true, error: null })
 
     try {
-      const url = `/api/status/tasks/${taskId}/stream?timeout=${timeout}`
+      const url = `/api/v1/status/tasks/${taskId}/stream?timeout=${timeout}`
       const eventSource = new EventSource(url)
       eventSourceRef.current = eventSource
 
@@ -96,8 +96,12 @@ export const useTaskStream = (
           error: 'Connection error occurred'
         })
 
-        // Auto-reconnect logic
-        if (autoReconnect && state.connectionAttempts < maxReconnectAttempts) {
+        // Don't reconnect if task is completed, failed, or cancelled
+        const lastStatus = lastStatusRef.current
+        const isTaskFinished = lastStatus && ['completed', 'failed', 'cancelled'].includes(lastStatus.status)
+        
+        // Auto-reconnect logic (but not for finished tasks)
+        if (autoReconnect && !isTaskFinished && state.connectionAttempts < maxReconnectAttempts) {
           reconnectTimeoutRef.current = setTimeout(() => {
             updateState({ connectionAttempts: state.connectionAttempts + 1 })
             connect()
@@ -111,6 +115,12 @@ export const useTaskStream = (
           const data: TaskStatus = JSON.parse(event.data)
           lastStatusRef.current = data
           updateState({ status: data })
+          
+          // Automatically disconnect when task is finished
+          if (['completed', 'failed', 'cancelled'].includes(data.status)) {
+            console.log(`Task ${taskId} finished with status: ${data.status}. Disconnecting...`)
+            setTimeout(() => disconnect(), 1000) // Small delay to ensure UI updates
+          }
         } catch (err) {
           console.error('Failed to parse SSE data:', err)
         }

@@ -388,7 +388,7 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
         raise exc
 
 
-async def process_single_image(file_path: str, face_limit: Optional[int] = None) -> Dict[str, Any]:
+async def process_single_image(file_path: str, face_limit: Optional[int] = None, texture_enabled: bool = True) -> Dict[str, Any]:
     """
     Process a single image file using FAL.AI API for 3D model generation.
     
@@ -413,7 +413,7 @@ async def process_single_image(file_path: str, face_limit: Optional[int] = None)
         logger.info(f"Starting FAL.AI processing for image: {file_path}")
         
         # Use FAL.AI client to process the image
-        result = await fal_client.process_single_image(file_path, face_limit)
+        result = await fal_client.process_single_image(file_path, face_limit, texture_enabled)
         
         logger.info(f"FAL.AI processing completed for {file_path}: {result['status']}")
         return result

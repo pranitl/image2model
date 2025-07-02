@@ -42,7 +42,11 @@ async def image2model_exception_handler(request: Request, exc: Image2ModelExcept
     """
     log_exception(exc, f"endpoint {request.url.path}")
     
-    response_data = create_error_response(exc)
+    response_data = create_error_response(
+        error_code=exc.__class__.__name__.upper(),
+        message=exc.message if hasattr(exc, 'message') else str(exc),
+        details=exc.details if hasattr(exc, 'details') else None
+    )
     status_code = getattr(exc, 'status_code', 500)
     
     return JSONResponse(

@@ -21,7 +21,7 @@ from app.core.error_handlers import (
     handle_file_validation_error,
     safe_file_operation
 )
-from app.workers.tasks import process_batch_task
+from app.workers.tasks import process_batch_task, generate_3d_model_task
 
 logger = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ class UploadResponse(BaseModel):
     file_size: int
     content_type: str
     status: str
+    task_id: Optional[str] = None  # Added for automatic processing
 
 
 class BatchUploadResponse(BaseModel):
@@ -123,12 +124,29 @@ async def upload_image(file: UploadFile = File(...)):
         
         logger.info(f"Successfully uploaded file: {file.filename} (ID: {file_id})")
         
+        # Automatically start 3D model generation for single file uploads
+        task_id = None
+        try:
+            task_result = generate_3d_model_task.delay(
+                file_id=file_id,
+                file_path=file_path,
+                job_id=str(uuid.uuid4()),
+                quality="medium",
+                texture_enabled=True
+            )
+            task_id = task_result.id
+            logger.info(f"Started automatic 3D model generation task {task_id} for file {file_id}")
+        except Exception as e:
+            logger.error(f"Failed to start automatic processing for file {file_id}: {str(e)}")
+            # Don't fail the upload if task creation fails
+        
         return UploadResponse(
             file_id=file_id,
             filename=file.filename,
             file_size=len(content),
             content_type=file.content_type,
-            status="uploaded"
+            status="uploaded",
+            task_id=task_id
         )
         
     except FileValidationException:
@@ -142,8 +160,7 @@ async def upload_image(file: UploadFile = File(...)):
         log_exception(e, f"upload_image for {file.filename if file else 'unknown'}")
         raise DatabaseException(
             message=f"Unexpected error during file upload: {str(e)}",
-            operation="upload_image",
-            details={"filename": file.filename if file else None}
+            details=f"operation=upload_image, filename={file.filename if file else None}"
         )
 
 

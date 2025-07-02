@@ -59,18 +59,39 @@ export const useUpload = (): UseUploadReturn => {
       formData.append('options', JSON.stringify(options))
 
       // Upload files with progress tracking
-      const response = await apiRequest.upload<UploadJob>(
-        '/v1/upload/image',
+      const response = await apiRequest.upload<any>(
+        '/upload/image',
         formData,
         (progress) => {
           setUploadProgress(progress)
         }
       )
 
-      if (response.data.success && response.data.data) {
-        return response.data.data
+      // Backend returns direct UploadResponse, not wrapped in ApiResponse
+      const uploadData = response.data
+      if (uploadData && uploadData.file_id) {
+        // Convert backend response to UploadJob format
+        const uploadJob: UploadJob = {
+          id: uploadData.file_id,
+          taskId: uploadData.task_id,  // Include task ID for monitoring
+          status: 'pending',
+          progress: 0,
+          inputImages: [{
+            id: uploadData.file_id,
+            filename: uploadData.filename,
+            originalName: uploadData.filename,
+            size: uploadData.file_size,
+            mimeType: uploadData.content_type,
+            url: `/download/${uploadData.file_id}`,
+            uploadedAt: new Date().toISOString()
+          }],
+          outputModels: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+        return uploadJob
       } else {
-        throw new Error(response.data.error || 'Upload failed')
+        throw new Error('Upload failed: Invalid response format')
       }
     } catch (err: any) {
       const errorMessage = handleApiError(err)

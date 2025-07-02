@@ -24,7 +24,9 @@ const UploadPage: React.FC = () => {
       
       if (uploadJob) {
         // Navigate to the processing page to show real-time progress
-        navigate(`/processing/${uploadJob.id}`)
+        // Use taskId if available, otherwise fall back to file id
+        const processingId = uploadJob.taskId || uploadJob.id
+        navigate(`/processing/${processingId}`)
       }
     } catch (err) {
       console.error('Upload failed:', err)

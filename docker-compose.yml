@@ -139,7 +139,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=development
-      - VITE_API_URL=http://172.18.0.5:8000
+      - VITE_API_URL=http://backend:8000
       - CHOKIDAR_USEPOLLING=true
       - FAST_REFRESH=true
     volumes:

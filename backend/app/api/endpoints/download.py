@@ -98,6 +98,76 @@ def _validate_file_path(file_path: str, base_dir: str) -> None:
         raise HTTPException(status_code=403, detail="Access denied")
 
 
+@router.get("/file/{filename}")
+async def download_file_direct(filename: str, request: Request):
+    """
+    Download a file directly by filename from the results directory.
+    
+    Args:
+        filename: Name of the file to download
+        request: FastAPI request object for logging
+        
+    Returns:
+        FileResponse with the requested file
+    """
+    client_ip = request.client.host if request.client else "unknown"
+    
+    try:
+        # Log download attempt
+        logger.info(f"Direct download request from {client_ip} for file {filename}")
+        
+        # Validate filename using existing security helper
+        _validate_filename(filename)
+        
+        # Construct file path - look directly in results directory
+        results_dir = settings.RESULTS_DIR if hasattr(settings, 'RESULTS_DIR') else 'results'
+        file_path = os.path.join(results_dir, filename)
+        
+        # Validate file path security
+        _validate_file_path(file_path, results_dir)
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            logger.warning(f"File not found: {file_path} (requested by {client_ip})")
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Log successful access
+        file_size = os.path.getsize(file_path)
+        logger.info(f"Serving file {filename} ({file_size} bytes) to {client_ip}")
+        
+        # Determine MIME type
+        file_extension = os.path.splitext(filename)[1].lower()
+        mime_type = "application/octet-stream"
+        if file_extension == '.glb':
+            mime_type = "model/gltf-binary"
+        elif file_extension == '.obj':
+            mime_type = "model/obj"
+        
+        # Security headers
+        security_headers = {
+            "Content-Disposition": f"attachment; filename=\"{filename}\"",
+            "Cache-Control": "public, max-age=3600",
+            "X-Content-Type-Options": "nosniff",
+            "X-Frame-Options": "DENY",
+            "Content-Security-Policy": "default-src 'none'",
+            "X-Download-Options": "noopen",
+            "Referrer-Policy": "no-referrer"
+        }
+        
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type=mime_type,
+            headers=security_headers
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error serving file {filename} to {client_ip}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @router.get("/download/{job_id}/{filename}")
 async def download_model(job_id: str, filename: str, request: Request):
     """

@@ -218,6 +218,8 @@ class MonitoringMiddleware:
         client_ip = request.client.host if request.client else None
         content_length = request.headers.get("content-length")
         
+        status_code = 500  # Default for exceptions
+        
         try:
             response = await call_next(request)
             status_code = response.status_code

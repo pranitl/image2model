@@ -156,9 +156,9 @@ const ProcessingPage: React.FC = () => {
         updatedFiles = status.result.results.map((result: any, index: number) => ({
           filename: result.input ? result.input.split('/').pop() : `file_${index + 1}`,
           status: result.status === 'success' ? 'completed' as const : 'failed' as const,
-          downloadUrl: result.output ? `/api/v1/download/${taskId}/${result.output.split('/').pop()}` : undefined,
+          downloadUrl: result.output ? `/api/v1/download/${status.result.job_id || taskId}/${result.output.split('/').pop()}` : undefined,
           error: result.error || undefined,
-          thumbnail: result.input ? `/api/v1/thumbnails/${taskId}/${result.input.split('/').pop()}` : undefined
+          thumbnail: result.input ? `/api/v1/thumbnails/${status.result.job_id || taskId}/${result.input.split('/').pop()}` : undefined
         }))
       }
       // Case 2: Single file result (like your example)
@@ -168,10 +168,14 @@ const ProcessingPage: React.FC = () => {
           ? status.result.result_path.split('/').pop()?.replace('.glb', '') || 'generated_model'
           : status.result.file_id || 'generated_model'
         
+        // Use job_id from result for download URL construction
+        const jobId = status.result.job_id || taskId
+        const modelFilename = status.result.result_path ? status.result.result_path.split('/').pop() : undefined
+        
         updatedFiles = [{
           filename: filename + '.jpg', // Display as the original image name
           status: status.result.status === 'completed' ? 'completed' as const : 'failed' as const,
-          downloadUrl: status.result.result_path ? `/api/v1/download/${taskId}/${status.result.result_path.split('/').pop()}` : undefined,
+          downloadUrl: modelFilename ? `/api/v1/download/file/${modelFilename}` : undefined,
           error: status.result.error || undefined,
           thumbnail: status.result.rendered_image?.url || undefined
         }]
@@ -391,7 +395,13 @@ const ProcessingPage: React.FC = () => {
                 <span className="text-sm font-medium text-gray-700">Progress</span>
                 <div className="flex items-center gap-4 text-sm text-gray-600">
                   {status.current !== undefined && status.total !== undefined && (
-                    <span>{status.current}/{status.total} files</span>
+                    // For single file uploads, current/total are percentages, not file counts
+                    // Only show file count format if we have multiple actual files
+                    files.length > 1 ? (
+                      <span>{status.current}/{status.total} files</span>
+                    ) : (
+                      <span>Processing 1 file</span>
+                    )
                   )}
                   <span>{status.progress}%</span>
                 </div>
