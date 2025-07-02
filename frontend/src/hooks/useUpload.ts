@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react'
 import { apiRequest, handleApiError } from '@/utils/api'
 import { validateImageFiles } from '@/utils/validation'
-import type { UploadJob, GenerationOptions } from '@/types'
+import type { UploadJob, UploadJobWithTaskId, GenerationOptions } from '@/types'
 
 interface UseUploadReturn {
-  uploadFiles: (files: File[], options?: GenerationOptions) => Promise<UploadJob | null>
+  uploadFiles: (files: File[], options?: GenerationOptions) => Promise<UploadJobWithTaskId | null>
   isUploading: boolean
   uploadProgress: number
   error: string | null
@@ -28,7 +28,7 @@ export const useUpload = (): UseUploadReturn => {
       generateTextures: true,
       optimizeForPrinting: false,
     }
-  ): Promise<UploadJob | null> => {
+  ): Promise<UploadJobWithTaskId | null> => {
     setError(null)
     setUploadProgress(0)
 
@@ -75,7 +75,29 @@ export const useUpload = (): UseUploadReturn => {
 
       // Backend returns direct response, not wrapped in ApiResponse
       if (response.data) {
-        return response.data as UploadJob
+        // Extract the actual upload job from the response
+        const uploadJob = (response.data as any).success !== undefined 
+          ? (response.data as any).data as UploadJob
+          : response.data as UploadJob
+        
+        // Extract task ID based on upload type
+        let taskId: string
+        if ('job_id' in uploadJob) {
+          // Batch upload - use job_id for SSE streaming
+          taskId = uploadJob.job_id
+        } else if ('file_id' in uploadJob) {
+          // Single file upload - for now, use file_id as task ID
+          // Note: Single file uploads might not trigger background processing
+          // but we need a consistent interface for the frontend
+          taskId = uploadJob.file_id
+        } else {
+          throw new Error('Upload response missing required ID field')
+        }
+        
+        return {
+          taskId,
+          data: uploadJob
+        }
       } else {
         throw new Error('Upload failed - no response data')
       }

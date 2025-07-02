@@ -18,8 +18,14 @@ export interface BatchUploadResponse {
   message: string
 }
 
-// Union type for upload responses
+// Union type for upload responses with consistent ID access
 export type UploadJob = UploadResponse | BatchUploadResponse
+
+// Helper type to get task ID for SSE streaming
+export interface UploadJobWithTaskId {
+  taskId: string
+  data: UploadJob
+}
 
 export interface UploadedImage {
   id: string

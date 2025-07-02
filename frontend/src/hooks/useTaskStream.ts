@@ -74,7 +74,7 @@ export const useTaskStream = (
     updateState({ isConnecting: true, error: null })
 
     try {
-      const url = `/api/status/tasks/${taskId}/stream?timeout=${timeout}`
+      const url = `/api/v1/status/tasks/${taskId}/stream?timeout=${timeout}`
       const eventSource = new EventSource(url)
       eventSourceRef.current = eventSource
 
