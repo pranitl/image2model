@@ -56,25 +56,37 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
         
         logger.info(f"Starting Tripo3D generation for file {file_id} (job: {job_id})")
         
-        # Use FAL.AI client for actual 3D model generation
-        current_task.update_state(
-            state="PROGRESS",
-            meta={"current": 25, "total": 100, "status": "Uploading image to Tripo3D..."}
-        )
+        # Create progress callback to update task state during FAL.AI processing
+        def progress_callback(message: str, progress: int):
+            """Callback to update Celery task progress during FAL.AI processing."""
+            current_task.update_state(
+                state="PROGRESS",
+                meta={
+                    "current": progress,
+                    "total": 100,
+                    "status": message,
+                    "job_id": job_id,
+                    "file_id": file_id
+                }
+            )
+            logger.info(f"Progress update for job {job_id}: {progress}% - {message}")
         
         # Quality is now handled directly in FAL.AI client
         # The texture setting is passed through the texture_enabled parameter
         logger.info(f"Processing with quality: {quality}, texture_enabled: {texture_enabled}")
         
-        # Process the image using FAL.AI client
+        # Process the image using FAL.AI client with progress callback
         import asyncio
-        result = asyncio.run(process_single_image(file_path, face_limit=None, texture_enabled=texture_enabled))
+        result = asyncio.run(process_single_image(
+            file_path, 
+            face_limit=None, 
+            texture_enabled=texture_enabled,
+            progress_callback=progress_callback
+        ))
         
         if result["status"] == "success":
-            current_task.update_state(
-                state="PROGRESS",
-                meta={"current": 90, "total": 100, "status": "Finalizing model..."}
-            )
+            # Final progress update before completion
+            progress_callback("Task completed successfully!", 100)
             
             logger.info(f"Tripo3D generation completed successfully for job {job_id}")
             
@@ -294,10 +306,34 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
                 
                 logger.info(f"Processing file {i+1}/{total_files}: {os.path.basename(file_path)}")
                 
+                # Create progress callback for batch processing
+                def batch_file_progress_callback(message: str, progress: int):
+                    """Callback to update progress for individual file in batch."""
+                    # Calculate overall batch progress
+                    file_progress = (i / total_files) * 100  # Progress from completed files
+                    current_file_progress = (progress / 100) * (100 / total_files)  # Progress from current file
+                    overall_progress = min(95, file_progress + current_file_progress)  # Cap at 95% until batch complete
+                    
+                    current_task.update_state(
+                        state="PROGRESS",
+                        meta={
+                            "current": i,
+                            "total": total_files,
+                            "status": f"File {i+1}/{total_files}: {message}",
+                            "job_id": job_id,
+                            "overall_progress": overall_progress
+                        }
+                    )
+
                 # Process single image using FAL.AI
                 file_start_time = time.time()
                 import asyncio
-                result = asyncio.run(process_single_image(file_path, face_limit))
+                result = asyncio.run(process_single_image(
+                    file_path, 
+                    face_limit, 
+                    texture_enabled=True,
+                    progress_callback=batch_file_progress_callback
+                ))
                 actual_processing_time = time.time() - file_start_time
                 
                 if result["status"] == "success":
@@ -522,9 +558,30 @@ def process_single_image_with_retry(self, file_path: str, face_limit: Optional[i
         
         logger.info(f"Processing image {file_path} (attempt {self.request.retries + 1}/{self.max_retries + 1})")
         
+        # Create progress callback for enhanced retry task
+        def retry_progress_callback(message: str, progress: int):
+            """Callback to update Celery task progress during retry processing."""
+            current_task.update_state(
+                state="PROGRESS",
+                meta={
+                    "current": progress,
+                    "total": 100,
+                    "status": message,
+                    "file_path": file_path,
+                    "retry_count": self.request.retries,
+                    "start_time": task_start_time
+                }
+            )
+            logger.info(f"Retry task progress: {progress}% - {message}")
+
         # Import and process with async handling
         import asyncio
-        result = asyncio.run(process_single_image(file_path, face_limit))
+        result = asyncio.run(process_single_image(
+            file_path, 
+            face_limit, 
+            texture_enabled=True,
+            progress_callback=retry_progress_callback
+        ))
         
         # Check if result indicates a retryable error
         if result["status"] == "failed" and result.get("retryable", False):

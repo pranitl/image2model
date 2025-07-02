@@ -188,12 +188,71 @@ class FalAIClient:
                     progress_callback("Submitting job to FAL.AI API...", 25)
                 
                 async with monitor_fal_api_call("submit_job") as monitor_logger:
-                    # Use the correct fal_client.run method for synchronous execution
-                    # This will handle the queue/progress automatically
-                    result = fal.run(
-                        self.model_endpoint,
-                        arguments=input_data
-                    )
+                    # Start processing with intermediate progress updates
+                    if progress_callback:
+                        progress_callback("Processing image with Tripo3D...", 35)
+                    
+                    # Use asyncio to run the blocking fal.run call with progress simulation
+                    import threading
+                    import time
+                    
+                    # Store the result from the FAL API call
+                    fal_result = None
+                    fal_error = None
+                    processing_complete = threading.Event()
+                    
+                    def run_fal_api():
+                        nonlocal fal_result, fal_error
+                        try:
+                            fal_result = fal.run(
+                                self.model_endpoint,
+                                arguments=input_data
+                            )
+                        except Exception as e:
+                            fal_error = e
+                        finally:
+                            processing_complete.set()
+                    
+                    # Start the FAL API call in a separate thread
+                    fal_thread = threading.Thread(target=run_fal_api)
+                    fal_thread.start()
+                    
+                    # Provide intermediate progress updates while waiting
+                    progress_stages = [
+                        (50, "Analyzing image structure..."),
+                        (60, "Generating 3D geometry..."),
+                        (70, "Creating mesh topology..."),
+                        (75, "Applying texture mapping..."),
+                        (80, "Optimizing model structure..."),
+                        (85, "Finalizing 3D model...")
+                    ]
+                    
+                    stage_index = 0
+                    start_time = time.time()
+                    
+                    while not processing_complete.is_set():
+                        # Update progress every 10 seconds, or when we reach the next stage
+                        elapsed = time.time() - start_time
+                        
+                        # Move to next stage every 15-20 seconds
+                        if stage_index < len(progress_stages) and elapsed > (stage_index + 1) * 15:
+                            if progress_callback:
+                                progress, message = progress_stages[stage_index]
+                                progress_callback(message, progress)
+                            stage_index += 1
+                        
+                        # Wait for either completion or timeout (check every 5 seconds)
+                        if processing_complete.wait(timeout=5):
+                            break
+                    
+                    # Wait for thread to complete
+                    fal_thread.join()
+                    
+                    # Check for errors
+                    if fal_error:
+                        raise fal_error
+                    
+                    result = fal_result
                     
                     monitor_logger.logger.info(
                         "FAL.AI job completed successfully",
@@ -205,7 +264,7 @@ class FalAIClient:
                     
                     logger.info("FAL.AI processing completed")
                     if progress_callback:
-                        progress_callback("FAL.AI processing completed", 80)
+                        progress_callback("3D model generation completed", 90)
                 
                 if not result:
                     raise FalAIAPIError("No result received from FAL.AI API")
@@ -293,7 +352,7 @@ class FalAIClient:
             # Download the 3D model file
             logger.info(f"Downloading model from: {model_url}")
             if progress_callback:
-                progress_callback("Downloading 3D model...", 90)
+                progress_callback("Downloading 3D model...", 92)
             
             # Download with streaming and retry logic
             download_attempts = 3
@@ -320,7 +379,7 @@ class FalAIClient:
                     
                     # Save the model file with progress tracking
                     if progress_callback:
-                        progress_callback("Saving model file...", 95)
+                        progress_callback("Saving model file...", 96)
                     
                     downloaded_size = 0
                     chunk_size = 8192  # 8KB chunks
@@ -339,7 +398,7 @@ class FalAIClient:
                     logger.info(f"3D model saved successfully to: {output_path} (Size: {file_size} bytes)")
                     
                     if progress_callback:
-                        progress_callback("3D model generation complete!", 100)
+                        progress_callback("3D model generation complete!", 98)
                     
                     break  # Success, exit retry loop
                     

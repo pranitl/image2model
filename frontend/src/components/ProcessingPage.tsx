@@ -30,6 +30,7 @@ interface FileStatus {
 const ProcessingPage: React.FC = () => {
   const { taskId } = useParams<{ taskId: string }>()
   const [processingStartTime] = useState(Date.now())
+  const [completionTime, setCompletionTime] = useState<Date | null>(null)
   const [files, setFiles] = useState<FileStatus[]>([])
   const [jobResults, setJobResults] = useState<any>(null)
   
@@ -142,6 +143,13 @@ const ProcessingPage: React.FC = () => {
   const isCompleted = status?.status === 'completed'
   const isFailed = status?.status === 'failed' || status?.status === 'error'
   const isProcessing = status?.status === 'processing'
+
+  // Track completion time
+  useEffect(() => {
+    if ((status?.status === 'completed' || status?.status === 'failed') && !completionTime) {
+      setCompletionTime(new Date())
+    }
+  }, [status?.status, completionTime])
 
   // Update file statuses when job results are available
   useEffect(() => {
@@ -352,17 +360,39 @@ const ProcessingPage: React.FC = () => {
               Task Processing
             </h1>
             <div className="flex items-center gap-3">
-              {/* Connection Status */}
-              <div className="flex items-center gap-2">
-                {isConnected ? (
-                  <Wifi className="h-4 w-4 text-green-500" />
-                ) : (
-                  <WifiOff className="h-4 w-4 text-red-500" />
-                )}
-                <span className="text-sm text-gray-600">
-                  {isConnecting ? 'Connecting...' : isConnected ? 'Live' : 'Disconnected'}
-                </span>
-              </div>
+              {/* Smart Connection Status - Only show when relevant */}
+              {(isProcessing || status?.status === 'queued' || status?.status === 'retrying') && (
+                <div className="flex items-center gap-2">
+                  {isConnected ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-green-600 font-medium">
+                        Live Processing
+                      </span>
+                    </div>
+                  ) : isConnecting ? (
+                    <div className="flex items-center gap-2">
+                      <div className="h-2 w-2 bg-yellow-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-yellow-600">
+                        Reconnecting...
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <WifiOff className="h-4 w-4 text-red-500" />
+                      <span className="text-sm text-red-600">
+                        Connection Lost
+                      </span>
+                      <button
+                        onClick={reconnect}
+                        className="text-xs px-2 py-1 bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
               
               {/* Task Status */}
               <div className="flex items-center gap-2">
@@ -370,6 +400,12 @@ const ProcessingPage: React.FC = () => {
                 <span className={`font-medium ${getStatusColor(status)}`}>
                   {getStatusText(status)}
                 </span>
+                {/* Show completion time for finished tasks */}
+                {(isCompleted || isFailed) && completionTime && (
+                  <span className="text-sm text-gray-500 ml-2">
+                    at {completionTime.toLocaleTimeString()}
+                  </span>
+                )}
               </div>
             </div>
           </div>

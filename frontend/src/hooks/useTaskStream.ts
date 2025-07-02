@@ -61,6 +61,7 @@ export const useTaskStream = (
   const eventSourceRef = useRef<EventSource | null>(null)
   const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const lastStatusRef = useRef<TaskStatus | null>(null)
+  const isDisconnectingRef = useRef<boolean>(false)
 
   const updateState = useCallback((updates: Partial<TaskStreamState>) => {
     setState(prev => ({ ...prev, ...updates }))
@@ -71,6 +72,8 @@ export const useTaskStream = (
       return
     }
 
+    // Reset disconnecting flag when starting new connection
+    isDisconnectingRef.current = false
     updateState({ isConnecting: true, error: null })
 
     try {
@@ -90,18 +93,21 @@ export const useTaskStream = (
 
       eventSource.onerror = (event) => {
         console.error(`SSE error for task ${taskId}:`, event)
+        
+        // Check if we're disconnecting because task completed successfully
+        const lastStatus = lastStatusRef.current
+        const isTaskFinished = lastStatus && ['completed', 'failed', 'cancelled'].includes(lastStatus.status)
+        const isExpectedDisconnect = isDisconnectingRef.current || isTaskFinished
+        
         updateState({
           isConnected: false,
           isConnecting: false,
-          error: 'Connection error occurred'
+          // Only show error message if this wasn't an expected disconnection
+          error: isExpectedDisconnect ? null : 'Connection error occurred'
         })
 
-        // Don't reconnect if task is completed, failed, or cancelled
-        const lastStatus = lastStatusRef.current
-        const isTaskFinished = lastStatus && ['completed', 'failed', 'cancelled'].includes(lastStatus.status)
-        
-        // Auto-reconnect logic (but not for finished tasks)
-        if (autoReconnect && !isTaskFinished && state.connectionAttempts < maxReconnectAttempts) {
+        // Auto-reconnect logic (but not for finished tasks or expected disconnects)
+        if (autoReconnect && !isTaskFinished && !isExpectedDisconnect && state.connectionAttempts < maxReconnectAttempts) {
           reconnectTimeoutRef.current = setTimeout(() => {
             updateState({ connectionAttempts: state.connectionAttempts + 1 })
             connect()
@@ -119,6 +125,7 @@ export const useTaskStream = (
           // Automatically disconnect when task is finished
           if (['completed', 'failed', 'cancelled'].includes(data.status)) {
             console.log(`Task ${taskId} finished with status: ${data.status}. Disconnecting...`)
+            isDisconnectingRef.current = true
             setTimeout(() => disconnect(), 1000) // Small delay to ensure UI updates
           }
         } catch (err) {
@@ -192,6 +199,9 @@ export const useTaskStream = (
       reconnectTimeoutRef.current = null
     }
 
+    // Reset disconnecting flag
+    isDisconnectingRef.current = false
+
     updateState({
       isConnected: false,
       isConnecting: false
@@ -200,7 +210,7 @@ export const useTaskStream = (
 
   const reconnect = useCallback(() => {
     disconnect()
-    updateState({ connectionAttempts: 0 })
+    updateState({ connectionAttempts: 0, error: null })
     setTimeout(connect, 100)
   }, [disconnect, connect, updateState])
 
