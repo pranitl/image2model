@@ -175,7 +175,7 @@ const ProcessingPage: React.FC = () => {
         updatedFiles = [{
           filename: filename + '.jpg', // Display as the original image name
           status: status.result.status === 'completed' ? 'completed' as const : 'failed' as const,
-          downloadUrl: modelFilename ? `/api/v1/download/file/${modelFilename}` : undefined,
+          downloadUrl: modelFilename ? `/api/v1/download/direct/${modelFilename}` : undefined,
           error: status.result.error || undefined,
           thumbnail: status.result.rendered_image?.url || undefined
         }]

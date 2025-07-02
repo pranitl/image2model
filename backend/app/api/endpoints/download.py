@@ -98,7 +98,7 @@ def _validate_file_path(file_path: str, base_dir: str) -> None:
         raise HTTPException(status_code=403, detail="Access denied")
 
 
-@router.get("/file/{filename}")
+@router.get("/download/direct/{filename}")
 async def download_file_direct(filename: str, request: Request):
     """
     Download a file directly by filename from the results directory.
