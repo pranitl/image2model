@@ -17,7 +17,8 @@ test.describe('Upload and Processing Flow', () => {
       // Simulate successful batch upload response (even for single file)
       const mockResponse = {
         batch_id: 'test-batch-123',
-        job_id: 'test-task-456', // This is the key field for SSE
+        job_id: 'test-job-456', // Background job parameter
+        task_id: 'test-task-xyz', // Actual Celery task ID for SSE
         uploaded_files: [{
           file_id: 'test-file-789',
           filename: 'test-image.jpg',
@@ -38,13 +39,13 @@ test.describe('Upload and Processing Flow', () => {
       });
     });
 
-    // Mock SSE endpoint to test connection
-    await page.route('**/api/v1/status/tasks/test-task-456/stream**', async (route) => {
+    // Mock SSE endpoint to test connection (should use task_id, not job_id)
+    await page.route('**/api/v1/status/tasks/test-task-xyz/stream**', async (route) => {
       // Mock SSE stream response
       const sseData = [
-        'event: task_queued\ndata: {"status": "queued", "progress": 0, "message": "Task is queued and waiting to start", "task_id": "test-task-456"}\n\n',
-        'event: task_progress\ndata: {"status": "processing", "progress": 50, "message": "Processing image...", "task_id": "test-task-456"}\n\n',
-        'event: task_completed\ndata: {"status": "completed", "progress": 100, "message": "Task completed successfully", "task_id": "test-task-456"}\n\n'
+        'event: task_queued\ndata: {"status": "queued", "progress": 0, "message": "Task is queued and waiting to start", "task_id": "test-task-xyz"}\n\n',
+        'event: task_progress\ndata: {"status": "processing", "progress": 50, "message": "Processing image...", "task_id": "test-task-xyz"}\n\n',
+        'event: task_completed\ndata: {"status": "completed", "progress": 100, "message": "Task completed successfully", "task_id": "test-task-xyz"}\n\n'
       ].join('');
       
       await route.fulfill({

@@ -453,6 +453,17 @@ These commands make AI calls and may take up to a minute:
 - **Technology Stack**: Keep versions and libraries current
 
 **ENFORCEMENT**: This is not a suggestion - it is a **MANDATORY WORKFLOW**. Any violation results in immediate task failure and restart.
+
+## API Development Guidelines
+
+### Testing Requirements
+When touching API endpoints or frontend integration:
+
+- **Backend changes**: Update integration tests to match new response schemas
+- **Frontend changes**: Update unit tests with correct mock responses  
+- **API contract changes**: Update both backend integration tests AND frontend unit/E2E tests
+- **Always verify**: Tests pass after API modifications
+
 ---
 
 _This guide ensures Claude Code has immediate access to Task Master's essential functionality for agentic development workflows._

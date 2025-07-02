@@ -79,7 +79,8 @@ describe('useUpload Hook', () => {
       const mockBatchResponse = {
         data: {
           batch_id: 'single-batch-abc',
-          job_id: 'single-task-def',
+          job_id: 'single-job-def',
+          task_id: 'single-task-xyz',
           uploaded_files: [{
             file_id: 'single-file-ghi',
             filename: 'single.jpg',
@@ -103,8 +104,8 @@ describe('useUpload Hook', () => {
         uploadResult = await result.current.uploadFiles([testFile]);
       });
 
-      // Even single file should use batch endpoint and extract job_id
-      expect(uploadResult.taskId).toBe('single-task-def');
+      // Should prefer task_id over job_id for SSE streaming
+      expect(uploadResult.taskId).toBe('single-task-xyz');
       expect(uploadResult.data.total_files).toBe(1);
 
       // Should use batch endpoint, not single file endpoint
@@ -119,7 +120,8 @@ describe('useUpload Hook', () => {
       const mockBatchResponse = {
         data: {
           batch_id: 'multi-batch-123',
-          job_id: 'multi-task-456',
+          job_id: 'multi-job-456',
+          task_id: 'multi-task-789',
           uploaded_files: [
             { file_id: 'file-1', filename: 'image1.jpg', status: 'uploaded' },
             { file_id: 'file-2', filename: 'image2.jpg', status: 'uploaded' },
@@ -146,7 +148,7 @@ describe('useUpload Hook', () => {
         uploadResult = await result.current.uploadFiles(testFiles);
       });
 
-      expect(uploadResult.taskId).toBe('multi-task-456');
+      expect(uploadResult.taskId).toBe('multi-task-789');
       expect(uploadResult.data.total_files).toBe(3);
       expect(uploadResult.data.uploaded_files).toHaveLength(3);
 
@@ -210,6 +212,61 @@ describe('useUpload Hook', () => {
 
       // Should extract from wrapped response
       expect(uploadResult.taskId).toBe('wrapped-task');
+    });
+
+    it('should prefer task_id over job_id when both are present', async () => {
+      const mockResponseWithBothIds = {
+        data: {
+          batch_id: 'test-batch',
+          job_id: 'fallback-job-id',
+          task_id: 'preferred-task-id',
+          uploaded_files: [{ file_id: 'test-file', filename: 'test.jpg', status: 'uploaded' }],
+          total_files: 1,
+          status: 'uploaded'
+        }
+      };
+
+      mockApiUpload.mockResolvedValueOnce(mockResponseWithBothIds);
+
+      const { result } = renderHook(() => useUpload());
+
+      const testFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+      let uploadResult: any;
+
+      await act(async () => {
+        uploadResult = await result.current.uploadFiles([testFile]);
+      });
+
+      // Should prefer task_id over job_id
+      expect(uploadResult.taskId).toBe('preferred-task-id');
+      expect(uploadResult.taskId).not.toBe('fallback-job-id');
+    });
+
+    it('should fallback to job_id when task_id is null', async () => {
+      const mockResponseWithNullTaskId = {
+        data: {
+          batch_id: 'test-batch',
+          job_id: 'fallback-job-id',
+          task_id: null,
+          uploaded_files: [{ file_id: 'test-file', filename: 'test.jpg', status: 'uploaded' }],
+          total_files: 1,
+          status: 'uploaded'
+        }
+      };
+
+      mockApiUpload.mockResolvedValueOnce(mockResponseWithNullTaskId);
+
+      const { result } = renderHook(() => useUpload());
+
+      const testFile = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
+      let uploadResult: any;
+
+      await act(async () => {
+        uploadResult = await result.current.uploadFiles([testFile]);
+      });
+
+      // Should fallback to job_id when task_id is null
+      expect(uploadResult.taskId).toBe('fallback-job-id');
     });
   });
 
