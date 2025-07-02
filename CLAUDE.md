@@ -1,458 +1,118 @@
 # Task Master AI - Claude Code Integration Guide
 
+## **CRITICAL: Setup Playwright MCP for Live Testing**
+
+**🚨 MANDATORY SETUP - Run this FIRST in every Claude Code session:**
+
+```bash
+claude mcp add playwright npx '@playwright/mcp@latest'
+```
+
+**Why This Is Critical:**
+- **Early Bug Detection**: Catch UI/UX issues during development, not after
+- **Real-time Validation**: Test components as you build them across all browsers
+- **Accessibility Compliance**: Ensure components work for all users from day 1
+- **Cross-platform Testing**: Mobile, tablet, desktop responsiveness validation
+
 ## Essential Commands
 
-### Core Workflow Commands
+### Task Master Core Commands
 
 ```bash
 # Project Setup
-task-master init                                    # Initialize Task Master in current project
-task-master parse-prd .taskmaster/docs/prd.txt      # Generate tasks from PRD document
-task-master models --setup                        # Configure AI models interactively
+task-master init                                    # Initialize Task Master
+task-master parse-prd .taskmaster/docs/prd.txt      # Generate tasks from PRD
+task-master models --setup                        # Configure AI models
 
-# Daily Development Workflow
+# Daily Workflow
 task-master list                                   # Show all tasks with status
-task-master next                                   # Get next available task to work on
-task-master show <id>                             # View detailed task information (e.g., task-master show 1.2)
+task-master next                                   # Get next available task
+task-master show <id>                             # View detailed task information
 task-master set-status --id=<id> --status=done    # Mark task complete
 
 # Task Management
-task-master add-task --prompt="description" --research        # Add new task with AI assistance
-task-master expand --id=<id> --research --force              # Break task into subtasks
-task-master update-task --id=<id> --prompt="changes"         # Update specific task
-task-master update --from=<id> --prompt="changes"            # Update multiple tasks from ID onwards
-task-master update-subtask --id=<id> --prompt="notes"        # Add implementation notes to subtask
-
-# Analysis & Planning
-task-master analyze-complexity --research          # Analyze task complexity
-task-master complexity-report                      # View complexity analysis
-task-master expand --all --research               # Expand all eligible tasks
-
-# Dependencies & Organization
-task-master add-dependency --id=<id> --depends-on=<id>       # Add task dependency
-task-master move --from=<id> --to=<id>                       # Reorganize task hierarchy
-task-master validate-dependencies                            # Check for dependency issues
-task-master generate                                         # Update task markdown files (usually auto-called)
+task-master expand --id=<id> --research           # Break task into subtasks
+task-master update-subtask --id=<id> --prompt="notes"  # Add implementation notes
 ```
 
-## Key Files & Project Structure
-
-### Core Files
-
-- `.taskmaster/tasks/tasks.json` - Main task data file (auto-managed)
-- `.taskmaster/config.json` - AI model configuration (use `task-master models` to modify)
-- `.taskmaster/docs/prd.txt` - Product Requirements Document for parsing
-- `.taskmaster/tasks/*.txt` - Individual task files (auto-generated from tasks.json)
-- `.env` - API keys for CLI usage
-
-### Claude Code Integration Files
-
-- `CLAUDE.md` - Auto-loaded context for Claude Code (this file)
-- `.claude/settings.json` - Claude Code tool allowlist and preferences
-- `.claude/commands/` - Custom slash commands for repeated workflows
-- `.mcp.json` - MCP server configuration (project-specific)
-
-### Directory Structure
-
-```
-project/
-├── .taskmaster/
-│   ├── tasks/              # Task files directory
-│   │   ├── tasks.json      # Main task database
-│   │   ├── task-1.md      # Individual task files
-│   │   └── task-2.md
-│   ├── docs/              # Documentation directory
-│   │   ├── prd.txt        # Product requirements
-│   ├── reports/           # Analysis reports directory
-│   │   └── task-complexity-report.json
-│   ├── templates/         # Template files
-│   │   └── example_prd.txt  # Example PRD template
-│   └── config.json        # AI models & settings
-├── .claude/
-│   ├── settings.json      # Claude Code configuration
-│   └── commands/         # Custom slash commands
-├── .env                  # API keys
-├── .mcp.json            # MCP configuration
-└── CLAUDE.md            # This file - auto-loaded by Claude Code
-```
-
-## MCP Integration
-
-Task Master provides an MCP server that Claude Code can connect to. Configure in `.mcp.json`:
-
-```json
-{
-  "mcpServers": {
-    "task-master-ai": {
-      "command": "npx",
-      "args": ["-y", "--package=task-master-ai", "task-master-ai"],
-      "env": {
-        "ANTHROPIC_API_KEY": "sk-ant-api03-your-anthropic-key-here",
-        "PERPLEXITY_API_KEY": "pplx-your-perplexity-key-here",
-        "OPENAI_API_KEY": "sk-proj-your-openai-key-here",
-        "GOOGLE_API_KEY": "your-google-api-key-here",
-        "XAI_API_KEY": "your-xai-api-key-here",
-        "OPENROUTER_API_KEY": "sk-or-v1-your-openrouter-key-here",
-        "MISTRAL_API_KEY": "MISTRAL_API_KEY_HERE",
-        "AZURE_OPENAI_API_KEY": "AZURE_OPENAI_API_KEY_HERE",
-        "OLLAMA_API_KEY": "OLLAMA_API_KEY_HERE"
-      }
-    }
-  }
-}
-```
-
-### Essential MCP Tools
-
-```javascript
-help; // = shows available taskmaster commands
-// Project setup
-initialize_project; // = task-master init
-parse_prd; // = task-master parse-prd
-
-// Daily workflow
-get_tasks; // = task-master list
-next_task; // = task-master next
-get_task; // = task-master show <id>
-set_task_status; // = task-master set-status
-
-// Task management
-add_task; // = task-master add-task
-expand_task; // = task-master expand
-update_task; // = task-master update-task
-update_subtask; // = task-master update-subtask
-update; // = task-master update
-
-// Analysis
-analyze_project_complexity; // = task-master analyze-complexity
-complexity_report; // = task-master complexity-report
-```
-
-## Claude Code Workflow Integration
-
-### Standard Development Workflow
-
-#### 1. Project Initialization
+### Testing Commands
 
 ```bash
-# Initialize Task Master
-task-master init
+# Interactive testing during development
+npm run test:e2e:ui
 
-# Create or obtain PRD, then parse it
-task-master parse-prd .taskmaster/docs/prd.txt
+# Full test suite
+npm run test:e2e
 
-# Analyze complexity and expand tasks
-task-master analyze-complexity --research
-task-master expand --all --research
+# Debug mode
+npm run test:e2e:debug
 ```
 
-If tasks already exist, another PRD can be parsed (with new information only!) using parse-prd with --append flag. This will add the generated tasks to the existing list of tasks..
+## Development Workflow
 
-#### 2. Daily Development Loop
+### Standard Implementation Process
 
-```bash
-# Start each session
-task-master next                           # Find next available task
-task-master show <id>                     # Review task details
+1. `task-master show <id>` - Understand requirements
+2. Create feature branch for task
+3. `task-master set-status --id=<id> --status=in-progress`
+4. Implement code following task requirements
+5. **🚨 MANDATORY: Test immediately with Playwright MCP**
+6. Fix any issues found during testing
+7. Commit changes with descriptive message
+8. `task-master set-status --id=<id> --status=done` - Only after testing passes
+9. Merge to main when task complete
 
-# During implementation, check in code context into the tasks and subtasks
-task-master update-subtask --id=<id> --prompt="implementation notes..."
+### Live Testing Workflow (MANDATORY for UI Development)
 
-# Complete tasks
-task-master set-status --id=<id> --status=done
-```
+**For Every UI Component/Feature:**
 
-#### 3. Multi-Claude Workflows
+1. **Build** - Implement the feature
+2. **Test Immediately** - Use Playwright MCP to validate:
+   - Cross-browser compatibility (Chrome, Firefox, Safari)
+   - Mobile responsiveness (iPhone, Android, tablet)
+   - Accessibility (keyboard navigation, screen readers)
+   - User interactions and error states
+3. **Fix Issues** - Don't proceed until testing passes
+4. **Document** - Update subtask with testing outcomes
 
-For complex projects, use multiple Claude Code sessions:
+### Testing Checklist
 
-```bash
-# Terminal 1: Main implementation
-cd project && claude
+Before marking ANY UI work as "done":
 
-# Terminal 2: Testing and validation
-cd project-test-worktree && claude
+✅ Cross-browser testing ✅ Mobile responsiveness ✅ Accessibility compliance  
+✅ Error state handling ✅ User interaction flows ✅ Dark mode compatibility
 
-# Terminal 3: Documentation updates
-cd project-docs-worktree && claude
-```
+**If ANY test fails, fix immediately before proceeding.**
 
-### Custom Slash Commands
+## Key Files
 
-Create `.claude/commands/taskmaster-next.md`:
+- `.taskmaster/tasks/tasks.json` - Main task data (auto-managed)
+- `CLAUDE.md` - This file (auto-loaded context)
+- `.mcp.json` - MCP server configuration
+- `frontend/tests/e2e/` - Playwright test files
 
-```markdown
-Find the next available Task Master task and show its details.
+## Git Management
 
-Steps:
-
-1. Run `task-master next` to get the next task
-2. If a task is available, run `task-master show <id>` for full details
-3. Provide a summary of what needs to be implemented
-4. Suggest the first implementation step
-```
-
-Create `.claude/commands/taskmaster-complete.md`:
-
-```markdown
-Complete a Task Master task: $ARGUMENTS
-
-Steps:
-
-1. Review the current task with `task-master show $ARGUMENTS`
-2. Verify all implementation is complete
-3. Run any tests related to this task
-4. Mark as complete: `task-master set-status --id=$ARGUMENTS --status=done`
-5. Show the next available task with `task-master next`
-```
-
-## Tool Allowlist Recommendations
-
-Add to `.claude/settings.json`:
-
-```json
-{
-  "allowedTools": [
-    "Edit",
-    "Bash(task-master *)",
-    "Bash(git commit:*)",
-    "Bash(git add:*)",
-    "Bash(npm run *)",
-    "mcp__task_master_ai__*"
-  ]
-}
-```
-
-## Configuration & Setup
-
-### API Keys Required
-
-At least **one** of these API keys must be configured:
-
-- `ANTHROPIC_API_KEY` (Claude models) - **Recommended**
-- `PERPLEXITY_API_KEY` (Research features) - **Highly recommended**
-- `OPENAI_API_KEY` (GPT models)
-- `GOOGLE_API_KEY` (Gemini models)
-- `MISTRAL_API_KEY` (Mistral models)
-- `OPENROUTER_API_KEY` (Multiple models)
-- `XAI_API_KEY` (Grok models)
-
-An API key is required for any provider used across any of the 3 roles defined in the `models` command.
-
-### Model Configuration
-
-```bash
-# Interactive setup (recommended)
-task-master models --setup
-
-# Set specific models
-task-master models --set-main claude-3-5-sonnet-20241022
-task-master models --set-research perplexity-llama-3.1-sonar-large-128k-online
-task-master models --set-fallback gpt-4o-mini
-```
-
-## Task Structure & IDs
-
-### Task ID Format
-
-- Main tasks: `1`, `2`, `3`, etc.
-- Subtasks: `1.1`, `1.2`, `2.1`, etc.
-- Sub-subtasks: `1.1.1`, `1.1.2`, etc.
-
-### Task Status Values
-
-- `pending` - Ready to work on
-- `in-progress` - Currently being worked on
-- `done` - Completed and verified
-- `deferred` - Postponed
-- `cancelled` - No longer needed
-- `blocked` - Waiting on external factors
-
-### Task Fields
-
-```json
-{
-  "id": "1.2",
-  "title": "Implement user authentication",
-  "description": "Set up JWT-based auth system",
-  "status": "pending",
-  "priority": "high",
-  "dependencies": ["1.1"],
-  "details": "Use bcrypt for hashing, JWT for tokens...",
-  "testStrategy": "Unit tests for auth functions, integration tests for login flow",
-  "subtasks": []
-}
-```
-
-## Claude Code Best Practices with Task Master
-
-### Context Management
-
-- Use `/clear` between different tasks to maintain focus
-- This CLAUDE.md file is automatically loaded for context
-- Use `task-master show <id>` to pull specific task context when needed
-
-### Iterative Implementation
-
-1. `task-master show <subtask-id>` - Understand requirements
-2. Explore codebase and plan implementation
-3. `task-master update-subtask --id=<id> --prompt="detailed plan"` - Log plan
-4. `task-master set-status --id=<id> --status=in-progress` - Start work
-5. Implement code following logged plan
-6. `task-master update-subtask --id=<id> --prompt="what worked/didn't work"` - Log progress
-7. `task-master set-status --id=<id> --status=done` - Complete task
-
-### Complex Workflows with Checklists
-
-For large migrations or multi-step processes:
-
-1. Create a markdown PRD file describing the new changes: `touch task-migration-checklist.md` (prds can be .txt or .md)
-2. Use Taskmaster to parse the new prd with `task-master parse-prd --append` (also available in MCP)
-3. Use Taskmaster to expand the newly generated tasks into subtasks. Consdier using `analyze-complexity` with the correct --to and --from IDs (the new ids) to identify the ideal subtask amounts for each task. Then expand them.
-4. Work through items systematically, checking them off as completed
-5. Use `task-master update-subtask` to log progress on each task/subtask and/or updating/researching them before/during implementation if getting stuck
-6. When you have subtasks, ensure you actively mark their status with `task-master set-status` so we have a good understanding of where progress stands.
-
-### Git Integration
-
-Task Master works well with `gh` CLI:
-
-```bash
-# Create PR for completed task
-gh pr create --title "Complete task 1.2: User authentication" --body "Implements JWT auth system as specified in task 1.2"
-
-# Reference task in commits
-git commit -m "feat: implement JWT auth (task 1.2)"
-```
-
-### Parallel Development with Git Worktrees
-
-```bash
-# Create worktrees for parallel task development
-git worktree add ../project-auth feature/auth-system
-git worktree add ../project-api feature/api-refactor
-
-# Run Claude Code in each worktree
-cd ../project-auth && claude    # Terminal 1: Auth work
-cd ../project-api && claude     # Terminal 2: API work
-```
-
-## Troubleshooting
-
-### AI Commands Failing
-
-```bash
-# Check API keys are configured
-cat .env                           # For CLI usage
-
-# Verify model configuration
-task-master models
-
-# Test with different model
-task-master models --set-fallback gpt-4o-mini
-```
-
-### MCP Connection Issues
-
-- Check `.mcp.json` configuration
-- Verify Node.js installation
-- Use `--mcp-debug` flag when starting Claude Code
-- Use CLI as fallback if MCP unavailable
-
-### Task File Sync Issues
-
-```bash
-# Regenerate task files from tasks.json
-task-master generate
-
-# Fix dependency issues
-task-master fix-dependencies
-```
-
-DO NOT RE-INITIALIZE. That will not do anything beyond re-adding the same Taskmaster core files.
+- Create branch for each task: `git checkout -b feature/task-description`
+- Commit after each subtask completion
+- **NEVER update README.md during task work** - only coordinator updates README after all merges
+- Reference tasks in commits: `git commit -m "feat: implement feature (task X)"`
 
 ## Important Notes
 
 ### AI-Powered Operations
-
-These commands make AI calls and may take up to a minute:
-
-- `parse_prd` / `task-master parse-prd`
-- `analyze_project_complexity` / `task-master analyze-complexity`
-- `expand_task` / `task-master expand`
-- `expand_all` / `task-master expand --all`
-- `add_task` / `task-master add-task`
-- `update` / `task-master update`
-- `update_task` / `task-master update-task`
-- `update_subtask` / `task-master update-subtask`
-
+These commands make AI calls (may take up to a minute):
+- `parse-prd`, `expand`, `add-task`, `update-task`, `analyze-complexity`
 
 ### File Management
-
 - Never manually edit `tasks.json` - use commands instead
-- Never manually edit `.taskmaster/config.json` - use `task-master models`
-- Task markdown files in `tasks/` are auto-generated
-- Run `task-master generate` after manual changes to tasks.json
+- Use `task-master generate` after manual changes
 
-### Claude Code Session Management
+### Testing Integration
+- Playwright MCP server enables live testing during development
+- Test suite covers components, workflows, and accessibility
+- Use `npm run test:e2e:ui` for interactive testing during development
 
-- Use `/clear` frequently to maintain focused context
-- Create custom slash commands for repeated Task Master workflows
-- Configure tool allowlist to streamline permissions
-- Use headless mode for automation: `claude -p "task-master next"`
-
-### Multi-Task Updates
-
-- Use `update --from=<id>` to update multiple future tasks
-- Use `update-task --id=<id>` for single task updates
-- Use `update-subtask --id=<id>` for implementation logging
-
-### Research Mode
-
-- Add `--research` flag for research-based AI enhancement
-- Requires a research model API key like Perplexity (`PERPLEXITY_API_KEY`) in environment
-- Provides more informed task creation and updates
-- Recommended for complex technical tasks
-
-### Git Management
-- For each task we perform with taskmaster, ensure we have created a branch for tracking this effort. Once we have completed the task, the branch is then ready to merge to main.
-- Commit after each sub task as well.
-
-
-
-### Documentation Maintenance
-
-**README.md Updates - STRICT ENFORCEMENT POLICY**
-
-🚨 **ABSOLUTE RULE**: **AGENTS MUST NEVER TOUCH README.md DURING THEIR TASK WORK** 🚨
-
-**ZERO TOLERANCE POLICY:**
-- Any agent that modifies README.md during task implementation has **FAILED** their assignment
-- README.md is **OFF-LIMITS** to all task agents - **NO EXCEPTIONS**
-- Only the designated final coordinator agent may update README.md after all merges
-
-**README Update Workflow (MANDATORY - NO DEVIATIONS):**
-1. **During Task Work**: Agents work ONLY on their assigned task files - **README.md IS FORBIDDEN**
-2. **Complete Task Implementation**: Finish all subtasks and mark task as done  
-3. **Merge to Main**: Merge branch **WITHOUT ANY README CHANGES WHATSOEVER**
-4. **Final Coordinator Only**: After **ALL** agent branches are merged, **ONLY ONE** designated agent updates README
-5. **Single README Commit**: Include all completed tasks in one comprehensive README update
-
-**VIOLATIONS THAT RESULT IN TASK FAILURE:**
-- ❌ **INSTANT FAILURE**: Any README.md changes in task-specific commits
-- ❌ **INSTANT FAILURE**: Multiple agents updating README after individual merges  
-- ❌ **INSTANT FAILURE**: README updates before all branches are merged
-- ❌ **INSTANT FAILURE**: Any agent violating the "README is forbidden during task work" rule
-
-**README Sections to Maintain (Final Coordinator Only):**
-- **Status section**: Always reflect current project state and completed tasks
-- **Quick Start**: Use `docker compose` (not `docker-compose`) and ensure accuracy
-- **API Documentation**: Keep endpoint list current with backend changes
-- **Development Commands**: Update available scripts and Makefile targets
-- **Project Structure**: Reflect actual directory organization
-- **Technology Stack**: Keep versions and libraries current
-
-**ENFORCEMENT**: This is not a suggestion - it is a **MANDATORY WORKFLOW**. Any violation results in immediate task failure and restart.
 ---
 
-_This guide ensures Claude Code has immediate access to Task Master's essential functionality for agentic development workflows._
+_Streamlined guide for efficient Task Master AI development with mandatory testing validation._
