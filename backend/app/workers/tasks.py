@@ -27,14 +27,16 @@ logger = logging.getLogger(__name__)
 
 
 @celery_app.task(bind=True)
-def generate_3d_model_task(self, job_id: str, file_path: str, model_config: Dict[str, Any]):
+def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, quality: str = "medium", texture_enabled: bool = True):
     """
-    Background task to generate 3D model from image.
+    Background task to generate 3D model from image using Tripo3D.
     
     Args:
-        job_id: Unique job identifier
+        file_id: Unique file identifier
         file_path: Path to the input image file
-        model_config: Configuration for the model generation
+        job_id: Unique job identifier
+        quality: Quality setting (low, medium, high)
+        texture_enabled: Whether to enable texture generation
         
     Returns:
         Dict with job results
@@ -43,66 +45,91 @@ def generate_3d_model_task(self, job_id: str, file_path: str, model_config: Dict
         # Update progress to 10%
         current_task.update_state(
             state="PROGRESS",
-            meta={"current": 10, "total": 100, "status": "Loading image..."}
+            meta={
+                "current": 10, 
+                "total": 100, 
+                "status": "Initializing Tripo3D generation...",
+                "job_id": job_id,
+                "file_id": file_id
+            }
         )
         
-        # TODO: Implement actual 3D model generation
-        # This would include:
-        # 1. Load and preprocess image
-        # 2. Run depth estimation model
-        # 3. Generate point cloud
-        # 4. Create mesh
-        # 5. Apply textures
-        # 6. Export to desired format
+        logger.info(f"Starting Tripo3D generation for file {file_id} (job: {job_id})")
         
-        # Simulate processing steps
-        import time
-        
-        # Step 1: Image preprocessing
-        current_task.update_state(
-            state="PROGRESS", 
-            meta={"current": 25, "total": 100, "status": "Preprocessing image..."}
-        )
-        time.sleep(2)
-        
-        # Step 2: Depth estimation
+        # Use FAL.AI client for actual 3D model generation
         current_task.update_state(
             state="PROGRESS",
-            meta={"current": 50, "total": 100, "status": "Estimating depth..."}
+            meta={"current": 25, "total": 100, "status": "Uploading image to Tripo3D..."}
         )
-        time.sleep(3)
         
-        # Step 3: Mesh generation
-        current_task.update_state(
-            state="PROGRESS",
-            meta={"current": 75, "total": 100, "status": "Generating mesh..."}
-        )
-        time.sleep(2)
+        # Convert quality setting to texture setting for Tripo3D
+        texture_setting = "standard"
+        if quality == "high":
+            texture_setting = "HD" if texture_enabled else "no"
+        elif quality == "low" or not texture_enabled:
+            texture_setting = "no"
         
-        # Step 4: Texture application
-        current_task.update_state(
-            state="PROGRESS",
-            meta={"current": 90, "total": 100, "status": "Applying textures..."}
-        )
-        time.sleep(1)
+        # Process the image using FAL.AI client
+        import asyncio
+        result = asyncio.run(process_single_image(file_path, face_limit=None))
         
-        # Final result
-        result_path = f"results/{job_id}.obj"
+        if result["status"] == "success":
+            current_task.update_state(
+                state="PROGRESS",
+                meta={"current": 90, "total": 100, "status": "Finalizing model..."}
+            )
+            
+            logger.info(f"Tripo3D generation completed successfully for job {job_id}")
+            
+            return {
+                "job_id": job_id,
+                "file_id": file_id,
+                "status": "completed",
+                "result_path": result["output"],
+                "model_format": result.get("model_format", "glb"),
+                "rendered_image": result.get("rendered_image"),
+                "processing_time": result.get("processing_time", 0),
+                "message": "3D model generated successfully using Tripo3D"
+            }
+        else:
+            # Handle failure case
+            error_message = result.get("error", "Unknown error during Tripo3D generation")
+            logger.error(f"Tripo3D generation failed for job {job_id}: {error_message}")
+            
+            current_task.update_state(
+                state="FAILURE",
+                meta={
+                    "error": error_message,
+                    "job_id": job_id,
+                    "file_id": file_id,
+                    "error_type": result.get("error_type", "unknown")
+                }
+            )
+            
+            raise ProcessingException(
+                message=f"Tripo3D generation failed: {error_message}",
+                job_id=job_id,
+                stage="model_generation"
+            )
         
-        return {
-            "job_id": job_id,
-            "status": "completed",
-            "result_path": result_path,
-            "message": "3D model generated successfully"
-        }
-        
+    except ProcessingException:
+        # Re-raise processing exceptions
+        raise
     except Exception as exc:
-        logger.error(f"Task failed for job {job_id}: {str(exc)}")
+        logger.error(f"Unexpected error in Tripo3D generation for job {job_id}: {str(exc)}", exc_info=True)
         current_task.update_state(
             state="FAILURE",
-            meta={"error": str(exc), "job_id": job_id}
+            meta={
+                "error": f"Unexpected error: {str(exc)}", 
+                "job_id": job_id,
+                "file_id": file_id
+            }
         )
-        raise exc
+        raise ProcessingException(
+            message=f"Unexpected error during 3D model generation: {str(exc)}",
+            job_id=job_id,
+            stage="unexpected_error"
+        )
 
 
 @celery_app.task

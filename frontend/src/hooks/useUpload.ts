@@ -45,16 +45,22 @@ export const useUpload = (): UseUploadReturn => {
       // Prepare form data
       const formData = new FormData()
       
-      files.forEach((file) => {
-        formData.append(`images`, file)
-      })
+      // For single file upload, use 'file' parameter
+      if (files.length === 1) {
+        formData.append('file', files[0])
+      } else {
+        // For multiple files, append each as 'file'
+        files.forEach((file) => {
+          formData.append('file', file)
+        })
+      }
       
       // Add generation options
       formData.append('options', JSON.stringify(options))
 
       // Upload files with progress tracking
       const response = await apiRequest.upload<UploadJob>(
-        '/upload',
+        '/v1/upload/image',
         formData,
         (progress) => {
           setUploadProgress(progress)

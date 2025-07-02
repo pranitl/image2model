@@ -54,6 +54,9 @@ services:
       - BACKEND_CORS_ORIGINS=http://localhost:3000,http://frontend:3000
       - ENVIRONMENT=development
       - LOG_LEVEL=debug
+      - FAL_API_KEY=e593280a-4735-4bb4-aa97-d16b985f10ac:312ea938c7a73ff88f8ba4a0b0d866cb
+    env_file:
+      - .env
     volumes:
       - ./backend:/app:delegated
       - backend_uploads:/app/uploads
@@ -84,6 +87,8 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - ENVIRONMENT=development
       - LOG_LEVEL=debug
+    env_file:
+      - .env
     volumes:
       - ./backend:/app:delegated
       - backend_uploads:/app/uploads

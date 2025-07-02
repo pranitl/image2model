@@ -66,8 +66,7 @@ check_environment() {
     required_vars=(
         "POSTGRES_PASSWORD"
         "SECRET_KEY"
-        "FAL_KEY_ID"
-        "FAL_KEY_SECRET"
+        "FAL_API_KEY"
     )
     
     missing_vars=()

@@ -2,10 +2,16 @@
 3D model generation endpoints.
 """
 
+import uuid
+import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
+from app.workers.tasks import generate_3d_model_task
+from app.core.exceptions import FileValidationException, ProcessingException
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -13,7 +19,7 @@ router = APIRouter()
 class ModelGenerationRequest(BaseModel):
     """Request model for 3D model generation."""
     file_id: str
-    model_type: str = "depth_anything_v2"
+    model_type: str = "tripo3d"
     quality: str = "medium"  # low, medium, high
     texture_enabled: bool = True
 
@@ -34,30 +40,80 @@ class ModelInfo(BaseModel):
 
 
 @router.post("/generate", response_model=ModelGenerationResponse)
-async def generate_3d_model(request: ModelGenerationRequest):
+async def generate_3d_model(request: ModelGenerationRequest, background_tasks: BackgroundTasks):
     """
-    Start 3D model generation from uploaded image.
+    Start 3D model generation from uploaded image using Tripo3D.
     
     Args:
         request: Model generation request
+        background_tasks: FastAPI background tasks
         
     Returns:
         Job information for tracking progress
+        
+    Raises:
+        FileValidationException: If file validation fails
+        ProcessingException: If model generation fails to start
     """
-    # This would typically:
-    # 1. Validate the file_id exists
-    # 2. Queue the generation job
-    # 3. Return job tracking information
-    
-    import uuid
-    
-    job_id = str(uuid.uuid4())
-    
-    return ModelGenerationResponse(
-        job_id=job_id,
-        status="queued",
-        estimated_time=120  # 2 minutes estimate
-    )
+    try:
+        # Validate the model type
+        if request.model_type != "tripo3d":
+            raise FileValidationException(
+                message=f"Unsupported model type: {request.model_type}. Only 'tripo3d' is supported.",
+                filename=request.file_id
+            )
+        
+        # Validate file_id exists
+        import os
+        from app.core.config import settings
+        
+        # Find the uploaded file
+        upload_dir = settings.UPLOAD_DIR
+        file_path = None
+        
+        # Search for file with the given ID
+        for filename in os.listdir(upload_dir):
+            if filename.startswith(request.file_id):
+                file_path = os.path.join(upload_dir, filename)
+                break
+        
+        if not file_path or not os.path.exists(file_path):
+            raise FileValidationException(
+                message=f"File with ID {request.file_id} not found",
+                filename=request.file_id
+            )
+        
+        # Generate job ID
+        job_id = str(uuid.uuid4())
+        
+        # Queue the 3D model generation task
+        task_result = generate_3d_model_task.delay(
+            file_id=request.file_id,
+            file_path=file_path,
+            job_id=job_id,
+            quality=request.quality,
+            texture_enabled=request.texture_enabled
+        )
+        
+        logger.info(f"Started 3D model generation job {job_id} for file {request.file_id}")
+        
+        return ModelGenerationResponse(
+            job_id=job_id,
+            status="queued",
+            estimated_time=180  # 3 minutes estimate for Tripo3D
+        )
+        
+    except (FileValidationException, ProcessingException):
+        # Re-raise validation and processing exceptions
+        raise
+    except Exception as e:
+        # Handle unexpected errors
+        logger.error(f"Unexpected error in generate_3d_model: {str(e)}")
+        raise ProcessingException(
+            message=f"Failed to start 3D model generation: {str(e)}",
+            operation="generate_3d_model",
+            details={"file_id": request.file_id, "model_type": request.model_type}
+        )
 
 
 @router.get("/job/{job_id}")
@@ -91,16 +147,10 @@ async def get_available_models():
     """
     return [
         ModelInfo(
-            name="depth_anything_v2",
-            description="Advanced depth estimation model for high-quality 3D generation",
-            type="depth_estimation",
-            supported_formats=["obj", "ply", "stl"]
-        ),
-        ModelInfo(
-            name="midas_v3",
-            description="MiDaS depth estimation model for general-purpose 3D generation",
-            type="depth_estimation", 
-            supported_formats=["obj", "ply"]
+            name="tripo3d",
+            description="Tripo3D v2.5 - Advanced AI model for high-quality 3D mesh generation from single images",
+            type="image_to_3d",
+            supported_formats=["obj", "ply", "glb"]
         )
     ]
 

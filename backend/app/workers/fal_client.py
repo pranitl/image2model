@@ -64,15 +64,16 @@ class FalAIClient:
         self.max_wait_time = 1800  # 30 minutes max
         
     def _setup_authentication(self) -> None:
-        """Set up FAL.AI authentication using credentials from settings."""
+        """Set up FAL.AI authentication using API key from settings."""
         try:
-            # Configure FAL credentials
-            if settings.FAL_KEY_ID and settings.FAL_KEY_SECRET:
-                fal.config.credentials = f"{settings.FAL_KEY_ID}:{settings.FAL_KEY_SECRET}"
-                logger.info("FAL.AI credentials configured successfully")
+            # Configure FAL credentials using the single API key
+            if settings.FAL_API_KEY and settings.FAL_API_KEY != "your-fal-api-key-here":
+                # Set the FAL_KEY environment variable which fal_client uses
+                os.environ["FAL_KEY"] = settings.FAL_API_KEY
+                logger.info("FAL.AI API key configured successfully")
             else:
-                logger.error("FAL.AI credentials not found in settings")
-                raise FalAIAuthenticationError("FAL.AI credentials not properly configured")
+                logger.error("FAL.AI API key not found or not set in settings")
+                raise FalAIAuthenticationError("FAL.AI API key not properly configured")
         except Exception as e:
             logger.error(f"Failed to configure FAL.AI credentials: {str(e)}")
             raise FalAIAuthenticationError(f"Authentication setup failed: {str(e)}")
@@ -157,9 +158,20 @@ class FalAIClient:
             try:
                 logger.info(f"Starting FAL.AI processing for image: {file_path} (attempt {attempt + 1})")
                 
-                # Prepare input data for FAL.AI API
+                # Upload the local file to get a URL that FAL.AI can access
+                logger.info("Uploading image file to FAL.AI...")
+                if progress_callback:
+                    progress_callback("Uploading image to FAL.AI...", 15)
+                
+                # Upload file and get URL
+                file_url = fal.upload_file(file_path)
+                logger.info(f"File uploaded to FAL.AI: {file_url}")
+                
+                # Prepare input data for FAL.AI API according to their documentation
                 input_data = {
-                    "image_url": file_path
+                    "image_url": file_url,
+                    "texture": "standard",  # Default texture setting
+                    "pbr": True  # Enable physically-based rendering
                 }
                 
                 # Add face_limit if specified
@@ -268,17 +280,22 @@ class FalAIClient:
             Processed result dictionary
         """
         try:
-            # Extract model URL from result
-            # Note: The exact key may vary based on FAL.AI response format
-            model_url = result.get('model_url') or result.get('model') or result.get('output_url')
+            # Extract model URL from result according to FAL.AI Tripo3D documentation
+            # Response format: {"model_mesh": {"url": "...", "file_size": ..., "content_type": "..."}, "rendered_image": {...}}
+            model_mesh = result.get('model_mesh')
+            rendered_image = result.get('rendered_image')
             
-            if not model_url:
-                logger.error(f"No model URL found in FAL.AI response: {result}")
+            if not model_mesh or not model_mesh.get('url'):
+                logger.error(f"No model_mesh or model URL found in FAL.AI response: {result}")
                 return {
                     'status': 'failed',
                     'input': file_path,
-                    'error': 'No model URL in API response'
+                    'error': 'No model_mesh.url in API response'
                 }
+            
+            model_url = model_mesh['url']
+            model_file_size = model_mesh.get('file_size', 0)
+            model_content_type = model_mesh.get('content_type', 'application/octet-stream')
             
             logger.info(f"Model URL found: {model_url}")
             
@@ -368,7 +385,8 @@ class FalAIClient:
                     else:
                         raise FalAIDownloadError(f"Failed to save model after {download_attempts} attempts: {str(e)}")
             
-            return {
+            # Prepare result with rendered image if available
+            result_data = {
                 'status': 'success',
                 'input': file_path,
                 'output': output_path,
@@ -376,8 +394,21 @@ class FalAIClient:
                 'model_url': model_url,
                 'file_size': file_size,
                 'content_type': content_type,
-                'output_directory': output_dir
+                'output_directory': output_dir,
+                'original_file_size': model_file_size,
+                'original_content_type': model_content_type
             }
+            
+            # Add rendered image information if available
+            if rendered_image and rendered_image.get('url'):
+                result_data['rendered_image'] = {
+                    'url': rendered_image['url'],
+                    'file_size': rendered_image.get('file_size', 0),
+                    'content_type': rendered_image.get('content_type', 'image/webp')
+                }
+                logger.info(f"Rendered image available: {rendered_image['url']}")
+            
+            return result_data
             
         except FalAIDownloadError as e:
             logger.error(f"Failed to download model file: {str(e)}")

@@ -49,8 +49,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     
     # FAL.AI Configuration
-    FAL_KEY_ID: str = "your-fal-key-id-here"
-    FAL_KEY_SECRET: str = "your-fal-key-secret-here"
+    FAL_API_KEY: str = "your-fal-api-key-here"
     
     class Config:
         case_sensitive = True
