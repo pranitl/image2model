@@ -179,65 +179,195 @@ export const useUploadQueue = create<UploadQueueStore>()(
   subscribeWithSelector((set, get) => ({
     ...getInitialState(),
 
-    // Actions implementation will be added in the next subtask
+    // Add multiple files to the queue
     addFiles: (files: File[], options?: GenerationOptions) => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('addFiles called with', files.length, 'files')
+      if (files.length === 0) return
+
+      set((state) => {
+        const newItems = files.map(file => createUploadItem(file, options))
+        
+        return {
+          ...state,
+          items: [...state.items, ...newItems],
+          isActive: true
+        }
+      })
+
+      // Auto-start uploads if enabled
+      const { settings } = get()
+      if (settings.autoStart) {
+        // Delay to ensure state is updated
+        setTimeout(() => {
+          const { startAll } = get()
+          startAll()
+        }, 0)
+      }
     },
 
     addFile: (file: File, options?: GenerationOptions) => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('addFile called with', file.name)
+      const { addFiles } = get()
+      addFiles([file], options)
     },
 
     updateItem: (id: string, patch: UploadItemPatch) => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('updateItem called for', id, 'with patch', patch)
+      set((state) => ({
+        ...state,
+        items: state.items.map(item => 
+          item.id === id 
+            ? { 
+                ...item, 
+                ...patch,
+                // Update timestamps based on status changes
+                ...(patch.status === 'uploading' && !item.startedAt ? { startedAt: new Date() } : {}),
+                ...(patch.status === 'completed' || patch.status === 'failed' ? { completedAt: new Date() } : {})
+              }
+            : item
+        )
+      }))
     },
 
     removeItem: (id: string) => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('removeItem called for', id)
+      set((state) => {
+        const itemToRemove = state.items.find(item => item.id === id)
+        
+        // Clean up blob URL if it exists
+        if (itemToRemove?.previewURL && itemToRemove.previewURL.startsWith('blob:')) {
+          URL.revokeObjectURL(itemToRemove.previewURL)
+        }
+        
+        const newItems = state.items.filter(item => item.id !== id)
+        
+        return {
+          ...state,
+          items: newItems,
+          isActive: newItems.length > 0
+        }
+      })
     },
 
     clearQueue: (filter?: (item: UploadItem) => boolean) => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('clearQueue called with filter', !!filter)
+      set((state) => {
+        const itemsToRemove = filter ? state.items.filter(filter) : state.items
+        const itemsToKeep = filter ? state.items.filter(item => !filter(item)) : []
+        
+        // Clean up blob URLs for items being removed
+        cleanupBlobURLs(itemsToRemove)
+        
+        return {
+          ...state,
+          items: itemsToKeep,
+          isActive: itemsToKeep.length > 0
+        }
+      })
     },
 
     startItem: (id: string) => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('startItem called for', id)
+      const { updateItem } = get()
+      const { items } = get()
+      const item = items.find(item => item.id === id)
+      
+      if (item && (item.status === 'queued' || item.status === 'paused')) {
+        updateItem(id, { 
+          status: 'uploading',
+          startedAt: new Date()
+        })
+      }
     },
 
     pauseItem: (id: string) => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('pauseItem called for', id)
+      const { updateItem } = get()
+      const { items } = get()
+      const item = items.find(item => item.id === id)
+      
+      if (item && item.status === 'uploading') {
+        updateItem(id, { status: 'paused' })
+      }
     },
 
     cancelItem: (id: string) => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('cancelItem called for', id)
+      const { updateItem } = get()
+      const { items } = get()
+      const item = items.find(item => item.id === id)
+      
+      if (item && ['queued', 'uploading', 'paused'].includes(item.status)) {
+        updateItem(id, { 
+          status: 'cancelled',
+          completedAt: new Date()
+        })
+      }
     },
 
     retryItem: (id: string) => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('retryItem called for', id)
+      const { updateItem } = get()
+      const { items, settings } = get()
+      const item = items.find(item => item.id === id)
+      
+      if (item && item.status === 'failed') {
+        const newRetryCount = (item.retryCount || 0) + 1
+        
+        if (newRetryCount <= (item.maxRetries || settings.maxRetries)) {
+          updateItem(id, { 
+            status: 'queued',
+            retryCount: newRetryCount,
+            errorMessage: undefined,
+            progress: 0
+          })
+        }
+      }
     },
 
     startAll: () => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('startAll called')
+      const { items, settings } = get()
+      const queuedItems = items.filter(item => item.status === 'queued')
+      const uploadingItems = items.filter(item => item.status === 'uploading')
+      
+      // Respect max concurrent uploads limit
+      const availableSlots = Math.max(0, settings.maxConcurrentUploads - uploadingItems.length)
+      const itemsToStart = queuedItems.slice(0, availableSlots)
+      
+      itemsToStart.forEach(item => {
+        const { startItem } = get()
+        startItem(item.id)
+      })
+      
+      // Set queue as active and not paused
+      set((state) => ({
+        ...state,
+        isActive: true,
+        isPaused: false
+      }))
     },
 
     pauseAll: () => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('pauseAll called')
+      const { items } = get()
+      const uploadingItems = items.filter(item => item.status === 'uploading')
+      
+      uploadingItems.forEach(item => {
+        const { pauseItem } = get()
+        pauseItem(item.id)
+      })
+      
+      set((state) => ({
+        ...state,
+        isPaused: true
+      }))
     },
 
     cancelAll: () => {
-      // Placeholder - will be implemented in subtask 3.3
-      console.log('cancelAll called')
+      const { items } = get()
+      const activeItems = items.filter(item => 
+        ['queued', 'uploading', 'paused'].includes(item.status)
+      )
+      
+      activeItems.forEach(item => {
+        const { cancelItem } = get()
+        cancelItem(item.id)
+      })
+      
+      set((state) => ({
+        ...state,
+        isPaused: false
+      }))
     },
 
     getStats: (): QueueStats => {
