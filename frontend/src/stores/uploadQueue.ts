@@ -16,6 +16,7 @@ import type {
   QueueStats,
   QueueSettings,
   UploadStatus,
+  PersistedQueueItem,
   DEFAULT_QUEUE_SETTINGS,
   DEFAULT_UPLOAD_ITEM,
   STORAGE_KEYS
@@ -74,6 +75,93 @@ const saveFaceLimitToStorage = (faceLimit: number): void => {
     sessionStorage.setItem(STORAGE_KEYS.FACE_LIMIT, faceLimit.toString())
   } catch (error) {
     console.warn('Failed to save face limit to storage:', error)
+  }
+}
+
+/**
+ * Helper function to serialize queue state for storage
+ * Excludes File objects and blob URLs which cannot be serialized
+ */
+const serializeQueueState = (items: UploadItem[]) => {
+  return items.map(item => ({
+    id: item.id,
+    filename: item.file.name,
+    size: item.file.size,
+    type: item.file.type,
+    status: item.status,
+    progress: item.progress,
+    uploadSpeed: item.uploadSpeed,
+    estimatedTimeRemaining: item.estimatedTimeRemaining,
+    errorMessage: item.errorMessage,
+    createdAt: item.createdAt.toISOString(),
+    startedAt: item.startedAt?.toISOString(),
+    completedAt: item.completedAt?.toISOString(),
+    jobId: item.jobId,
+    generationOptions: item.generationOptions,
+    retryCount: item.retryCount,
+    maxRetries: item.maxRetries
+  }))
+}
+
+/**
+ * Helper function to save queue state to session storage
+ * Only saves essential metadata, not the actual files
+ */
+const saveQueueStateToStorage = (items: UploadItem[]): void => {
+  try {
+    const serializedItems = serializeQueueState(items)
+    sessionStorage.setItem(STORAGE_KEYS.QUEUE_STATE, JSON.stringify({
+      items: serializedItems,
+      timestamp: new Date().toISOString()
+    }))
+  } catch (error) {
+    console.warn('Failed to save queue state to storage:', error)
+  }
+}
+
+/**
+ * Helper function to load queue state from session storage
+ * Returns serialized items that can be used to restore queue display
+ */
+const loadQueueStateFromStorage = () => {
+  try {
+    const stored = sessionStorage.getItem(STORAGE_KEYS.QUEUE_STATE)
+    if (stored) {
+      const parsed = JSON.parse(stored)
+      
+      // Check if the stored data is not too old (1 hour)
+      const timestamp = new Date(parsed.timestamp)
+      const now = new Date()
+      const hoursSinceStored = (now.getTime() - timestamp.getTime()) / (1000 * 60 * 60)
+      
+      if (hoursSinceStored < 1) {
+        return parsed.items.map((item: any) => ({
+          ...item,
+          createdAt: new Date(item.createdAt),
+          startedAt: item.startedAt ? new Date(item.startedAt) : undefined,
+          completedAt: item.completedAt ? new Date(item.completedAt) : undefined
+        }))
+      } else {
+        // Clear old data
+        sessionStorage.removeItem(STORAGE_KEYS.QUEUE_STATE)
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load queue state from storage:', error)
+  }
+  return []
+}
+
+/**
+ * Helper function to clear all storage data
+ */
+const clearStorageData = (): void => {
+  try {
+    Object.values(STORAGE_KEYS).forEach(key => {
+      sessionStorage.removeItem(key)
+    })
+  } catch (error) {
+    console.warn('Failed to clear storage data:', error)
   }
 }
 
@@ -152,6 +240,7 @@ const cleanupBlobURLs = (items: UploadItem[]): void => {
 
 /**
  * Initial store state
+ * Loads persisted settings and queue state from session storage
  */
 const getInitialState = () => {
   const settings = loadSettingsFromStorage()
@@ -162,11 +251,16 @@ const getInitialState = () => {
     settings.defaultFaceLimit = faceLimit
   }
 
+  // Load persisted queue state (metadata only, files cannot be restored)
+  const persistedQueueItems = loadQueueStateFromStorage()
+
   return {
     items: [],
     settings,
     isActive: false,
-    isPaused: false
+    isPaused: false,
+    // Store persisted queue metadata for display purposes
+    persistedItems: persistedQueueItems
   }
 }
 
@@ -192,6 +286,10 @@ export const useUploadQueue = create<UploadQueueStore>()(
           isActive: true
         }
       })
+
+      // Persist state after adding files
+      const { _persistState } = get()
+      _persistState()
 
       // Auto-start uploads if enabled
       const { settings } = get()
@@ -224,6 +322,10 @@ export const useUploadQueue = create<UploadQueueStore>()(
             : item
         )
       }))
+
+      // Persist state after updating item
+      const { _persistState } = get()
+      _persistState()
     },
 
     removeItem: (id: string) => {
@@ -243,6 +345,10 @@ export const useUploadQueue = create<UploadQueueStore>()(
           isActive: newItems.length > 0
         }
       })
+
+      // Persist state after removing item
+      const { _persistState } = get()
+      _persistState()
     },
 
     clearQueue: (filter?: (item: UploadItem) => boolean) => {
@@ -400,6 +506,9 @@ export const useUploadQueue = create<UploadQueueStore>()(
       // Clean up any existing blob URLs
       cleanupBlobURLs(items)
       
+      // Clear all storage data
+      clearStorageData()
+      
       // Reset to initial state
       set(getInitialState())
     },
@@ -408,6 +517,28 @@ export const useUploadQueue = create<UploadQueueStore>()(
       const { items } = get()
       const itemsToCleanup = items.filter(item => itemIds.includes(item.id))
       cleanupBlobURLs(itemsToCleanup)
+    },
+
+    clearPersistedItems: () => {
+      try {
+        sessionStorage.removeItem(STORAGE_KEYS.QUEUE_STATE)
+        set((state) => ({
+          ...state,
+          persistedItems: []
+        }))
+      } catch (error) {
+        console.warn('Failed to clear persisted items:', error)
+      }
+    },
+
+    getPersistedItems: () => {
+      const { persistedItems } = get()
+      return persistedItems
+    },
+
+    _persistState: () => {
+      const { items } = get()
+      saveQueueStateToStorage(items)
     }
   }))
 )
@@ -448,6 +579,10 @@ export const useQueueState = () =>
     isPaused: state.isPaused,
     hasItems: state.items.length > 0
   }))
+
+// Get persisted queue items from previous sessions
+export const usePersistedItems = () => 
+  useUploadQueue(state => state.persistedItems)
 
 /**
  * Auto-cleanup effect for blob URLs on unmount

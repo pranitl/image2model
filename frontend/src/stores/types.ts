@@ -153,6 +153,29 @@ export type UploadItemPatch = Partial<Pick<UploadItem,
 >>
 
 /**
+ * Persisted queue item interface
+ * Represents serialized upload item data from previous sessions
+ */
+export interface PersistedQueueItem {
+  id: string
+  filename: string
+  size: number
+  type: string
+  status: UploadStatus
+  progress: number
+  uploadSpeed?: number
+  estimatedTimeRemaining?: number
+  errorMessage?: string
+  createdAt: Date
+  startedAt?: Date
+  completedAt?: Date
+  jobId?: string
+  generationOptions?: GenerationOptions
+  retryCount?: number
+  maxRetries?: number
+}
+
+/**
  * Upload queue store state interface
  * Defines the complete state structure for the Zustand store
  */
@@ -168,6 +191,9 @@ export interface UploadQueueState {
   
   /** Whether uploads should auto-start */
   isPaused: boolean
+  
+  /** Persisted queue items from previous sessions (metadata only) */
+  persistedItems: PersistedQueueItem[]
 }
 
 /**
@@ -269,6 +295,23 @@ export interface UploadQueueActions {
    * Internal method for memory management
    */
   _cleanupBlobURLs: (itemIds: string[]) => void
+  
+  /**
+   * Clear persisted queue items from storage and state
+   */
+  clearPersistedItems: () => void
+  
+  /**
+   * Get persisted queue items from previous sessions
+   * @returns Array of persisted queue item metadata
+   */
+  getPersistedItems: () => PersistedQueueItem[]
+  
+  /**
+   * Save current queue state to session storage
+   * Internal method called automatically on state changes
+   */
+  _persistState: () => void
 }
 
 /**
