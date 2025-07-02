@@ -45,23 +45,15 @@ export const useUpload = (): UseUploadReturn => {
       // Prepare form data
       const formData = new FormData()
       
-      // Choose endpoint based on file count
-      let endpoint: string
-      if (files.length === 1) {
-        // Single file upload - use /api/v1/upload/image
-        endpoint = '/api/v1/upload/image'
-        formData.append('file', files[0])
-      } else {
-        // Multiple files upload - use /api/v1/upload/batch
-        endpoint = '/api/v1/upload/batch'
-        files.forEach((file) => {
-          formData.append('files', file)
-        })
-        
-        // Add face_limit from options if specified
-        if (options.faceLimit) {
-          formData.append('face_limit', options.faceLimit.toString())
-        }
+      // Always use batch endpoint for consistent background processing
+      const endpoint = '/api/v1/upload/batch'
+      files.forEach((file) => {
+        formData.append('files', file)
+      })
+      
+      // Add face_limit from options if specified
+      if (options.faceLimit) {
+        formData.append('face_limit', options.faceLimit.toString())
       }
 
       // Upload files with progress tracking
@@ -80,23 +72,16 @@ export const useUpload = (): UseUploadReturn => {
           ? (response.data as any).data as UploadJob
           : response.data as UploadJob
         
-        // Extract task ID based on upload type
-        let taskId: string
+        // Always using batch endpoint, so extract job_id for SSE streaming
         if ('job_id' in uploadJob) {
-          // Batch upload - use job_id for SSE streaming
-          taskId = uploadJob.job_id
-        } else if ('file_id' in uploadJob) {
-          // Single file upload - for now, use file_id as task ID
-          // Note: Single file uploads might not trigger background processing
-          // but we need a consistent interface for the frontend
-          taskId = uploadJob.file_id
+          const taskId = uploadJob.job_id
+          
+          return {
+            taskId,
+            data: uploadJob
+          }
         } else {
-          throw new Error('Upload response missing required ID field')
-        }
-        
-        return {
-          taskId,
-          data: uploadJob
+          throw new Error('Upload response missing job_id field')
         }
       } else {
         throw new Error('Upload failed - no response data')
