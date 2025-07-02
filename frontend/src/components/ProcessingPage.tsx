@@ -14,7 +14,8 @@ import {
   Image,
   FileX
 } from 'lucide-react'
-import { useTaskStream, TaskStatus } from '@/hooks'
+import { useTaskStream } from '@/hooks'
+import type { TaskStatus } from '@/hooks/useTaskStream'
 
 // File status interface for individual file tracking
 interface FileStatus {
@@ -110,15 +111,6 @@ const ProcessingPage: React.FC = () => {
     }
   }
 
-  const formatDuration = (seconds: number) => {
-    const minutes = Math.floor(seconds / 60)
-    const remainingSeconds = seconds % 60
-    
-    if (minutes > 0) {
-      return `${minutes}m ${remainingSeconds}s`
-    }
-    return `${remainingSeconds}s`
-  }
 
   const formatETA = (etaSeconds: number) => {
     if (etaSeconds < 60) {
@@ -156,15 +148,37 @@ const ProcessingPage: React.FC = () => {
     if (status?.status === 'completed' && status.result && !jobResults) {
       setJobResults(status.result)
       
-      // Extract file results and update file status
+      // Handle different result formats
+      let updatedFiles: FileStatus[] = []
+      
+      // Case 1: Multiple files in results array (batch processing)
       if (status.result.results && Array.isArray(status.result.results)) {
-        const updatedFiles = status.result.results.map((result: any, index: number) => ({
+        updatedFiles = status.result.results.map((result: any, index: number) => ({
           filename: result.input ? result.input.split('/').pop() : `file_${index + 1}`,
           status: result.status === 'success' ? 'completed' as const : 'failed' as const,
-          downloadUrl: result.output ? `/api/download/${taskId}/${result.output.split('/').pop()}` : undefined,
+          downloadUrl: result.output ? `/api/v1/download/${taskId}/${result.output.split('/').pop()}` : undefined,
           error: result.error || undefined,
-          thumbnail: result.input ? `/api/thumbnails/${taskId}/${result.input.split('/').pop()}` : undefined
+          thumbnail: result.input ? `/api/v1/thumbnails/${taskId}/${result.input.split('/').pop()}` : undefined
         }))
+      }
+      // Case 2: Single file result (like your example)
+      else if (status.result.result_path || status.result.file_id) {
+        // Extract filename from result_path or use file_id
+        const filename = status.result.result_path 
+          ? status.result.result_path.split('/').pop()?.replace('.glb', '') || 'generated_model'
+          : status.result.file_id || 'generated_model'
+        
+        updatedFiles = [{
+          filename: filename + '.jpg', // Display as the original image name
+          status: status.result.status === 'completed' ? 'completed' as const : 'failed' as const,
+          downloadUrl: status.result.result_path ? `/api/v1/download/${taskId}/${status.result.result_path.split('/').pop()}` : undefined,
+          error: status.result.error || undefined,
+          thumbnail: status.result.rendered_image?.url || undefined
+        }]
+      }
+      
+      // Only update files if we have actual results
+      if (updatedFiles.length > 0) {
         setFiles(updatedFiles)
       }
     }
@@ -172,16 +186,20 @@ const ProcessingPage: React.FC = () => {
 
   // Initialize files from job metadata if available  
   useEffect(() => {
-    if (status?.total && files.length === 0) {
+    // Only create initial files if we don't have real file data yet and the task is not completed
+    // Don't create files if total seems to be a percentage (like 100) rather than file count
+    if (status?.total && files.length === 0 && status.status !== 'completed' && status.total <= 10) {
       // Try to get actual filenames from status message or use generic names
       const getFilename = (index: number) => {
         if (status?.message && status.message.includes('Processing')) {
           const match = status.message.match(/Processing (.+)/)
           if (match) return match[1]
         }
-        return `file_${index + 1}.jpg`
+        // Only create a single placeholder file if we don't know the actual count
+        return `Processing file...`
       }
 
+      // Only create placeholder files if we have a reasonable number (not percentage values like 100)
       const initialFiles = Array.from({ length: status.total }, (_, index) => ({
         filename: getFilename(index),
         status: 'queued' as const,
@@ -189,7 +207,15 @@ const ProcessingPage: React.FC = () => {
       }))
       setFiles(initialFiles)
     }
-  }, [status?.total, files.length, status?.message])
+    // For single file processing without initial file info, create one placeholder
+    else if (files.length === 0 && status?.status === 'processing' && !status?.total) {
+      setFiles([{
+        filename: 'Processing file...',
+        status: 'processing' as const,
+        progress: status.progress || 0
+      }])
+    }
+  }, [status?.total, files.length, status?.message, status?.status, status?.progress])
 
   // Update file progress during processing
   useEffect(() => {
@@ -206,9 +232,9 @@ const ProcessingPage: React.FC = () => {
             
             return { 
               ...file, 
-              filename: currentFilename,
+              filename: currentFilename === 'Processing...' ? (status.message || 'Processing file...') : currentFilename,
               status: 'processing' as const, 
-              progress: Math.floor((status.progress || 0) / (status.total || 1)) // Individual file progress estimate
+              progress: status.progress || 0 // Use actual progress from status
             }
           } else {
             return { ...file, status: 'queued' as const, progress: 0 }
@@ -288,7 +314,7 @@ const ProcessingPage: React.FC = () => {
   const retryJob = async () => {
     try {
       // This would need to be implemented on the backend to retry a failed job
-      const response = await fetch(`/api/retry/${taskId}`, {
+      const response = await fetch(`/api/v1/retry/${taskId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       })
@@ -487,7 +513,7 @@ const ProcessingPage: React.FC = () => {
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Image className="h-5 w-5" />
-              File Processing Status ({files.length} files)
+              File Processing Status ({files.length} {files.length === 1 ? 'file' : 'files'})
             </h2>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -685,7 +711,7 @@ const ProcessingPage: React.FC = () => {
                 onClick={() => {
                   if (confirm('Are you sure you want to cancel processing? This cannot be undone.')) {
                     // This would need backend support to cancel jobs
-                    fetch(`/api/cancel/${taskId}`, { method: 'POST' })
+                    fetch(`/api/v1/cancel/${taskId}`, { method: 'POST' })
                       .catch(err => console.error('Cancel failed:', err))
                   }
                 }}
