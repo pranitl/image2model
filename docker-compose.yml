@@ -1,0 +1,170 @@
+# Removed deprecated version field - Docker Compose v2+ ignores this
+
+services:
+  # PostgreSQL database
+  postgres:
+    image: postgres:15
+    container_name: image2model-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: image2model
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - image2model-network
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    container_name: image2model-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - image2model-network
+
+  # FastAPI backend
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: image2model-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/image2model
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - BACKEND_CORS_ORIGINS=http://localhost:3000,http://frontend:3000
+      - ENVIRONMENT=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./backend:/app:delegated
+      - backend_uploads:/app/uploads
+      - backend_results:/app/results
+      - backend_models:/app/models
+      - /app/__pycache__
+      - /app/.pytest_cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - image2model-network
+    restart: unless-stopped
+
+  # Celery worker for background tasks
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: image2model-worker
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/image2model
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ENVIRONMENT=development
+      - LOG_LEVEL=debug
+    volumes:
+      - ./backend:/app:delegated
+      - backend_uploads:/app/uploads
+      - backend_results:/app/results
+      - backend_models:/app/models
+      - /app/__pycache__
+      - /app/.pytest_cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=2
+    networks:
+      - image2model-network
+    restart: unless-stopped
+
+  # Celery monitoring (optional)
+  flower:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: image2model-flower
+    ports:
+      - "5555:5555"
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    volumes:
+      - ./backend:/app:delegated
+    depends_on:
+      - redis
+      - worker
+    command: celery -A app.core.celery_app flower --port=5555
+    networks:
+      - image2model-network
+    restart: unless-stopped
+
+  # React frontend development server
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: development
+    container_name: image2model-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://172.18.0.5:8000
+      - CHOKIDAR_USEPOLLING=true
+      - FAST_REFRESH=true
+    volumes:
+      - ./frontend:/app:delegated
+      - frontend_node_modules:/app/node_modules
+      - /app/dist
+    depends_on:
+      - backend
+    command: npm run dev
+    networks:
+      - image2model-network
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+networks:
+  image2model-network:
+    driver: bridge
+    name: image2model-network
+
+volumes:
+  postgres_data:
+    name: image2model-postgres-data
+  redis_data:
+    name: image2model-redis-data
+  backend_uploads:
+    name: image2model-backend-uploads
+  backend_results:
+    name: image2model-backend-results
+  backend_models:
+    name: image2model-backend-models
+  frontend_node_modules:
+    name: image2model-frontend-node-modules
