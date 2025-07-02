@@ -136,12 +136,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: celery -A app.workers.celery_app worker --loglevel=info --concurrency=${WORKER_CONCURRENCY:-4} --max-tasks-per-child=1000
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=${WORKER_CONCURRENCY:-4} --max-tasks-per-child=1000 -Q default,batch_processing,model_generation,maintenance,priority
     networks:
       - image2model-network
     restart: always
     healthcheck:
-      test: ["CMD", "celery", "-A", "app.workers.celery_app", "inspect", "ping"]
+      test: ["CMD", "celery", "-A", "app.core.celery_app", "inspect", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -176,7 +176,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: celery -A app.workers.celery_app beat --loglevel=info --pidfile=/tmp/celerybeat.pid
+    command: celery -A app.core.celery_app beat --loglevel=info --pidfile=/tmp/celerybeat.pid
     networks:
       - image2model-network
     restart: always
@@ -205,7 +205,7 @@ services:
     depends_on:
       - redis
       - worker
-    command: celery -A app.workers.celery_app flower --port=5555 --basic_auth=${FLOWER_BASIC_AUTH:-admin:admin}
+    command: celery -A app.core.celery_app flower --port=5555 --basic_auth=${FLOWER_BASIC_AUTH:-admin:admin}
     networks:
       - image2model-network
     restart: always
