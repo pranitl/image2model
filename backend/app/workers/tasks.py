@@ -504,16 +504,22 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
                             "overall_progress": overall_progress
                         }
                     )
+                    # Important: Don't return anything from callback
+                    return None
 
                 # Process single image using FAL.AI
                 file_start_time = time.time()
                 import asyncio
+                from app.workers.fal_client import fal_client
+                
                 try:
-                    result = asyncio.run(process_single_image(
-                        file_path, 
-                        face_limit, 
+                    # Call FAL client directly to avoid any wrapper issues
+                    result = asyncio.run(fal_client.process_single_image(
+                        file_path=file_path, 
+                        face_limit=face_limit, 
                         texture_enabled=True,
-                        progress_callback=batch_file_progress_callback
+                        progress_callback=batch_file_progress_callback,
+                        job_id=job_id
                     ))
                 except Exception as async_error:
                     logger.error(f"Error in asyncio.run: {str(async_error)}", exc_info=True)
