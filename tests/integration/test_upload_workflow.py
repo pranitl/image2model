@@ -36,7 +36,7 @@ class TestUploadWorkflow:
     
     def test_batch_upload_success(self, http_session, test_config, multiple_image_files, services_ready):
         """Test successful batch upload."""
-        url = f"{test_config['backend_url']}/api/v1/upload/batch"
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
         files = []
         for img_file in multiple_image_files[:3]:  # Upload first 3 files
@@ -140,7 +140,7 @@ class TestUploadWorkflow:
     
     def test_batch_upload_size_limit(self, http_session, test_config, multiple_image_files, services_ready):
         """Test batch upload with too many files."""
-        url = f"{test_config['backend_url']}/api/v1/upload/batch"
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
         # Try to upload more than 25 files (simulate with same files repeated)
         files = []

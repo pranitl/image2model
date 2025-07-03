@@ -26,7 +26,7 @@ class TestUploadAPIIntegration:
     def test_single_file_uses_batch_endpoint(self, http_session, test_config, sample_image_file, services_ready):
         """Test that frontend always uses batch endpoint, even for single files."""
         # This simulates the frontend behavior after our fix
-        url = f"{test_config['backend_url']}/api/v1/upload/batch"
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
         with open(sample_image_file, 'rb') as f:
             files = [('files', (sample_image_file.name, f, 'image/jpeg'))]
@@ -54,7 +54,7 @@ class TestUploadAPIIntegration:
     
     def test_batch_upload_multiple_files(self, http_session, test_config, multiple_image_files, services_ready):
         """Test batch upload with multiple files."""
-        url = f"{test_config['backend_url']}/api/v1/upload/batch"
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
         files = []
         for img_file in multiple_image_files[:3]:  # Upload first 3 files
@@ -89,7 +89,7 @@ class TestUploadAPIIntegration:
     
     def test_task_id_extraction_logic(self, http_session, test_config, sample_image_file, services_ready):
         """Test that we can extract the correct task ID for SSE streaming."""
-        url = f"{test_config['backend_url']}/api/v1/upload/batch"
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
         with open(sample_image_file, 'rb') as f:
             files = [('files', (sample_image_file.name, f, 'image/jpeg'))]
@@ -326,7 +326,7 @@ class TestUploadAPIErrors:
     def test_malformed_response_handling(self, http_session, test_config, services_ready):
         """Test handling of malformed responses."""
         # This test ensures frontend can handle unexpected response formats
-        url = f"{test_config['backend_url']}/api/v1/upload/batch"
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
         # Send invalid file data
         response = http_session.post(url, data={'invalid': 'data'}, timeout=test_config['timeout'])
