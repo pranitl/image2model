@@ -419,6 +419,40 @@ class FalAIClient:
 
     # Storage management methods removed - no longer needed with direct FAL.AI URLs
 
+    def process_single_image_sync(
+        self, 
+        file_path: str, 
+        face_limit: Optional[int] = None,
+        texture_enabled: bool = True,
+        progress_callback: Optional[callable] = None,
+        job_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Synchronous wrapper for process_single_image to use in Celery tasks.
+        
+        This avoids the coroutine serialization issues when using async functions
+        in Celery tasks.
+        """
+        import asyncio
+        
+        # Create a new event loop for this thread if needed
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        # Run the async function in the event loop
+        return loop.run_until_complete(
+            self.process_single_image(
+                file_path=file_path,
+                face_limit=face_limit,
+                texture_enabled=texture_enabled,
+                progress_callback=progress_callback,
+                job_id=job_id
+            )
+        )
+
 
 # Global instance for use in tasks
 fal_client = FalAIClient()

@@ -507,27 +507,23 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
                     # Important: Don't return anything from callback
                     return None
 
-                # Process single image using FAL.AI
+                # Process single image using FAL.AI with synchronous wrapper
                 file_start_time = time.time()
-                import asyncio
                 from app.workers.fal_client import fal_client
                 
                 try:
-                    # Call FAL client directly to avoid any wrapper issues
-                    result = asyncio.run(fal_client.process_single_image(
+                    # Use synchronous wrapper to avoid coroutine serialization issues
+                    result = fal_client.process_single_image_sync(
                         file_path=file_path, 
                         face_limit=face_limit, 
                         texture_enabled=True,
                         progress_callback=batch_file_progress_callback,
                         job_id=job_id
-                    ))
-                except Exception as async_error:
-                    logger.error(f"Error in asyncio.run: {str(async_error)}", exc_info=True)
+                    )
+                except Exception as process_error:
+                    logger.error(f"Error processing image: {str(process_error)}", exc_info=True)
                     raise
                 actual_processing_time = time.time() - file_start_time
-                
-                # Debug: Check if result contains any non-serializable objects
-                logger.debug(f"Result type: {type(result)}, keys: {result.keys() if isinstance(result, dict) else 'not a dict'}")
                 
                 if result["status"] == "success":
                     file_result = {
