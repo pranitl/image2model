@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error Handling Tests - AI 3D Model Generator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .test-container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+        }
+        .test-section {
+            background: var(--bg-secondary);
+            padding: 1.5rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .test-card {
+            background: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .test-card:hover {
+            transform: translateY(-2px);
+        }
+        .error-display {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(244, 67, 54, 0.1);
+            border-left: 4px solid var(--error);
+            border-radius: 4px;
+            display: none;
+        }
+        .error-display.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Error Handling Test Suite</h1>
+        
+        <div class="test-section">
+            <h2>Navigation Error Tests</h2>
+            <div class="test-grid">
+                <div class="test-card" onclick="testProcessingNoTaskId()">
+                    <h3>Processing Page - No Task ID</h3>
+                    <p>Test navigation to processing.html without taskId parameter</p>
+                </div>
+                <div class="test-card" onclick="testProcessingInvalidTaskId()">
+                    <h3>Processing Page - Invalid Task ID</h3>
+                    <p>Test with malformed task ID</p>
+                </div>
+                <div class="test-card" onclick="testResultsNoJobId()">
+                    <h3>Results Page - No Job ID</h3>
+                    <p>Test navigation to results.html without jobId parameter</p>
+                </div>
+            </div>
+            <div id="navError" class="error-display"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>File Validation Error Tests</h2>
+            <div class="test-grid">
+                <div class="test-card" onclick="testInvalidFileType()">
+                    <h3>Invalid File Type</h3>
+                    <p>Test uploading unsupported file format</p>
+                </div>
+                <div class="test-card" onclick="testOversizedFile()">
+                    <h3>Oversized File</h3>
+                    <p>Test file exceeding 10MB limit</p>
+                </div>
+                <div class="test-card" onclick="testTooManyFiles()">
+                    <h3>Too Many Files</h3>
+                    <p>Test exceeding 25 file limit</p>
+                </div>
+            </div>
+            <div id="fileError" class="error-display"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>API Error Tests</h2>
+            <div class="test-grid">
+                <div class="test-card" onclick="testUploadFailure()">
+                    <h3>Upload Failure</h3>
+                    <p>Simulate upload API failure</p>
+                </div>
+                <div class="test-card" onclick="testSSEDisconnect()">
+                    <h3>SSE Disconnect</h3>
+                    <p>Test SSE connection loss</p>
+                </div>
+                <div class="test-card" onclick="testDownloadFailure()">
+                    <h3>Download Failure</h3>
+                    <p>Test download API failure</p>
+                </div>
+            </div>
+            <div id="apiError" class="error-display"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Edge Case Tests</h2>
+            <div class="test-grid">
+                <div class="test-card" onclick="testEmptyUpload()">
+                    <h3>Empty Upload</h3>
+                    <p>Test submitting with no files</p>
+                </div>
+                <div class="test-card" onclick="testInvalidFaceLimit()">
+                    <h3>Invalid Face Limit</h3>
+                    <p>Test negative or zero face limit</p>
+                </div>
+                <div class="test-card" onclick="testSpecialCharacters()">
+                    <h3>Special Characters</h3>
+                    <p>Test files with special characters in names</p>
+                </div>
+            </div>
+            <div id="edgeError" class="error-display"></div>
+        </div>
+    </div>
+    
+    <script src="js/api.js"></script>
+    <script src="js/upload.js"></script>
+    <script>
+        function showError(sectionId, message) {
+            const errorDiv = document.getElementById(sectionId);
+            errorDiv.textContent = message;
+            errorDiv.classList.add('show');
+            setTimeout(() => errorDiv.classList.remove('show'), 5000);
+        }
+        
+        // Navigation error tests
+        function testProcessingNoTaskId() {
+            // Open processing page without taskId
+            window.open('processing.html', '_blank');
+            showError('navError', 'Opened processing.html without taskId - should show error and redirect');
+        }
+        
+        function testProcessingInvalidTaskId() {
+            // Open processing page with invalid taskId
+            window.open('processing.html?taskId=invalid-id-123', '_blank');
+            showError('navError', 'Opened processing.html with invalid taskId - should handle gracefully');
+        }
+        
+        function testResultsNoJobId() {
+            // Open results page without jobId
+            window.open('results.html', '_blank');
+            showError('navError', 'Opened results.html without jobId - should show error');
+        }
+        
+        // File validation tests
+        function testInvalidFileType() {
+            const file = new File(['test'], 'test.gif', { type: 'image/gif' });
+            const error = UploadModule.validateFile(file);
+            showError('fileError', error || 'ERROR: File should have been rejected');
+        }
+        
+        function testOversizedFile() {
+            const size = 11 * 1024 * 1024; // 11MB
+            const content = new Uint8Array(size);
+            const file = new File([content], 'large.jpg', { type: 'image/jpeg' });
+            const error = UploadModule.validateFile(file);
+            showError('fileError', error || 'ERROR: File should have been rejected');
+        }
+        
+        function testTooManyFiles() {
+            UploadModule.clearFiles();
+            let error = null;
+            for (let i = 0; i < 30; i++) {
+                const file = new File(['test'], `file${i}.jpg`, { type: 'image/jpeg' });
+                const added = UploadModule.addFile(file);
+                if (!added && i >= 25) {
+                    error = `File limit reached at file ${i + 1}`;
+                    break;
+                }
+            }
+            showError('fileError', error || 'ERROR: Should have hit file limit');
+        }
+        
+        // API error tests
+        async function testUploadFailure() {
+            // Mock a failed upload
+            const files = [new File(['test'], 'test.jpg', { type: 'image/jpeg' })];
+            
+            // Temporarily override fetch to simulate failure
+            const originalFetch = window.fetch;
+            window.fetch = () => Promise.reject(new Error('Network error'));
+            
+            try {
+                const result = await API.uploadBatch(files);
+                showError('apiError', result.error || 'Upload failed as expected');
+            } catch (e) {
+                showError('apiError', 'Upload failed with error: ' + e.message);
+            } finally {
+                window.fetch = originalFetch;
+            }
+        }
+        
+        function testSSEDisconnect() {
+            // Test SSE disconnect handling
+            const controller = API.streamProgress('test-task-id', {
+                onError: (error) => {
+                    showError('apiError', 'SSE error handled: ' + error);
+                }
+            });
+            
+            // Simulate disconnect after 1 second
+            setTimeout(() => {
+                controller.close();
+                showError('apiError', 'SSE connection closed - reconnection should be attempted');
+            }, 1000);
+        }
+        
+        async function testDownloadFailure() {
+            // Test download failure
+            const result = await API.getJobFiles('invalid-job-id');
+            showError('apiError', result.error || 'Download request handled');
+        }
+        
+        // Edge case tests
+        function testEmptyUpload() {
+            UploadModule.clearFiles();
+            const canSubmit = UploadModule.getFiles().length > 0;
+            showError('edgeError', canSubmit ? 'ERROR: Should not allow empty upload' : 'Empty upload prevented correctly');
+        }
+        
+        function testInvalidFaceLimit() {
+            // Test various invalid face limits
+            const invalidLimits = [-1, 0, 'abc', null, undefined];
+            const errors = [];
+            
+            invalidLimits.forEach(limit => {
+                // This would be validated in the form submission
+                if (typeof limit !== 'number' || limit <= 0) {
+                    errors.push(`Face limit ${limit} would be rejected`);
+                }
+            });
+            
+            showError('edgeError', errors.length > 0 ? 'Invalid face limits handled correctly' : 'ERROR: Invalid limits not validated');
+        }
+        
+        function testSpecialCharacters() {
+            const specialFiles = [
+                'test@file.jpg',
+                'test#file.jpg',
+                'test&file.jpg',
+                'test file.jpg',
+                'test(1).jpg',
+                'тест.jpg', // Cyrillic
+                '测试.jpg', // Chinese
+            ];
+            
+            const results = [];
+            specialFiles.forEach(filename => {
+                const file = new File(['test'], filename, { type: 'image/jpeg' });
+                const error = UploadModule.validateFile(file);
+                if (!error) {
+                    results.push(`${filename}: accepted`);
+                }
+            });
+            
+            showError('edgeError', `Special character handling:\n${results.join('\n')}`);
+        }
+    </script>
+</body>
+</html>

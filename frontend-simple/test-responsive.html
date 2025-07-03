@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Responsive Design Tests - AI 3D Model Generator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .viewport-tester {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            z-index: 1000;
+            font-family: monospace;
+        }
+        .device-frame {
+            margin: 20px auto;
+            border: 2px solid #333;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            transition: all 0.3s ease;
+        }
+        .control-panel {
+            text-align: center;
+            margin: 20px 0;
+            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+        .device-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+        }
+        .device-btn {
+            padding: 10px 20px;
+            background: var(--bg-tertiary);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .device-btn:hover {
+            background: var(--primary);
+            color: white;
+        }
+        .device-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        .test-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="viewport-tester">
+        <div>Width: <span id="width">0</span>px</div>
+        <div>Height: <span id="height">0</span>px</div>
+        <div>Device: <span id="device">Desktop</span></div>
+    </div>
+    
+    <div class="container">
+        <h1>Responsive Design Testing</h1>
+        
+        <div class="control-panel">
+            <h2>Select Device</h2>
+            <div class="device-buttons">
+                <button class="device-btn" onclick="setDevice('iphone-se', 375, 667)">iPhone SE</button>
+                <button class="device-btn" onclick="setDevice('iphone-12', 390, 844)">iPhone 12</button>
+                <button class="device-btn" onclick="setDevice('iphone-plus', 414, 736)">iPhone Plus</button>
+                <button class="device-btn" onclick="setDevice('ipad', 768, 1024)">iPad</button>
+                <button class="device-btn" onclick="setDevice('ipad-pro', 1024, 1366)">iPad Pro</button>
+                <button class="device-btn" onclick="setDevice('desktop', 1440, 900)">Desktop</button>
+                <button class="device-btn active" onclick="setDevice('custom', '100%', 600)">Full Width</button>
+            </div>
+            
+            <h3>Test Page</h3>
+            <select id="pageSelect" onchange="changePage()">
+                <option value="index.html">Home Page</option>
+                <option value="upload.html">Upload Page</option>
+                <option value="processing.html?taskId=test">Processing Page</option>
+                <option value="results.html?jobId=test">Results Page</option>
+            </select>
+            
+            <h3>Orientation</h3>
+            <button class="device-btn" onclick="rotateDevice()">Rotate Device</button>
+        </div>
+        
+        <div id="deviceFrame" class="device-frame" style="width: 100%; height: 600px;">
+            <iframe id="testFrame" class="test-iframe" src="index.html"></iframe>
+        </div>
+        
+        <div class="control-panel">
+            <h2>Responsive Checklist</h2>
+            <div style="text-align: left; max-width: 600px; margin: 0 auto;">
+                <h3>Mobile (320px - 768px)</h3>
+                <ul>
+                    <li>[ ] Navigation is accessible</li>
+                    <li>[ ] Text is readable without zooming</li>
+                    <li>[ ] Buttons are minimum 44x44px</li>
+                    <li>[ ] Forms are easy to fill</li>
+                    <li>[ ] Images scale properly</li>
+                    <li>[ ] No horizontal scrolling</li>
+                    <li>[ ] Drop zones work with touch</li>
+                </ul>
+                
+                <h3>Tablet (768px - 1024px)</h3>
+                <ul>
+                    <li>[ ] Layout adapts to wider screen</li>
+                    <li>[ ] Grid layouts adjust columns</li>
+                    <li>[ ] Spacing is appropriate</li>
+                    <li>[ ] Touch targets still adequate</li>
+                </ul>
+                
+                <h3>Desktop (1024px+)</h3>
+                <ul>
+                    <li>[ ] Content has max-width</li>
+                    <li>[ ] Line lengths are readable</li>
+                    <li>[ ] Hover states work</li>
+                    <li>[ ] Layout uses available space well</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let currentWidth = '100%';
+        let currentHeight = 600;
+        let currentDevice = 'custom';
+        
+        function updateViewport() {
+            const frame = document.getElementById('deviceFrame');
+            const widthSpan = document.getElementById('width');
+            const heightSpan = document.getElementById('height');
+            const deviceSpan = document.getElementById('device');
+            
+            frame.style.width = typeof currentWidth === 'number' ? currentWidth + 'px' : currentWidth;
+            frame.style.height = currentHeight + 'px';
+            
+            const actualWidth = frame.offsetWidth;
+            widthSpan.textContent = actualWidth;
+            heightSpan.textContent = currentHeight;
+            deviceSpan.textContent = currentDevice;
+            
+            // Update active button
+            document.querySelectorAll('.device-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        function setDevice(device, width, height) {
+            currentDevice = device;
+            currentWidth = width;
+            currentHeight = height;
+            updateViewport();
+        }
+        
+        function rotateDevice() {
+            if (typeof currentWidth === 'number' && typeof currentHeight === 'number') {
+                const temp = currentWidth;
+                currentWidth = currentHeight;
+                currentHeight = temp;
+                updateViewport();
+            }
+        }
+        
+        function changePage() {
+            const select = document.getElementById('pageSelect');
+            const iframe = document.getElementById('testFrame');
+            iframe.src = select.value;
+        }
+        
+        // Update viewport info on resize
+        window.addEventListener('resize', () => {
+            const widthSpan = document.getElementById('width');
+            const frame = document.getElementById('deviceFrame');
+            widthSpan.textContent = frame.offsetWidth;
+        });
+        
+        // Initial update
+        updateViewport();
+        
+        // Test touch events in iframe
+        document.getElementById('testFrame').addEventListener('load', function() {
+            try {
+                const iframeDoc = this.contentDocument || this.contentWindow.document;
+                
+                // Add touch event indicators
+                iframeDoc.addEventListener('touchstart', function(e) {
+                    console.log('Touch start detected', e.touches.length, 'touches');
+                });
+                
+                iframeDoc.addEventListener('touchmove', function(e) {
+                    console.log('Touch move detected');
+                });
+                
+                iframeDoc.addEventListener('touchend', function(e) {
+                    console.log('Touch end detected');
+                });
+            } catch (e) {
+                console.log('Cannot access iframe content');
+            }
+        });
+    </script>
+</body>
+</html>

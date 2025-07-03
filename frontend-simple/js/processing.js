@@ -1,16 +1,57 @@
-// Processing page logic with enhanced SSE and UI updates
-class ProcessingPage {
-    constructor() {
-        this.urlParams = new URLSearchParams(window.location.search);
-        this.taskId = this.urlParams.get('taskId');
-        this.eventSource = null;
-        this.startTime = new Date();
-        this.reconnectAttempts = 0;
-        this.maxReconnectAttempts = 5;
-        this.fileStatuses = new Map();
+// Enhanced Processing Module with SSE and real-time updates
+const ProcessingModule = (function() {
+    'use strict';
+    
+    // State management
+    const state = {
+        taskId: null,
+        eventSource: null,
+        streamController: null,
+        files: new Map(), // Map of filename -> file status
+        overallProgress: 0,
+        isComplete: false,
+        isCancelled: false,
+        reconnectAttempts: 0,
+        maxReconnectAttempts: 5,
+        reconnectDelay: 1000, // Start with 1 second
+        startTime: new Date(),
+        elapsedInterval: null
+    };
+    
+    // DOM element references
+    let elements = {};
+    
+    // Initialize on DOM ready
+    function init() {
+        // Extract task_id from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        state.taskId = urlParams.get('taskId') || urlParams.get('task_id');
         
-        // DOM elements
-        this.elements = {
+        if (!state.taskId) {
+            showError('No task ID provided');
+            setTimeout(() => window.location.href = 'upload.html', 3000);
+            return;
+        }
+        
+        // Cache DOM elements
+        cacheElements();
+        
+        // Set initial UI
+        initializeUI();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        // Start elapsed timer
+        startElapsedTimer();
+        
+        // Establish SSE connection
+        connectSSE();
+    }
+    
+    // Cache all DOM elements
+    function cacheElements() {
+        elements = {
             taskId: document.getElementById('taskId'),
             fileCount: document.getElementById('fileCount'),
             startTime: document.getElementById('startTime'),
@@ -20,147 +61,225 @@ class ProcessingPage {
             filesCompleted: document.getElementById('filesCompleted'),
             totalFiles: document.getElementById('totalFiles'),
             fileGrid: document.getElementById('fileGrid'),
-            cancelBtn: document.getElementById('cancelBtn')
+            cancelBtn: document.getElementById('cancelBtn'),
+            statusMessage: document.getElementById('statusMessage')
         };
-        
-        this.init();
     }
     
-    init() {
-        if (!this.taskId) {
-            console.error('No task ID provided');
-            window.location.href = 'upload.html';
-            return;
+    // Initialize UI with default values
+    function initializeUI() {
+        if (elements.taskId) {
+            elements.taskId.textContent = state.taskId;
+        }
+        if (elements.startTime) {
+            elements.startTime.textContent = state.startTime.toLocaleTimeString();
+        }
+        if (elements.fileCount) {
+            elements.fileCount.textContent = '0';
+        }
+        if (elements.totalFiles) {
+            elements.totalFiles.textContent = '0';
+        }
+        if (elements.filesCompleted) {
+            elements.filesCompleted.textContent = '0';
+        }
+    }
+    
+    // Setup event listeners
+    function setupEventListeners() {
+        if (elements.cancelBtn) {
+            elements.cancelBtn.addEventListener('click', handleCancel);
         }
         
-        // Set initial UI values
-        this.elements.taskId.textContent = this.taskId;
-        this.elements.startTime.textContent = this.startTime.toLocaleTimeString();
-        
-        // Set up event listeners
-        this.setupEventListeners();
-        
-        // Start elapsed time counter
-        this.startElapsedTimer();
-        
-        // Connect to SSE
-        this.connectToSSE();
-    }
-    
-    setupEventListeners() {
-        // Cancel button
-        this.elements.cancelBtn.addEventListener('click', () => this.handleCancel());
-        
         // Handle page unload
-        window.addEventListener('beforeunload', () => {
-            if (this.eventSource) {
-                this.eventSource.close();
-            }
-        });
+        window.addEventListener('beforeunload', cleanup);
     }
     
-    startElapsedTimer() {
-        this.elapsedInterval = setInterval(() => {
-            const elapsed = Math.floor((new Date() - this.startTime) / 1000);
+    // Start elapsed time counter
+    function startElapsedTimer() {
+        state.elapsedInterval = setInterval(() => {
+            const elapsed = Math.floor((new Date() - state.startTime) / 1000);
             const minutes = Math.floor(elapsed / 60);
             const seconds = elapsed % 60;
-            this.elements.elapsedTime.textContent = 
-                minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+            if (elements.elapsedTime) {
+                elements.elapsedTime.textContent = 
+                    minutes > 0 ? `${minutes}m ${seconds}s` : `${seconds}s`;
+            }
         }, 1000);
     }
     
-    connectToSSE() {
-        console.log('Connecting to SSE for task:', this.taskId);
-        
+    // Establish SSE connection
+    function connectSSE() {
         try {
-            this.eventSource = api.streamProgress(this.taskId, (data) => {
-                this.handleProgressUpdate(data);
+            console.log('Connecting to SSE for task:', state.taskId);
+            
+            // Use API client's streamProgress function with callbacks
+            state.streamController = window.API.streamProgress(state.taskId, {
+                onProgress: handleProgressUpdate,
+                onFileUpdate: handleFileUpdate,
+                onComplete: handleComplete,
+                onError: handleError
             });
             
-            // Add custom error handler for reconnection logic
-            const originalOnerror = this.eventSource.onerror;
-            this.eventSource.onerror = (error) => {
-                console.error('SSE error:', error);
-                this.handleSSEError();
-                if (originalOnerror) originalOnerror(error);
-            };
-            
-            // Add open handler
-            this.eventSource.onopen = () => {
-                console.log('SSE connection established');
-                this.reconnectAttempts = 0;
-            };
+            // Set reconnect attempts to 0 on successful connection
+            state.reconnectAttempts = 0;
+            state.reconnectDelay = 1000;
             
         } catch (error) {
-            console.error('Failed to create EventSource:', error);
-            this.showError('Failed to connect to processing stream');
+            console.error('Failed to establish SSE connection:', error);
+            handleConnectionError();
         }
     }
     
-    handleProgressUpdate(data) {
+    // Handle connection errors with exponential backoff
+    function handleConnectionError() {
+        // Close existing connection
+        if (state.streamController && state.streamController.close) {
+            state.streamController.close();
+            state.streamController = null;
+        }
+        
+        // Check if we should reconnect
+        if (state.reconnectAttempts < state.maxReconnectAttempts && 
+            !state.isComplete && !state.isCancelled) {
+            
+            state.reconnectAttempts++;
+            console.log(`Reconnecting... Attempt ${state.reconnectAttempts}/${state.maxReconnectAttempts}`);
+            
+            // Show reconnection status
+            showStatus(`Connection lost. Reconnecting... (${state.reconnectAttempts}/${state.maxReconnectAttempts})`);
+            
+            // Exponential backoff
+            setTimeout(() => {
+                connectSSE();
+            }, state.reconnectDelay);
+            
+            // Increase delay for next attempt
+            state.reconnectDelay = Math.min(state.reconnectDelay * 2, 30000); // Max 30 seconds
+        } else {
+            showError('Connection lost. Please refresh the page.');
+        }
+    }
+    
+    // Handle overall progress updates
+    function handleProgressUpdate(data) {
         console.log('Progress update:', data);
         
         // Update overall progress
-        if (data.progress !== undefined) {
-            this.updateProgressBar(data.progress);
+        if (data.overall !== undefined) {
+            updateOverallProgress(data.overall);
         }
         
-        // Update file count
-        if (data.total_files !== undefined) {
-            this.elements.fileCount.textContent = data.total_files;
-            this.elements.totalFiles.textContent = data.total_files;
+        // Update file counts
+        if (data.totalFiles !== undefined) {
+            if (elements.fileCount) elements.fileCount.textContent = data.totalFiles;
+            if (elements.totalFiles) elements.totalFiles.textContent = data.totalFiles;
         }
         
-        // Update files grid
+        // Initialize file grid if we have files
         if (data.files && Array.isArray(data.files)) {
-            this.updateFileGrid(data.files);
-            this.updateCompletedCount(data.files);
-        }
-        
-        // Handle completion
-        if (data.status === 'completed' && data.job_id) {
-            this.handleProcessingComplete(data.job_id);
-        }
-        
-        // Handle failure
-        if (data.status === 'failed') {
-            this.handleProcessingFailed(data.error || 'Processing failed');
+            updateFileGrid(data.files);
+            updateCompletedCount(data.files);
         }
     }
     
-    updateProgressBar(percentage) {
-        const progress = Math.min(100, Math.max(0, percentage));
-        this.elements.progressFill.style.width = `${progress}%`;
-        this.elements.progressText.textContent = `${Math.round(progress)}%`;
+    // Handle individual file updates
+    function handleFileUpdate(data) {
+        console.log('File update:', data);
+        
+        if (data.fileName) {
+            updateFileCard(data.fileName, data.status, data.error || formatStatus(data.status));
+            
+            // Update file progress if provided
+            if (data.progress !== undefined && data.status === 'processing') {
+                updateFileProgress(data.fileName, data.progress);
+            }
+        }
     }
     
-    updateFileGrid(files) {
-        // Update internal state
+    // Handle completion
+    function handleComplete(data) {
+        console.log('Processing complete:', data);
+        state.isComplete = true;
+        
+        // Close SSE connection
+        cleanup();
+        
+        // Update UI
+        updateOverallProgress(100);
+        showStatus('All files processed successfully!');
+        
+        // Disable cancel button
+        if (elements.cancelBtn) {
+            elements.cancelBtn.disabled = true;
+            elements.cancelBtn.textContent = 'Completed';
+        }
+        
+        // Redirect to results page after short delay
+        setTimeout(() => {
+            const jobId = data.jobId || state.taskId;
+            window.location.href = `results.html?jobId=${jobId}`;
+        }, 1500);
+    }
+    
+    // Handle errors
+    function handleError(error) {
+        console.error('Processing error:', error);
+        
+        // Check if it's a connection error
+        if (!state.isComplete && !state.isCancelled) {
+            handleConnectionError();
+        }
+    }
+    
+    // Update overall progress bar
+    function updateOverallProgress(progress) {
+        state.overallProgress = Math.min(Math.max(progress, 0), 100);
+        
+        if (elements.progressFill) {
+            elements.progressFill.style.width = `${state.overallProgress}%`;
+            elements.progressFill.style.transition = 'width 0.3s ease-out';
+        }
+        
+        if (elements.progressText) {
+            elements.progressText.textContent = `${Math.round(state.overallProgress)}%`;
+        }
+    }
+    
+    // Update file grid
+    function updateFileGrid(files) {
+        if (!elements.fileGrid) return;
+        
+        // Update state
         files.forEach(file => {
-            this.fileStatuses.set(file.id || file.name, file);
+            const key = file.name || file.filename;
+            if (key) {
+                state.files.set(key, file);
+            }
         });
         
         // Clear and rebuild grid
-        this.elements.fileGrid.innerHTML = '';
+        elements.fileGrid.innerHTML = '';
         
-        files.forEach(file => {
-            const card = this.createFileCard(file);
-            this.elements.fileGrid.appendChild(card);
+        state.files.forEach((file, filename) => {
+            createFileCard(filename, file);
         });
     }
     
-    createFileCard(file) {
-        const card = document.createElement('div');
-        card.className = `file-card file-status-${file.status || 'pending'}`;
-        card.id = `file-${file.id || file.name.replace(/\./g, '-')}`;
+    // Create file card
+    function createFileCard(filename, fileData) {
+        if (!elements.fileGrid) return;
         
-        // Status icon based on state
-        const statusIcon = this.getStatusIcon(file.status);
+        const card = document.createElement('div');
+        card.className = `file-card file-status-${fileData.status || 'pending'}`;
+        card.dataset.filename = filename;
+        
+        const statusIcon = getStatusIcon(fileData.status);
         
         card.innerHTML = `
             <div class="file-card-content">
-                ${file.thumbnail ? 
-                    `<img src="${file.thumbnail}" alt="${file.name}" class="file-thumbnail">` :
+                ${fileData.thumbnail ? 
+                    `<img src="${fileData.thumbnail}" alt="${filename}" class="file-thumbnail">` :
                     `<div class="file-thumbnail-placeholder">
                         <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
@@ -170,27 +289,83 @@ class ProcessingPage {
                     </div>`
                 }
                 <div class="file-info">
-                    <h4 class="file-name">${this.truncateFileName(file.name)}</h4>
+                    <h4 class="file-name" title="${filename}">${truncateFileName(filename)}</h4>
                     <div class="file-status">
                         ${statusIcon}
-                        <span class="status-text">${this.formatStatus(file.status)}</span>
+                        <span class="status-text">${formatStatus(fileData.status)}</span>
                     </div>
-                    ${file.progress && file.status === 'processing' ? 
-                        `<div class="file-progress-bar">
-                            <div class="file-progress-fill" style="width: ${file.progress}%"></div>
-                        </div>` : ''
-                    }
-                    ${file.error ? 
-                        `<div class="file-error">${file.error}</div>` : ''
+                    <div class="file-progress-bar" style="display: ${fileData.status === 'processing' ? 'block' : 'none'}">
+                        <div class="file-progress-fill" style="width: ${fileData.progress || 0}%"></div>
+                    </div>
+                    ${fileData.error ? 
+                        `<div class="file-error">${fileData.error}</div>` : ''
                     }
                 </div>
             </div>
         `;
         
-        return card;
+        elements.fileGrid.appendChild(card);
     }
     
-    getStatusIcon(status) {
+    // Update file card status
+    function updateFileCard(filename, status, message) {
+        const card = document.querySelector(`[data-filename="${filename}"]`);
+        if (!card) {
+            // Create card if it doesn't exist
+            const fileData = { status: status, error: status === 'failed' ? message : null };
+            state.files.set(filename, fileData);
+            createFileCard(filename, fileData);
+            return;
+        }
+        
+        // Update state
+        const fileData = state.files.get(filename) || {};
+        fileData.status = status;
+        if (status === 'failed') fileData.error = message;
+        state.files.set(filename, fileData);
+        
+        // Update card appearance
+        card.className = `file-card file-status-${status}`;
+        
+        // Update status text
+        const statusText = card.querySelector('.status-text');
+        if (statusText) {
+            statusText.textContent = message || formatStatus(status);
+        }
+        
+        // Update icon
+        const iconContainer = card.querySelector('.file-status');
+        if (iconContainer) {
+            const statusIcon = getStatusIcon(status);
+            const existingIcon = iconContainer.querySelector('svg, .spinner');
+            if (existingIcon) {
+                existingIcon.outerHTML = statusIcon;
+            }
+        }
+        
+        // Handle progress bar visibility
+        const progressBar = card.querySelector('.file-progress-bar');
+        if (progressBar) {
+            progressBar.style.display = status === 'processing' ? 'block' : 'none';
+        }
+        
+        // Update completed count
+        updateCompletedCount();
+    }
+    
+    // Update file progress
+    function updateFileProgress(filename, progress) {
+        const card = document.querySelector(`[data-filename="${filename}"]`);
+        if (!card) return;
+        
+        const progressFill = card.querySelector('.file-progress-fill');
+        if (progressFill) {
+            progressFill.style.width = `${progress}%`;
+        }
+    }
+    
+    // Get status icon
+    function getStatusIcon(status) {
         const icons = {
             pending: '<svg class="status-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>',
             processing: '<svg class="status-icon spinning" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-6.219-8.56"></path></svg>',
@@ -200,7 +375,8 @@ class ProcessingPage {
         return icons[status] || icons.pending;
     }
     
-    formatStatus(status) {
+    // Format status text
+    function formatStatus(status) {
         const statusMap = {
             pending: 'Waiting',
             processing: 'Processing',
@@ -210,7 +386,8 @@ class ProcessingPage {
         return statusMap[status] || status || 'Unknown';
     }
     
-    truncateFileName(name, maxLength = 25) {
+    // Truncate filename
+    function truncateFileName(name, maxLength = 25) {
         if (name.length <= maxLength) return name;
         const ext = name.split('.').pop();
         const baseName = name.substring(0, name.lastIndexOf('.'));
@@ -218,124 +395,107 @@ class ProcessingPage {
         return `${truncated}.${ext}`;
     }
     
-    updateCompletedCount(files) {
-        const completed = files.filter(f => f.status === 'completed').length;
-        this.elements.filesCompleted.textContent = completed;
-    }
-    
-    handleProcessingComplete(jobId) {
-        console.log('Processing complete, job ID:', jobId);
-        clearInterval(this.elapsedInterval);
+    // Update completed count
+    function updateCompletedCount() {
+        let completed = 0;
+        state.files.forEach(file => {
+            if (file.status === 'completed') completed++;
+        });
         
-        // Show success state
-        this.elements.progressFill.classList.add('progress-complete');
-        
-        // Close SSE connection
-        if (this.eventSource) {
-            this.eventSource.close();
-        }
-        
-        // Redirect to results after a short delay
-        setTimeout(() => {
-            window.location.href = `results.html?jobId=${jobId}`;
-        }, 1500);
-    }
-    
-    handleProcessingFailed(error) {
-        console.error('Processing failed:', error);
-        clearInterval(this.elapsedInterval);
-        
-        // Show error state
-        this.elements.progressFill.classList.add('progress-error');
-        
-        // Close SSE connection
-        if (this.eventSource) {
-            this.eventSource.close();
-        }
-        
-        // Show error message
-        this.showError(error);
-    }
-    
-    handleSSEError() {
-        if (this.eventSource) {
-            this.eventSource.close();
-        }
-        
-        // Attempt reconnection with exponential backoff
-        if (this.reconnectAttempts < this.maxReconnectAttempts) {
-            this.reconnectAttempts++;
-            const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 30000);
-            
-            console.log(`Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
-            
-            setTimeout(() => {
-                this.connectToSSE();
-            }, delay);
-        } else {
-            this.showError('Lost connection to server. Please refresh the page.');
+        if (elements.filesCompleted) {
+            elements.filesCompleted.textContent = completed;
         }
     }
     
-    async handleCancel() {
-        if (!confirm('Are you sure you want to cancel processing?')) {
+    // Handle cancel
+    async function handleCancel() {
+        if (!confirm('Are you sure you want to cancel this batch processing?')) {
             return;
         }
         
+        state.isCancelled = true;
+        
+        // Close SSE connection
+        cleanup();
+        
         try {
-            // Close SSE connection first
-            if (this.eventSource) {
-                this.eventSource.close();
+            // Use the API module's cancelJob function
+            const result = await window.API.cancelJob(state.taskId);
+            
+            if (result.success) {
+                showStatus('Batch processing cancelled');
+                setTimeout(() => {
+                    window.location.href = 'upload.html';
+                }, 2000);
+            } else {
+                throw new Error(result.error || 'Failed to cancel batch');
             }
-            
-            // Call cancel API
-            const response = await fetch(`/api/v1/tasks/${this.taskId}/cancel`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error('Failed to cancel task');
-            }
-            
-            // Redirect back to upload
-            window.location.href = 'upload.html';
-            
         } catch (error) {
             console.error('Cancel error:', error);
-            // Even if cancel fails, allow user to go back
+            showError('Failed to cancel batch processing');
+            
+            // Still allow going back
             if (confirm('Failed to cancel task. Return to upload page anyway?')) {
                 window.location.href = 'upload.html';
             }
         }
     }
     
-    showError(message) {
-        // Create error overlay
-        const errorOverlay = document.createElement('div');
-        errorOverlay.className = 'error-overlay';
-        errorOverlay.innerHTML = `
-            <div class="error-content">
-                <svg class="error-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="12"></line>
-                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                </svg>
-                <h3>Processing Error</h3>
-                <p>${message}</p>
-                <button class="btn-primary" onclick="window.location.href='upload.html'">
-                    Try Again
-                </button>
-            </div>
-        `;
-        
-        document.body.appendChild(errorOverlay);
+    // Show status message
+    function showStatus(message) {
+        if (elements.statusMessage) {
+            elements.statusMessage.textContent = message;
+            elements.statusMessage.className = 'status-message info';
+            elements.statusMessage.style.display = 'block';
+        }
     }
-}
+    
+    // Show error message
+    function showError(message) {
+        if (elements.statusMessage) {
+            elements.statusMessage.textContent = message;
+            elements.statusMessage.className = 'status-message error';
+            elements.statusMessage.style.display = 'block';
+        } else {
+            // Fallback to error overlay
+            const errorOverlay = document.createElement('div');
+            errorOverlay.className = 'error-overlay';
+            errorOverlay.innerHTML = `
+                <div class="error-content">
+                    <svg class="error-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <h3>Processing Error</h3>
+                    <p>${message}</p>
+                    <button class="btn-primary" onclick="window.location.href='upload.html'">
+                        Try Again
+                    </button>
+                </div>
+            `;
+            document.body.appendChild(errorOverlay);
+        }
+    }
+    
+    // Cleanup function
+    function cleanup() {
+        // Close SSE connection
+        if (state.streamController && state.streamController.close) {
+            state.streamController.close();
+        }
+        
+        // Clear elapsed timer
+        if (state.elapsedInterval) {
+            clearInterval(state.elapsedInterval);
+        }
+    }
+    
+    // Public API
+    return {
+        init: init
+    };
+})();
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    new ProcessingPage();
-});
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', ProcessingModule.init);
