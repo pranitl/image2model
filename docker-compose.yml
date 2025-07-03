@@ -51,7 +51,7 @@ services:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/image2model
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
-      - BACKEND_CORS_ORIGINS=http://localhost:3000,http://frontend:3000,http://localhost:3001,http://frontend-simple
+      - BACKEND_CORS_ORIGINS=http://localhost:3000,http://frontend:80
       - ENVIRONMENT=development
       - LOG_LEVEL=debug
       - FAL_API_KEY=e593280a-4735-4bb4-aa97-d16b985f10ac:312ea938c7a73ff88f8ba4a0b0d866cb
@@ -128,41 +128,14 @@ services:
       - image2model-network
     restart: unless-stopped
 
-  # React frontend development server
+  # Frontend (Vanilla JS)
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      target: development
-    container_name: image2model-frontend
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - VITE_API_URL=http://backend:8000
-      - CHOKIDAR_USEPOLLING=true
-      - FAST_REFRESH=true
-    volumes:
-      - ./frontend:/app:delegated
-      - frontend_node_modules:/app/node_modules
-      - /app/dist
-    depends_on:
-      - backend
-    command: npm run dev
-    networks:
-      - image2model-network
-    restart: unless-stopped
-    stdin_open: true
-    tty: true
-
-  # Simple Frontend (Vanilla JS) - Running in parallel for migration
-  frontend-simple:
     build:
       context: ./frontend-simple
       dockerfile: Dockerfile
-    container_name: image2model-frontend-simple
+    container_name: image2model-frontend
     ports:
-      - "3001:80"  # Different port for parallel testing
+      - "3000:80"  # Default frontend port
     environment:
       - NGINX_HOST=localhost
       - NGINX_PORT=80
@@ -197,5 +170,3 @@ volumes:
     name: image2model-backend-results
   backend_models:
     name: image2model-backend-models
-  frontend_node_modules:
-    name: image2model-frontend-node-modules
