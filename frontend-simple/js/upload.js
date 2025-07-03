@@ -49,7 +49,8 @@ function updateFileList() {
     `).join('');
 }
 
-function removeFile(index) {
+// Make removeFile globally accessible for onclick handlers
+window.removeFile = function(index) {
     selectedFiles.splice(index, 1);
     updateFileList();
     generateBtn.disabled = selectedFiles.length === 0;
