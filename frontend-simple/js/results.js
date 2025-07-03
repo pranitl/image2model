@@ -24,6 +24,11 @@ document.addEventListener('DOMContentLoaded', function() {
             // Fetch job files using the api module
             const response = await api.getJobFiles(jobId);
             
+            // Check if the API call was successful
+            if (!response.success) {
+                throw new Error(response.error || 'Failed to load job files');
+            }
+            
             if (!response.files || response.files.length === 0) {
                 modelList.innerHTML = `
                     <div style="text-align: center; padding: 2rem;">
