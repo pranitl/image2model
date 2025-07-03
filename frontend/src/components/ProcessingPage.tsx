@@ -15,6 +15,7 @@ import {
   FileX
 } from 'lucide-react'
 import { useTaskStream, TaskStatus } from '@/hooks'
+// import ModelViewer from './ModelViewer' // Removed - using image preview instead
 
 // File status interface for individual file tracking
 interface FileStatus {
@@ -158,13 +159,19 @@ const ProcessingPage: React.FC = () => {
       
       // Extract file results and update file status
       if (status.result.results && Array.isArray(status.result.results)) {
-        const updatedFiles = status.result.results.map((result: any, index: number) => ({
-          filename: result.input ? result.input.split('/').pop() : `file_${index + 1}`,
-          status: result.status === 'success' ? 'completed' as const : 'failed' as const,
-          downloadUrl: result.output ? `/api/download/${taskId}/${result.output.split('/').pop()}` : undefined,
-          error: result.error || undefined,
-          thumbnail: result.input ? `/api/thumbnails/${taskId}/${result.input.split('/').pop()}` : undefined
-        }))
+        console.log('Processing results:', status.result.results)
+        const updatedFiles = status.result.results.map((result: any, index: number) => {
+          const file = {
+            filename: result.filename || (result.file_path ? result.file_path.split('/').pop() : `file_${index + 1}`),
+            status: (result.status === 'success' || result.status === 'completed') ? 'completed' as const : 'failed' as const,
+            downloadUrl: result.download_url || result.model_url || undefined,  // Use direct FAL.AI URL
+            error: result.error || undefined,
+            thumbnail: result.rendered_image?.url || undefined
+          }
+          console.log('Processed file:', file)
+          console.log('Rendered image URL:', result.rendered_image?.url)
+          return file
+        })
         setFiles(updatedFiles)
       }
     }
@@ -263,13 +270,44 @@ const ProcessingPage: React.FC = () => {
     }
   }, [status?.status, status?.current, files.length])
 
-  // Download file helper function
+  // Download file helper function - now supports direct FAL.AI URLs
   const downloadFile = async (downloadUrl: string, filename: string) => {
     try {
-      const response = await fetch(downloadUrl)
-      if (!response.ok) throw new Error('Download failed')
+      console.log('Attempting download:', { downloadUrl, filename })
+      
+      // For FAL.AI URLs, open in new tab (browser will handle the download)
+      if (downloadUrl.includes('fal.ai') || downloadUrl.includes('fal.run')) {
+        // Create a temporary link and trigger download
+        const link = document.createElement('a')
+        link.href = downloadUrl
+        link.download = filename.replace(/\.[^/.]+$/, '.glb') // Ensure .glb extension
+        link.target = '_blank'  // Open in new tab as fallback
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        return
+      }
+      
+      // For local URLs, use the fetch approach
+      const absoluteUrl = downloadUrl.startsWith('http') ? downloadUrl : `${window.location.origin}${downloadUrl}`
+      console.log('Absolute URL:', absoluteUrl)
+      
+      const response = await fetch(absoluteUrl, {
+        method: 'GET',
+        credentials: 'same-origin'
+      })
+      
+      console.log('Download response:', response.status, response.statusText)
+      
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('Download error response:', errorText)
+        throw new Error(`Download failed: ${response.status} ${response.statusText}`)
+      }
       
       const blob = await response.blob()
+      console.log('Blob size:', blob.size, 'type:', blob.type)
+      
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
       link.href = url
@@ -482,8 +520,64 @@ const ProcessingPage: React.FC = () => {
           </div>
         )}
 
-        {/* File Status Grid */}
-        {files.length > 0 && (
+        {/* Rendered Images Preview - Show completed 3D renders prominently */}
+        {files.some(f => f.status === 'completed' && f.thumbnail) && (
+          <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+              <CheckCircle className="h-5 w-5 text-green-500" />
+              Generated 3D Models
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {files.filter(f => f.status === 'completed' && f.thumbnail).map((file, index) => (
+                <div key={index} className="space-y-3">
+                  <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 shadow-md">
+                    <img
+                      src={file.thumbnail}
+                      alt={`3D render of ${file.filename}`}
+                      className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-gray-900 truncate">{file.filename}</p>
+                    {file.downloadUrl && (
+                      <button
+                        onClick={() => downloadFile(file.downloadUrl!, file.filename)}
+                        className="mt-2 inline-flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                        Download GLB
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Bulk download option for generated models */}
+            {files.filter(f => f.status === 'completed' && f.downloadUrl).length > 1 && (
+              <div className="mt-6 pt-4 border-t border-gray-200 text-center">
+                <button
+                  onClick={() => {
+                    const completedFiles = files.filter(f => f.status === 'completed' && f.downloadUrl)
+                    completedFiles.forEach(file => {
+                      if (file.downloadUrl) {
+                        downloadFile(file.downloadUrl, file.filename)
+                      }
+                    })
+                  }}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  <Download className="h-4 w-4" />
+                  Download All Models ({files.filter(f => f.status === 'completed').length})
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* File Status Grid - Only show when processing or if there are failures */}
+        {files.length > 0 && (isProcessing || files.some(f => f.status === 'failed' || f.status === 'processing' || f.status === 'queued')) && (
           <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Image className="h-5 w-5" />
@@ -504,32 +598,17 @@ const ProcessingPage: React.FC = () => {
                       : 'border-gray-200 bg-gray-50'
                   }`}
                 >
-                  {/* File thumbnail/icon */}
+                  {/* File preview/thumbnail - simplified for status view */}
                   <div className="aspect-square mb-3 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
-                    {file.thumbnail ? (
-                      <img
-                        src={file.thumbnail}
-                        alt={file.filename}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          // Fallback to icon if thumbnail fails to load
-                          const target = e.target as HTMLImageElement
-                          target.style.display = 'none'
-                          target.nextElementSibling?.classList.remove('hidden')
-                        }}
-                      />
-                    ) : null}
-                    <div className={file.thumbnail ? 'hidden' : ''}>
-                      {file.status === 'failed' ? (
-                        <FileX className="h-8 w-8 text-red-400" />
-                      ) : file.status === 'completed' ? (
-                        <CheckCircle className="h-8 w-8 text-green-400" />
-                      ) : file.status === 'processing' ? (
-                        <Activity className="h-8 w-8 text-blue-400 animate-pulse" />
-                      ) : (
-                        <Clock className="h-8 w-8 text-gray-400" />
-                      )}
-                    </div>
+                    {file.status === 'failed' ? (
+                      <FileX className="h-8 w-8 text-red-400" />
+                    ) : file.status === 'completed' ? (
+                      <CheckCircle className="h-8 w-8 text-green-400" />
+                    ) : file.status === 'processing' ? (
+                      <Activity className="h-8 w-8 text-blue-400 animate-pulse" />
+                    ) : (
+                      <Clock className="h-8 w-8 text-gray-400" />
+                    )}
                   </div>
 
                   {/* File info */}
@@ -575,41 +654,10 @@ const ProcessingPage: React.FC = () => {
                         {file.error}
                       </div>
                     )}
-
-                    {/* Download button */}
-                    {file.status === 'completed' && file.downloadUrl && (
-                      <button
-                        onClick={() => downloadFile(file.downloadUrl!, file.filename)}
-                        className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition-colors"
-                      >
-                        <Download className="h-3 w-3" />
-                        Download GLB
-                      </button>
-                    )}
                   </div>
                 </div>
               ))}
             </div>
-
-            {/* Bulk download option */}
-            {files.some(f => f.status === 'completed') && (
-              <div className="mt-6 pt-4 border-t border-gray-200">
-                <button
-                  onClick={() => {
-                    const completedFiles = files.filter(f => f.status === 'completed' && f.downloadUrl)
-                    completedFiles.forEach(file => {
-                      if (file.downloadUrl) {
-                        downloadFile(file.downloadUrl, file.filename)
-                      }
-                    })
-                  }}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  <Download className="h-4 w-4" />
-                  Download All Completed Models ({files.filter(f => f.status === 'completed').length})
-                </button>
-              </div>
-            )}
           </div>
         )}
 

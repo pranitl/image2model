@@ -90,6 +90,18 @@ export const useTaskStream = (
 
       eventSource.onerror = (event) => {
         console.error(`SSE error for task ${taskId}:`, event)
+        
+        // Don't reconnect if task is already completed or failed
+        const lastStatus = lastStatusRef.current
+        if (lastStatus && (lastStatus.status === 'completed' || lastStatus.status === 'failed' || lastStatus.status === 'cancelled')) {
+          updateState({
+            isConnected: false,
+            isConnecting: false
+          })
+          disconnect()
+          return
+        }
+        
         updateState({
           isConnected: false,
           isConnecting: false,
