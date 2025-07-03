@@ -35,7 +35,7 @@ const HomePage: React.FC = () => {
           </p>
           <Link
             to="/upload"
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+            className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors"
           >
             Start Creating
           </Link>
@@ -53,7 +53,7 @@ const HomePage: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <Stepper steps={steps} />
             <div>
-              <img src="/placeholder.png" alt="3D Model" className="rounded-lg" />
+              <img src="/human-head.png" alt="3D Model" className="rounded-lg" />
             </div>
           </div>
         </div>
@@ -70,7 +70,7 @@ const HomePage: React.FC = () => {
           </p>
           <Link
             to="/upload"
-            className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors inline-block"
+            className="bg-indigo-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-indigo-700 transition-colors inline-block"
           >
             Upload Image
           </Link>
