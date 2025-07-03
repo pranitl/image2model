@@ -15,7 +15,6 @@ document.addEventListener('DOMContentLoaded', function() {
     async function loadResults() {
         const modelList = document.getElementById('modelList');
         const downloadAllBtn = document.getElementById('downloadAllBtn');
-        const previewImage = document.getElementById('previewImage');
         const container = document.querySelector('.container');
         
         try {
@@ -40,32 +39,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 `;
                 downloadAllBtn.style.display = 'none';
-                document.querySelector('.model-preview').style.display = 'none';
                 return;
             }
             
             // Clear loading state
             modelList.innerHTML = '';
             
-            // Track if we have any preview-able files
-            let hasPreview = false;
-            
             // Create download links for each file
             response.files.forEach((file, index) => {
                 const modelItem = createModelItem(file, jobId);
                 modelList.appendChild(modelItem);
-                
-                // Set first GLB file as preview
-                if (!hasPreview && file.filename.toLowerCase().endsWith('.glb')) {
-                    hasPreview = true;
-                    showPreview(file);
-                }
             });
-            
-            // Hide preview section if no preview-able files
-            if (!hasPreview) {
-                document.querySelector('.model-preview').style.display = 'none';
-            }
             
             // Configure download all button
             setupDownloadAllButton(downloadAllBtn, response.files, jobId);
@@ -80,25 +64,67 @@ document.addEventListener('DOMContentLoaded', function() {
         const modelItem = document.createElement('div');
         modelItem.className = 'model-item';
         
+        // Create preview section if rendered_image exists
+        if (file.rendered_image && file.rendered_image.url) {
+            const previewContainer = document.createElement('div');
+            previewContainer.className = 'model-item-preview';
+            
+            const previewImg = document.createElement('img');
+            previewImg.src = file.rendered_image.url;
+            previewImg.alt = `Preview of ${file.filename}`;
+            previewImg.loading = 'lazy';
+            
+            previewContainer.appendChild(previewImg);
+            modelItem.appendChild(previewContainer);
+        }
+        
+        // Create file info section
         const fileInfo = document.createElement('div');
+        fileInfo.className = 'model-item-info';
         fileInfo.innerHTML = `
             <h3>${escapeHtml(file.filename)}</h3>
             <small>${formatFileSize(file.size)} - ${getFileTypeLabel(file.mime_type)}</small>
         `;
         
+        // Create actions section
+        const actionsContainer = document.createElement('div');
+        actionsContainer.className = 'model-item-actions';
+        
         const downloadBtn = document.createElement('a');
-        downloadBtn.href = `/api/v1/download/${jobId}/${encodeURIComponent(file.filename)}`;
+        
+        // Check if this is a FAL.AI URL
+        const downloadUrl = file.downloadUrl;
+        const isFalUrl = downloadUrl && (downloadUrl.includes('fal.ai') || downloadUrl.includes('fal.media') || downloadUrl.includes('fal.run'));
+        
+        if (isFalUrl) {
+            // Direct FAL.AI URL - open in new tab
+            downloadBtn.href = downloadUrl;
+            downloadBtn.target = '_blank';
+            downloadBtn.rel = 'noopener noreferrer';
+        } else {
+            // Local file URL
+            downloadBtn.href = `/api/v1/download/${jobId}/${encodeURIComponent(file.filename)}`;
+        }
+        
         downloadBtn.className = 'btn-secondary';
         downloadBtn.textContent = 'Download';
         downloadBtn.download = file.filename;
         
         // Add click tracking
-        downloadBtn.addEventListener('click', function() {
-            console.log(`Downloading: ${file.filename}`);
+        downloadBtn.addEventListener('click', function(e) {
+            console.log(`Downloading: ${file.filename} from ${isFalUrl ? 'FAL.AI' : 'local'}`);
+            
+            // For FAL.AI URLs, we might want to handle the download differently
+            if (isFalUrl) {
+                // Browser will handle the download natively
+                console.log('FAL.AI download URL:', downloadUrl);
+            }
         });
         
+        actionsContainer.appendChild(downloadBtn);
+        
         modelItem.appendChild(fileInfo);
-        modelItem.appendChild(downloadBtn);
+        modelItem.appendChild(actionsContainer);
         
         return modelItem;
     }
@@ -115,7 +141,21 @@ document.addEventListener('DOMContentLoaded', function() {
             for (const file of files) {
                 try {
                     const link = document.createElement('a');
-                    link.href = `/api/v1/download/${jobId}/${encodeURIComponent(file.filename)}`;
+                    
+                    // Check if this is a FAL.AI URL
+                    const downloadUrl = file.downloadUrl;
+                    const isFalUrl = downloadUrl && (downloadUrl.includes('fal.ai') || downloadUrl.includes('fal.media') || downloadUrl.includes('fal.run'));
+                    
+                    if (isFalUrl) {
+                        // Direct FAL.AI URL
+                        link.href = downloadUrl;
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                    } else {
+                        // Local file URL
+                        link.href = `/api/v1/download/${jobId}/${encodeURIComponent(file.filename)}`;
+                    }
+                    
                     link.download = file.filename;
                     link.style.display = 'none';
                     document.body.appendChild(link);
@@ -142,25 +182,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 showToast(`Downloaded ${downloadCount} of ${files.length} files.`, 'warning');
             }
         };
-    }
-    
-    function showPreview(file) {
-        const previewImage = document.getElementById('previewImage');
-        const previewSection = document.querySelector('.model-preview');
-        
-        // For 3D models, we show a placeholder since we can't directly preview GLB/OBJ files as images
-        // In a real implementation, you might use a 3D viewer library like Three.js
-        previewImage.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iIzJhMmEyYSIvPgogIDx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjOTk5IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTgiIGR5PSIuM2VtIj4zRCBNb2RlbCBQcmV2aWV3PC90ZXh0PgogIDx0ZXh0IHg9IjUwJSIgeT0iNTAlIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjNjY2IiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMTQiIGR5PSIyZW0iPiR7ZXNjYXBlSHRtbChmaWxlLmZpbGVuYW1lKX08L3RleHQ+Cjwvc3ZnPg==';
-        previewImage.alt = `Preview placeholder for ${file.filename}`;
-        
-        // Add a note about 3D preview
-        if (!document.getElementById('preview-note')) {
-            const note = document.createElement('p');
-            note.id = 'preview-note';
-            note.style.cssText = 'color: #999; font-size: 0.875rem; margin-top: 1rem;';
-            note.textContent = 'Download the file to view in a 3D modeling application';
-            previewSection.appendChild(note);
-        }
     }
     
     function showError(message) {

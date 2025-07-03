@@ -24,7 +24,6 @@ class FileInfo(BaseModel):
     size: int
     mime_type: str
     created_time: float
-    rendered_image: Dict[str, Any] = None  # Optional rendered image data
 
 
 class JobFilesResponse(BaseModel):
@@ -169,7 +168,83 @@ async def download_file_direct(filename: str, request: Request):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-# IMPORTANT: This route must come BEFORE the generic /{filename} route
+@router.get("/download/{job_id}/{filename}")
+async def download_model(job_id: str, filename: str, request: Request):
+    """
+    Download a single 3D model file from a completed job.
+    
+    Args:
+        job_id: Unique job identifier
+        filename: Name of the file to download
+        request: FastAPI request object for logging
+        
+    Returns:
+        FileResponse with the requested model file
+    """
+    client_ip = request.client.host if request.client else "unknown"
+    
+    try:
+        # Log download attempt
+        logger.info(f"Download request from {client_ip} for job {job_id}, file {filename}")
+        
+        # Validate inputs using security helpers
+        _validate_job_id(job_id)
+        _validate_filename(filename)
+        
+        # Construct file path
+        file_path = os.path.join(settings.OUTPUT_DIR, job_id, filename)
+        
+        # Validate file path security
+        _validate_file_path(file_path, settings.OUTPUT_DIR)
+        
+        # Check if file exists
+        if not os.path.exists(file_path):
+            logger.warning(f"File not found: {file_path} (requested by {client_ip})")
+            raise HTTPException(status_code=404, detail="File not found")
+        
+        # Check file size for large file handling
+        file_stat = os.stat(file_path)
+        file_size = file_stat.st_size
+        
+        # Log successful access
+        logger.info(f"Serving file {filename} ({file_size} bytes) to {client_ip}")
+        
+        # Determine MIME type based on file extension
+        file_extension = os.path.splitext(filename)[1].lower()
+        mime_type = "application/octet-stream"  # Default
+        if file_extension == '.glb':
+            mime_type = "model/gltf-binary"
+        elif file_extension == '.obj':
+            mime_type = "model/obj"
+        
+        # Enhanced security headers
+        security_headers = {
+            "Content-Disposition": f"attachment; filename=\"{filename}\"",
+            "Cache-Control": "public, max-age=3600",  # Cache for 1 hour
+            "X-Content-Type-Options": "nosniff",  # Prevent MIME sniffing
+            "X-Frame-Options": "DENY",  # Prevent embedding in frames
+            "Content-Security-Policy": "default-src 'none'",  # Strict CSP
+            "X-Download-Options": "noopen",  # IE-specific security
+            "Referrer-Policy": "no-referrer"  # Privacy protection
+        }
+        
+        # Return file with enhanced security headers
+        return FileResponse(
+            path=file_path,
+            filename=filename,
+            media_type=mime_type,
+            headers=security_headers
+        )
+        
+    except HTTPException:
+        # Re-raise HTTP exceptions (already logged in validation functions)
+        raise
+    except Exception as e:
+        # Log unexpected errors
+        logger.error(f"Unexpected error serving file {filename} to {client_ip}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @router.get("/download/{job_id}/all", response_model=JobFilesResponse)
 async def list_job_files(job_id: str, request: Request):
     """
@@ -195,46 +270,6 @@ async def list_job_files(job_id: str, request: Request):
         from app.core.job_store import job_store
         job_result = job_store.get_job_result(job_id)
         
-        logger.info(f"Job store result for {job_id}: {job_result is not None}")
-        
-        # If not in job store, try to get from Celery task result
-        if not job_result:
-            try:
-                from app.core.celery_app import celery_app
-                # Look for any recent task with this job_id in the result
-                # This is a bit hacky but works for now
-                inspect = celery_app.control.inspect()
-                active_tasks = inspect.active()
-                
-                # Also check Redis directly for completed tasks
-                from celery.result import AsyncResult
-                # We need to find the task ID for this job
-                # For now, check if we stored it in upload response
-                # As a fallback, scan recent results
-                
-                # Try Redis backend directly
-                import redis
-                r = redis.Redis(host='redis', port=6379, db=0)
-                
-                # Look for keys matching celery-task-meta-*
-                for key in r.scan_iter(match="celery-task-meta-*", count=100):
-                    try:
-                        task_data = r.get(key)
-                        if task_data:
-                            import json
-                            result = json.loads(task_data)
-                            if result.get('status') == 'SUCCESS':
-                                task_result = result.get('result', {})
-                                if task_result.get('job_id') == job_id and 'job_result' in task_result:
-                                    job_result = task_result['job_result']
-                                    logger.info(f"Found job result in Celery backend for {job_id}")
-                                    break
-                    except Exception as e:
-                        continue
-                        
-            except Exception as e:
-                logger.warning(f"Failed to check Celery results: {e}")
-        
         if job_result:
             # We have FAL.AI results - return them directly
             logger.info(f"Found FAL.AI results for job {job_id}")
@@ -247,8 +282,7 @@ async def list_job_files(job_id: str, request: Request):
                     filename=file_data.get("filename", "model.glb"),
                     size=file_data.get("file_size", 0),
                     mime_type=file_data.get("content_type", "model/gltf-binary"),
-                    created_time=0,  # FAL.AI doesn't provide creation time
-                    rendered_image=file_data.get("rendered_image")  # Include preview image
+                    created_time=0  # FAL.AI doesn't provide creation time
                 )
                 files.append(file_info)
                 
@@ -332,80 +366,3 @@ async def list_job_files(job_id: str, request: Request):
             status_code=500, 
             detail="Internal server error"
         )
-
-
-@router.get("/download/{job_id}/{filename}")
-async def download_model(job_id: str, filename: str, request: Request):
-    """
-    Download a single 3D model file from a completed job.
-    
-    Args:
-        job_id: Unique job identifier
-        filename: Name of the file to download
-        request: FastAPI request object for logging
-        
-    Returns:
-        FileResponse with the requested model file
-    """
-    client_ip = request.client.host if request.client else "unknown"
-    
-    try:
-        # Log download attempt
-        logger.info(f"Download request from {client_ip} for job {job_id}, file {filename}")
-        
-        # Validate inputs using security helpers
-        _validate_job_id(job_id)
-        _validate_filename(filename)
-        
-        # Construct file path
-        file_path = os.path.join(settings.OUTPUT_DIR, job_id, filename)
-        
-        # Validate file path security
-        _validate_file_path(file_path, settings.OUTPUT_DIR)
-        
-        # Check if file exists
-        if not os.path.exists(file_path):
-            logger.warning(f"File not found: {file_path} (requested by {client_ip})")
-            raise HTTPException(status_code=404, detail="File not found")
-        
-        # Check file size for large file handling
-        file_stat = os.stat(file_path)
-        file_size = file_stat.st_size
-        
-        # Log successful access
-        logger.info(f"Serving file {filename} ({file_size} bytes) to {client_ip}")
-        
-        # Determine MIME type based on file extension
-        file_extension = os.path.splitext(filename)[1].lower()
-        mime_type = "application/octet-stream"  # Default
-        if file_extension == '.glb':
-            mime_type = "model/gltf-binary"
-        elif file_extension == '.obj':
-            mime_type = "model/obj"
-        
-        # Enhanced security headers
-        security_headers = {
-            "Content-Disposition": f"attachment; filename=\"{filename}\"",
-            "Cache-Control": "public, max-age=3600",  # Cache for 1 hour
-            "X-Content-Type-Options": "nosniff",  # Prevent MIME sniffing
-            "X-Frame-Options": "DENY",  # Prevent embedding in frames
-            "Content-Security-Policy": "default-src 'none'",  # Strict CSP
-            "X-Download-Options": "noopen",  # IE-specific security
-            "Referrer-Policy": "no-referrer"  # Privacy protection
-        }
-        
-        # Return file with enhanced security headers
-        return FileResponse(
-            path=file_path,
-            filename=filename,
-            media_type=mime_type,
-            headers=security_headers
-        )
-        
-    except HTTPException:
-        # Re-raise HTTP exceptions (already logged in validation functions)
-        raise
-    except Exception as e:
-        # Log unexpected errors
-        logger.error(f"Unexpected error serving file {filename} to {client_ip}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Internal server error")

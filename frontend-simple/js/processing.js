@@ -57,7 +57,7 @@ const ProcessingModule = (function() {
             startTime: document.getElementById('startTime'),
             elapsedTime: document.getElementById('elapsedTime'),
             progressFill: document.getElementById('progressFill'),
-            progressText: document.querySelector('.progress-text'),
+            progressText: document.querySelector('#progressFill .progress-text'),
             filesCompleted: document.getElementById('filesCompleted'),
             totalFiles: document.getElementById('totalFiles'),
             fileGrid: document.getElementById('fileGrid'),
@@ -176,10 +176,16 @@ const ProcessingModule = (function() {
             if (elements.totalFiles) elements.totalFiles.textContent = data.totalFiles;
         }
         
+        // Update current/total from backend progress
+        if (data.current !== undefined && data.total !== undefined) {
+            if (elements.filesCompleted) elements.filesCompleted.textContent = data.current;
+            if (elements.totalFiles) elements.totalFiles.textContent = data.total;
+        }
+        
         // Initialize file grid if we have files
         if (data.files && Array.isArray(data.files)) {
             updateFileGrid(data.files);
-            updateCompletedCount(data.files);
+            updateCompletedCount();
         }
     }
     
@@ -260,6 +266,7 @@ const ProcessingModule = (function() {
     
     // Update overall progress bar
     function updateOverallProgress(progress) {
+        console.log('Updating overall progress to:', progress);
         state.overallProgress = Math.min(Math.max(progress, 0), 100);
         
         if (elements.progressFill) {

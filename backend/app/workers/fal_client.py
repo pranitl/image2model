@@ -89,24 +89,31 @@ class FalAIClient:
         """Handle FAL.AI queue updates and forward progress."""
         try:
             import fal_client
+            logger.info(f"FAL.AI queue update received: {type(update).__name__}")
+            
             if isinstance(update, fal_client.InProgress):
+                # Log the update structure for debugging
+                logger.info(f"InProgress update - has logs: {hasattr(update, 'logs')}")
+                
                 # Extract progress information and forward to callback
                 if hasattr(update, 'logs') and update.logs:
+                    logger.info(f"Processing {len(update.logs)} log entries")
                     for log in update.logs:
+                        logger.info(f"FAL.AI log entry: {log}")
                         if progress_callback and 'message' in log:
                             raw_message = log['message']
                             # Convert FAL.AI progress to user-friendly message
-                            progress_percent = 50  # Default
-                            user_message = "Generating 3D model..."  # Default user-friendly message
+                            progress_percent = 0  # Default to 0 instead of arbitrary values
+                            user_message = "Processing..."  # Default user-friendly message
                             
                             if 'upload' in raw_message.lower():
-                                progress_percent = 30
+                                progress_percent = 5  # Small progress for upload
                                 user_message = "Uploading to FAL.AI..."
                             elif 'generating' in raw_message.lower() or 'processing' in raw_message.lower():
-                                progress_percent = 60
+                                progress_percent = 10  # Small default if no percentage found
                                 user_message = "Generating 3D model..."
                             elif 'download' in raw_message.lower() or 'saving' in raw_message.lower():
-                                progress_percent = 90
+                                progress_percent = 95  # Near complete
                                 user_message = "Finalizing model..."
                             elif 'progress:' in raw_message.lower():
                                 # Try to extract percentage from FAL.AI progress message
@@ -114,16 +121,20 @@ class FalAIClient:
                                 percent_match = re.search(r'(\d+)%', raw_message)
                                 if percent_match:
                                     try:
-                                        # Scale FAL.AI progress to our range (30-90%)
+                                        # Use raw FAL.AI progress without scaling
                                         fal_percent = int(percent_match.group(1))
-                                        progress_percent = 30 + (fal_percent * 0.6)  # Scale to 30-90% range
+                                        progress_percent = fal_percent  # Use raw percentage
                                         user_message = f"Processing 3D model... {fal_percent}%"
                                     except:
                                         pass
                             
+                            logger.info(f"Sending progress update: {user_message} ({progress_percent}%)")
                             progress_callback(user_message, progress_percent)
                 elif progress_callback:
-                    progress_callback("Generating 3D model...", 50)
+                    logger.info("No logs in update, sending default progress")
+                    progress_callback("Generating 3D model...", 10)
+            else:
+                logger.info(f"Non-InProgress update type: {type(update)}")
         except Exception as e:
             logger.warning(f"Failed to handle queue update: {str(e)}")
     
@@ -219,11 +230,11 @@ class FalAIClient:
                     "orientation": "default"  # Per documentation
                 }
                 
-                # Add face_limit if specified (only works with quad=True)
+                # Add face_limit if specified
+                # Note: We do NOT set quad=True as it forces FBX output instead of GLB
                 if face_limit is not None and face_limit > 0:
-                    input_data["quad"] = True
                     input_data["face_limit"] = face_limit
-                    logger.info(f"Using face_limit: {face_limit} with quad mesh")
+                    logger.info(f"Using face_limit: {face_limit} (GLB output)")
                 
                 # Submit the job to FAL.AI using correct API method
                 logger.info("Submitting job to FAL.AI API...")
@@ -320,9 +331,13 @@ class FalAIClient:
             logger.info(f"Model URL found: {model_url}")
             
             # No longer downloading files - just return FAL.AI URLs directly
-            # Extract original filename for display purposes
-            base_name = os.path.splitext(os.path.basename(file_path))[0]
-            output_filename = f"{base_name}.glb"
+            # Use FAL.AI's filename if provided, otherwise generate one
+            if model_mesh.get('file_name'):
+                output_filename = model_mesh['file_name']
+            else:
+                # Extract original filename for display purposes
+                base_name = os.path.splitext(os.path.basename(file_path))[0]
+                output_filename = f"{base_name}.glb"
             
             if progress_callback:
                 progress_callback("3D model generation complete!", 100)

@@ -102,7 +102,7 @@
                     case 'task_status':
                         // Overall progress update
                         onProgress({
-                            overall: data.progress || 0,
+                            overall: data.progress || data.overall || 0,
                             currentFile: data.current_file,
                             status: data.status,
                             totalFiles: data.total || data.total_files,
@@ -205,12 +205,14 @@
             return {
                 success: true,
                 files: (data.files || []).map((file, index) => ({
-                    name: file.filename,
+                    filename: file.filename,  // Changed from 'name' to 'filename' to match results.js
                     size: file.size || 0,
                     downloadUrl: data.download_urls?.[index] || `${API_BASE}/download/${jobId}/${file.filename}`,
                     thumbnailUrl: null, // Not provided in schema
                     mimeType: file.mime_type,
-                    createdTime: file.created_time
+                    mime_type: file.mime_type, // Add both for compatibility
+                    createdTime: file.created_time,
+                    rendered_image: file.rendered_image || null  // Add rendered_image from FAL.AI
                 })),
                 downloadAllUrl: `${API_BASE}/download/${jobId}/all`,
                 totalFiles: data.total_files

@@ -85,6 +85,7 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
         
         # Progress callback to update Celery task state with proper filename
         original_filename = os.path.basename(file_path)
+        
         def progress_callback(message, progress_percent):
             current_task.update_state(
                 state="PROGRESS",
@@ -110,6 +111,28 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
         ))
         
         if result["status"] == "success":
+            # Store FAL.AI result in job store for later retrieval
+            from app.core.job_store import job_store
+            
+            # Prepare job result data
+            job_result = {
+                "job_id": job_id,
+                "files": [{
+                    "filename": result.get("filename", f"{original_filename.rsplit('.', 1)[0]}.glb"),
+                    "model_url": result.get("download_url"),  # Direct FAL.AI URL
+                    "file_size": result.get("file_size", 0),
+                    "content_type": result.get("content_type", "model/gltf-binary"),
+                    "rendered_image": result.get("rendered_image"),
+                    "task_id": result.get("task_id")
+                }],
+                "total_files": 1,
+                "successful_files": 1,
+                "failed_files": 0
+            }
+            
+            # Store in job store
+            job_store.set_job_result(job_id, job_result)
+            
             # Final completion state - update with result in meta for SSE endpoint  
             task_meta = {
                 "current": 1,
@@ -139,6 +162,7 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
             
             logger.info(f"FAL.AI Tripo3D generation completed successfully for job {job_id}")
             
+            # Return the full result including all necessary fields for SSE
             return {
                 "job_id": job_id,
                 "file_id": file_id,
@@ -148,7 +172,10 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
                 "rendered_image": result.get("rendered_image"),
                 "processing_time": result.get("processing_time", 0),
                 "message": f"3D model generated successfully for {original_filename}",
-                "filename": original_filename
+                "filename": original_filename,
+                "total_files": 1,
+                "successful_files": 1,
+                "failed_files": 0
             }
         else:
             # Handle failure case
@@ -254,7 +281,7 @@ def process_batch_task(self, batch_id: str, job_id: str, file_paths: List[str], 
                 fal_client = FalAIClient()
                 
                 # Progress callback to update Celery task state
-                def progress_callback(progress_percent, message="Processing..."):
+                def progress_callback(message, progress_percent):
                     current_task.update_state(
                         state="PROGRESS",
                         meta={
@@ -290,6 +317,7 @@ def process_batch_task(self, batch_id: str, job_id: str, file_paths: List[str], 
                     "model_format": result.get("model_format", "glb"),
                     "rendered_image": result.get("rendered_image"),  # Include rendered_image for preview
                     "filename": result.get("filename", os.path.basename(file_path)),  # Include filename for display
+                    "file_size": result.get("file_size", 0),  # Get actual file size from FAL.AI
                     "error": result.get("error") if result.get("status") != "success" else None
                 }
                 
@@ -305,9 +333,36 @@ def process_batch_task(self, batch_id: str, job_id: str, file_paths: List[str], 
                 results.append(file_result)
         
         # Final completion update
-        success_count = sum(1 for r in results if r["status"] == "completed")
+        success_count = sum(1 for r in results if r["status"] == "success")
         failure_count = len(results) - success_count
         
+        # Store batch results in job store for later retrieval
+        from app.core.job_store import job_store
+        
+        # Prepare job result data with successful files
+        job_result = {
+            "job_id": job_id,
+            "batch_id": batch_id,
+            "files": [
+                {
+                    "filename": r.get("filename", os.path.basename(r["file_path"])),
+                    "model_url": r.get("download_url"),
+                    "file_size": r.get("file_size", 0),  # Use actual file size from FAL.AI
+                    "content_type": "model/gltf-binary",
+                    "rendered_image": r.get("rendered_image")
+                }
+                for r in results if r["status"] == "success" and r.get("download_url")
+            ],
+            "total_files": total_files,
+            "successful_files": success_count,
+            "failed_files": failure_count
+        }
+        
+        job_store.set_job_result(job_id, job_result)
+        logger.info(f"Stored batch results in job store for job {job_id}: {success_count} files")
+        
+        # Include the job result data directly in the return value
+        # This way the backend can access it from Celery's result backend
         return {
             "batch_id": batch_id,
             "job_id": job_id,
@@ -317,7 +372,9 @@ def process_batch_task(self, batch_id: str, job_id: str, file_paths: List[str], 
             "failed_files": failure_count,
             "face_limit": face_limit,
             "results": results,
-            "message": f"Batch processing completed. {success_count} successful, {failure_count} failed."
+            "message": f"Batch processing completed. {success_count} successful, {failure_count} failed.",
+            # Include job result data for download endpoint
+            "job_result": job_result
         }
         
     except Exception as exc:
