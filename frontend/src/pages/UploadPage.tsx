@@ -23,10 +23,21 @@ const UploadPage: React.FC = () => {
       const uploadJob = await uploadFiles(files, generationOptions)
       
       if (uploadJob) {
+        // Save job data to localStorage for ResultsPage
+        const jobData = {
+          taskId: uploadJob.taskId,
+          fileId: uploadJob.data.file_id || uploadJob.data.files?.[0]?.file_id,
+          filename: files[0]?.name || 'uploaded_image.jpg',
+          uploadPath: uploadJob.data.preview_url || uploadJob.data.files?.[0]?.url || '/api/placeholder/300/300'
+        }
+        
+        // Use job_id if available, otherwise use taskId
+        const jobId = uploadJob.data.job_id || uploadJob.taskId
+        localStorage.setItem(`job_${jobId}`, JSON.stringify(jobData))
+        console.log('Saved initial job data:', jobData)
+        
         // Navigate to the processing page to show real-time progress
-        // Use taskId if available, otherwise fall back to file id
-        const processingId = uploadJob.taskId || uploadJob.id
-        navigate(`/processing/${processingId}`)
+        navigate(`/processing/${uploadJob.taskId}`)
       }
     } catch (err) {
       console.error('Upload failed:', err)

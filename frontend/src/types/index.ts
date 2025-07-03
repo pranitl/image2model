@@ -1,14 +1,31 @@
-export interface UploadJob {
-  id: string
-  taskId?: string  // Added for tracking Celery task
-  status: 'pending' | 'processing' | 'completed' | 'failed'
-  progress: number
-  inputImages: UploadedImage[]
-  outputModels: GeneratedModel[]
-  createdAt: string
-  updatedAt: string
-  estimatedCompletion?: string
-  errorMessage?: string
+// Single file upload response (from /api/v1/upload/image)
+export interface UploadResponse {
+  file_id: string
+  filename: string
+  file_size: number
+  content_type: string
+  status: string
+}
+
+// Batch upload response (from /api/v1/upload/batch)
+export interface BatchUploadResponse {
+  batch_id: string
+  job_id: string
+  task_id?: string  // Actual Celery task ID for status tracking
+  uploaded_files: UploadResponse[]
+  face_limit?: number
+  total_files: number
+  status: string
+  message: string
+}
+
+// Union type for upload responses with consistent ID access
+export type UploadJob = UploadResponse | BatchUploadResponse
+
+// Helper type to get task ID for SSE streaming
+export interface UploadJobWithTaskId {
+  taskId: string
+  data: UploadJob
 }
 
 export interface UploadedImage {

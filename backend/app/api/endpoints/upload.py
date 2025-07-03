@@ -42,6 +42,7 @@ class BatchUploadResponse(BaseModel):
     """Batch upload response model."""
     batch_id: str
     job_id: str
+    task_id: Optional[str] = None  # Actual Celery task ID for status tracking
     uploaded_files: List[UploadResponse]
     face_limit: Optional[int] = None
     total_files: int
@@ -348,21 +349,24 @@ async def upload_batch(
         ]
         
         # Start background processing task
-        process_batch_task.delay(
+        task_result = process_batch_task.delay(
             batch_id=batch_id,
             job_id=job_id,
             file_paths=file_paths,
             face_limit=face_limit
         )
+        actual_task_id = task_result.id
         
     except Exception as e:
         # Log error but don't fail the upload
         # The files are saved and can be processed manually if needed
-        print(f"Failed to start background task: {str(e)}")
+        logger.error(f"Failed to start background task: {str(e)}")
+        actual_task_id = None
     
     return BatchUploadResponse(
         batch_id=batch_id,
         job_id=job_id,
+        task_id=actual_task_id,
         uploaded_files=uploaded_files,
         face_limit=face_limit,
         total_files=len(uploaded_files),

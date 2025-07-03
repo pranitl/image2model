@@ -85,6 +85,48 @@ class FalAIClient:
         delay = min(base_delay * (2 ** attempt), max_delay)
         return delay
     
+    def _handle_queue_update(self, update, progress_callback):
+        """Handle FAL.AI queue updates and forward progress."""
+        try:
+            import fal_client
+            if isinstance(update, fal_client.InProgress):
+                # Extract progress information and forward to callback
+                if hasattr(update, 'logs') and update.logs:
+                    for log in update.logs:
+                        if progress_callback and 'message' in log:
+                            raw_message = log['message']
+                            # Convert FAL.AI progress to user-friendly message
+                            progress_percent = 50  # Default
+                            user_message = "Generating 3D model..."  # Default user-friendly message
+                            
+                            if 'upload' in raw_message.lower():
+                                progress_percent = 30
+                                user_message = "Uploading to FAL.AI..."
+                            elif 'generating' in raw_message.lower() or 'processing' in raw_message.lower():
+                                progress_percent = 60
+                                user_message = "Generating 3D model..."
+                            elif 'download' in raw_message.lower() or 'saving' in raw_message.lower():
+                                progress_percent = 90
+                                user_message = "Finalizing model..."
+                            elif 'progress:' in raw_message.lower():
+                                # Try to extract percentage from FAL.AI progress message
+                                import re
+                                percent_match = re.search(r'(\d+)%', raw_message)
+                                if percent_match:
+                                    try:
+                                        # Scale FAL.AI progress to our range (30-90%)
+                                        fal_percent = int(percent_match.group(1))
+                                        progress_percent = 30 + (fal_percent * 0.6)  # Scale to 30-90% range
+                                        user_message = f"Processing 3D model... {fal_percent}%"
+                                    except:
+                                        pass
+                            
+                            progress_callback(user_message, progress_percent)
+                elif progress_callback:
+                    progress_callback("Generating 3D model...", 50)
+        except Exception as e:
+            logger.warning(f"Failed to handle queue update: {str(e)}")
+    
     def _handle_fal_error(self, error: Exception, attempt: int) -> bool:
         """
         Handle FAL.AI errors and determine if retry is appropriate.
@@ -142,7 +184,8 @@ class FalAIClient:
         file_path: str, 
         face_limit: Optional[int] = None,
         texture_enabled: bool = True,
-        progress_callback: Optional[callable] = None
+        progress_callback: Optional[callable] = None,
+        job_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Process a single image to generate a 3D model using FAL.AI.
@@ -188,71 +231,14 @@ class FalAIClient:
                     progress_callback("Submitting job to FAL.AI API...", 25)
                 
                 async with monitor_fal_api_call("submit_job") as monitor_logger:
-                    # Start processing with intermediate progress updates
-                    if progress_callback:
-                        progress_callback("Processing image with Tripo3D...", 35)
-                    
-                    # Use asyncio to run the blocking fal.run call with progress simulation
-                    import threading
-                    import time
-                    
-                    # Store the result from the FAL API call
-                    fal_result = None
-                    fal_error = None
-                    processing_complete = threading.Event()
-                    
-                    def run_fal_api():
-                        nonlocal fal_result, fal_error
-                        try:
-                            fal_result = fal.run(
-                                self.model_endpoint,
-                                arguments=input_data
-                            )
-                        except Exception as e:
-                            fal_error = e
-                        finally:
-                            processing_complete.set()
-                    
-                    # Start the FAL API call in a separate thread
-                    fal_thread = threading.Thread(target=run_fal_api)
-                    fal_thread.start()
-                    
-                    # Provide intermediate progress updates while waiting
-                    progress_stages = [
-                        (50, "Analyzing image structure..."),
-                        (60, "Generating 3D geometry..."),
-                        (70, "Creating mesh topology..."),
-                        (75, "Applying texture mapping..."),
-                        (80, "Optimizing model structure..."),
-                        (85, "Finalizing 3D model...")
-                    ]
-                    
-                    stage_index = 0
-                    start_time = time.time()
-                    
-                    while not processing_complete.is_set():
-                        # Update progress every 10 seconds, or when we reach the next stage
-                        elapsed = time.time() - start_time
-                        
-                        # Move to next stage every 15-20 seconds
-                        if stage_index < len(progress_stages) and elapsed > (stage_index + 1) * 15:
-                            if progress_callback:
-                                progress, message = progress_stages[stage_index]
-                                progress_callback(message, progress)
-                            stage_index += 1
-                        
-                        # Wait for either completion or timeout (check every 5 seconds)
-                        if processing_complete.wait(timeout=5):
-                            break
-                    
-                    # Wait for thread to complete
-                    fal_thread.join()
-                    
-                    # Check for errors
-                    if fal_error:
-                        raise fal_error
-                    
-                    result = fal_result
+                    # Use the correct fal_client.subscribe method for real-time execution
+                    # This will handle the queue/progress automatically and provide real-time updates
+                    result = fal.subscribe(
+                        self.model_endpoint,
+                        arguments=input_data,
+                        with_logs=True,
+                        on_queue_update=lambda update: self._handle_queue_update(update, progress_callback) if progress_callback else None
+                    )
                     
                     monitor_logger.logger.info(
                         "FAL.AI job completed successfully",
@@ -272,7 +258,7 @@ class FalAIClient:
                 logger.info(f"FAL.AI API response received: {result}")
                 
                 # Process the successful result
-                return await self._process_result(result, file_path, progress_callback)
+                return await self._process_result(result, file_path, progress_callback, job_id)
                 
             except (FalAIAuthenticationError, FalAIRateLimitError, FalAITimeoutError, FalAIAPIError):
                 # These are already properly handled exceptions
@@ -299,23 +285,25 @@ class FalAIClient:
             'error': f'Failed after {self.max_retries + 1} attempts'
         }
     
-    async def _process_result(self, result: Dict[str, Any], file_path: str, progress_callback: Optional[callable] = None) -> Dict[str, Any]:
+    async def _process_result(self, result: Dict[str, Any], file_path: str, progress_callback: Optional[callable] = None, job_id: Optional[str] = None) -> Dict[str, Any]:
         """
-        Process the FAL.AI API result and download the 3D model.
+        Process the FAL.AI API result and return direct URLs without downloading.
         
         Args:
             result: FAL.AI API response
             file_path: Original input file path
             progress_callback: Optional callback function for progress updates
+            job_id: Job ID for tracking
             
         Returns:
-            Processed result dictionary
+            Processed result dictionary with FAL.AI URLs
         """
         try:
             # Extract model URL from result according to FAL.AI Tripo3D documentation
-            # Response format: {"model_mesh": {"url": "...", "file_size": ..., "content_type": "..."}, "rendered_image": {...}}
+            # Response format: {"model_mesh": {"url": "...", "file_size": ..., "content_type": "..."}, "rendered_image": {...}, "task_id": "..."}
             model_mesh = result.get('model_mesh')
             rendered_image = result.get('rendered_image')
+            task_id = result.get('task_id')
             
             if not model_mesh or not model_mesh.get('url'):
                 logger.error(f"No model_mesh or model URL found in FAL.AI response: {result}")
@@ -331,104 +319,29 @@ class FalAIClient:
             
             logger.info(f"Model URL found: {model_url}")
             
-            # Create output directory structure
-            # Use 'results' directory instead of 'outputs' to match existing structure
-            output_dir = os.path.dirname(file_path).replace('uploads', 'results')
-            if not output_dir or output_dir == os.path.dirname(file_path):
-                # Fallback if replace didn't work
-                output_dir = os.path.join(os.path.dirname(file_path), '..', 'results')
-            
-            output_dir = os.path.abspath(output_dir)
-            os.makedirs(output_dir, exist_ok=True)
-            logger.info(f"Created output directory: {output_dir}")
-            
-            # Generate output file path with timestamp for uniqueness
+            # No longer downloading files - just return FAL.AI URLs directly
+            # Extract original filename for display purposes
             base_name = os.path.splitext(os.path.basename(file_path))[0]
-            import time
-            timestamp = int(time.time())
-            output_filename = f"{base_name}_{timestamp}.glb"
-            output_path = os.path.join(output_dir, output_filename)
+            output_filename = f"{base_name}.glb"
             
-            # Download the 3D model file
-            logger.info(f"Downloading model from: {model_url}")
             if progress_callback:
-                progress_callback("Downloading 3D model...", 92)
+                progress_callback("3D model generation complete!", 100)
             
-            # Download with streaming and retry logic
-            download_attempts = 3
-            for download_attempt in range(download_attempts):
-                try:
-                    async with monitor_fal_api_call("download_model") as monitor_logger:
-                        response = requests.get(model_url, timeout=300, stream=True)  # 5 minute timeout
-                        response.raise_for_status()
-                        
-                        monitor_logger.logger.info(
-                            "Model download initiated",
-                            model_url=model_url,
-                            output_path=output_path,
-                            attempt=download_attempt + 1
-                        )
-                    
-                    # Validate content type if possible
-                    content_type = response.headers.get('content-type', '')
-                    logger.info(f"Downloaded file content type: {content_type}")
-                    
-                    # Get content length for progress tracking
-                    content_length = response.headers.get('content-length')
-                    total_size = int(content_length) if content_length else None
-                    
-                    # Save the model file with progress tracking
-                    if progress_callback:
-                        progress_callback("Saving model file...", 96)
-                    
-                    downloaded_size = 0
-                    chunk_size = 8192  # 8KB chunks
-                    
-                    with open(output_path, 'wb') as f:
-                        for chunk in response.iter_content(chunk_size=chunk_size):
-                            if chunk:  # Filter out keep-alive chunks
-                                f.write(chunk)
-                                downloaded_size += len(chunk)
-                    
-                    # Validate the downloaded file
-                    if not os.path.exists(output_path) or os.path.getsize(output_path) == 0:
-                        raise FalAIDownloadError("Downloaded file is empty or does not exist")
-                    
-                    file_size = os.path.getsize(output_path)
-                    logger.info(f"3D model saved successfully to: {output_path} (Size: {file_size} bytes)")
-                    
-                    if progress_callback:
-                        progress_callback("3D model generation complete!", 98)
-                    
-                    break  # Success, exit retry loop
-                    
-                except requests.RequestException as e:
-                    if download_attempt < download_attempts - 1:
-                        logger.warning(f"Download attempt {download_attempt + 1} failed, retrying: {str(e)}")
-                        time.sleep(2 ** download_attempt)  # Exponential backoff
-                        continue
-                    else:
-                        raise FalAIDownloadError(f"Failed to download model after {download_attempts} attempts: {str(e)}")
-                except Exception as e:
-                    if download_attempt < download_attempts - 1:
-                        logger.warning(f"Download attempt {download_attempt + 1} failed, retrying: {str(e)}")
-                        time.sleep(2 ** download_attempt)
-                        continue
-                    else:
-                        raise FalAIDownloadError(f"Failed to save model after {download_attempts} attempts: {str(e)}")
-            
-            # Prepare result with rendered image if available
+            # Prepare result with direct FAL.AI URLs
             result_data = {
                 'status': 'success',
                 'input': file_path,
-                'output': output_path,
+                'output': None,  # No local file path since we're not downloading
+                'download_url': model_url,  # Direct FAL.AI URL for download
                 'model_format': 'glb',
-                'model_url': model_url,
-                'file_size': file_size,
-                'content_type': content_type,
-                'output_directory': output_dir,
-                'original_file_size': model_file_size,
-                'original_content_type': model_content_type
+                'model_url': model_url,  # Original FAL.AI URL
+                'file_size': model_file_size,  # FAL.AI reported file size
+                'content_type': model_content_type,  # FAL.AI reported content type
+                'output_directory': None,  # No local directory
+                'original_file_size': model_file_size,  # FAL.AI response file size
+                'original_content_type': model_content_type,  # FAL.AI response content type
+                'task_id': task_id,  # FAL.AI task ID
+                'filename': output_filename  # For display purposes
             }
             
             # Add rendered image information if available
@@ -460,97 +373,7 @@ class FalAIClient:
             }
 
 
-    @staticmethod
-    def cleanup_old_results(max_age_hours: int = 24) -> Dict[str, Any]:
-        """
-        Clean up old result files to manage disk space.
-        
-        Args:
-            max_age_hours: Maximum age in hours before files are considered for cleanup
-            
-        Returns:
-            Dictionary with cleanup statistics
-        """
-        import time
-        
-        try:
-            results_dir = os.path.abspath("results")
-            if not os.path.exists(results_dir):
-                return {"status": "success", "message": "No results directory found", "files_removed": 0}
-            
-            current_time = time.time()
-            max_age_seconds = max_age_hours * 3600
-            files_removed = 0
-            total_size_removed = 0
-            
-            for root, dirs, files in os.walk(results_dir):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    try:
-                        file_age = current_time - os.path.getctime(file_path)
-                        if file_age > max_age_seconds:
-                            file_size = os.path.getsize(file_path)
-                            os.remove(file_path)
-                            files_removed += 1
-                            total_size_removed += file_size
-                            logger.info(f"Removed old result file: {file_path}")
-                    except OSError as e:
-                        logger.warning(f"Could not remove file {file_path}: {str(e)}")
-            
-            return {
-                "status": "success",
-                "files_removed": files_removed,
-                "total_size_removed": total_size_removed,
-                "message": f"Cleanup completed: {files_removed} files removed ({total_size_removed} bytes)"
-            }
-            
-        except Exception as e:
-            logger.error(f"Error during cleanup: {str(e)}")
-            return {
-                "status": "failed",
-                "error": str(e),
-                "files_removed": 0
-            }
-    
-    @staticmethod
-    def get_storage_stats() -> Dict[str, Any]:
-        """
-        Get storage statistics for the results directory.
-        
-        Returns:
-            Dictionary with storage statistics
-        """
-        try:
-            results_dir = os.path.abspath("results")
-            if not os.path.exists(results_dir):
-                return {"status": "success", "total_files": 0, "total_size": 0}
-            
-            total_files = 0
-            total_size = 0
-            
-            for root, dirs, files in os.walk(results_dir):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    try:
-                        total_files += 1
-                        total_size += os.path.getsize(file_path)
-                    except OSError:
-                        pass  # Skip files that can't be accessed
-            
-            return {
-                "status": "success",
-                "total_files": total_files,
-                "total_size": total_size,
-                "total_size_mb": round(total_size / (1024 * 1024), 2),
-                "results_directory": results_dir
-            }
-            
-        except Exception as e:
-            logger.error(f"Error getting storage stats: {str(e)}")
-            return {
-                "status": "failed",
-                "error": str(e)
-            }
+    # Storage management methods removed - no longer needed with direct FAL.AI URLs
 
 
 # Global instance for use in tasks

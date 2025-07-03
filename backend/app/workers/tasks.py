@@ -23,6 +23,9 @@ from app.core.exceptions import (
 from app.core.logging_config import get_task_logger, set_correlation_id
 from app.core.monitoring import monitor_task, task_monitor
 
+# Import FAL.AI client for real 3D model generation
+from app.workers.fal_client import FalAIClient
+
 logger = logging.getLogger(__name__)
 
 
@@ -43,12 +46,15 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
     """
     try:
         # Update progress to 10%
+        original_filename = os.path.basename(file_path)
         current_task.update_state(
             state="PROGRESS",
             meta={
-                "current": 10, 
-                "total": 100, 
-                "status": "Initializing Tripo3D generation...",
+                "current": 0,  # File index (0 for single file)
+                "total": 1,    # Total files (1 for single file)
+                "progress": 10,  # Actual progress percentage
+                "status": f"Initializing 3D generation for {original_filename}...",
+                "filename": original_filename,
                 "job_id": job_id,
                 "file_id": file_id
             }
@@ -56,54 +62,98 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
         
         logger.info(f"Starting Tripo3D generation for file {file_id} (job: {job_id})")
         
-        # Create progress callback to update task state during FAL.AI processing
-        def progress_callback(message: str, progress: int):
-            """Callback to update Celery task progress during FAL.AI processing."""
-            current_task.update_state(
-                state="PROGRESS",
-                meta={
-                    "current": progress,
-                    "total": 100,
-                    "status": message,
-                    "job_id": job_id,
-                    "file_id": file_id
-                }
-            )
-            logger.info(f"Progress update for job {job_id}: {progress}% - {message}")
+        # Use FAL.AI client for actual 3D model generation
+        current_task.update_state(
+            state="PROGRESS",
+            meta={
+                "current": 0,
+                "total": 1,
+                "progress": 25,
+                "status": f"Uploading {original_filename} to FAL.AI Tripo3D...",
+                "filename": original_filename,
+                "job_id": job_id,
+                "file_id": file_id
+            }
+        )
         
         # Quality is now handled directly in FAL.AI client
         # The texture setting is passed through the texture_enabled parameter
         logger.info(f"Processing with quality: {quality}, texture_enabled: {texture_enabled}")
         
-        # Process the image using FAL.AI client with progress callback
+        # Process the image using real FAL.AI client
+        fal_client = FalAIClient()
+        
+        # Progress callback to update Celery task state with proper filename
+        original_filename = os.path.basename(file_path)
+        def progress_callback(message, progress_percent):
+            current_task.update_state(
+                state="PROGRESS",
+                meta={
+                    "current": 0,  # File index (always 0 for single file)
+                    "total": 1,    # Total files (always 1 for single file)
+                    "progress": progress_percent,  # Actual progress percentage
+                    "status": f"Processing {original_filename}: {message}",
+                    "filename": original_filename,
+                    "job_id": job_id,
+                    "file_id": file_id
+                }
+            )
+        
+        # Call real 3D model generation using async wrapper
         import asyncio
-        result = asyncio.run(process_single_image(
-            file_path, 
-            face_limit=None, 
+        result = asyncio.run(fal_client.process_single_image(
+            file_path=file_path,
+            face_limit=None,  # Quality setting handled by FAL.AI client
             texture_enabled=texture_enabled,
-            progress_callback=progress_callback
+            progress_callback=progress_callback,
+            job_id=job_id  # Pass job_id for proper file organization
         ))
         
         if result["status"] == "success":
-            # Final progress update before completion
-            progress_callback("Task completed successfully!", 100)
+            # Final completion state - update with result in meta for SSE endpoint  
+            task_meta = {
+                "current": 1,
+                "total": 1,
+                "progress": 100,
+                "status": f"3D model generated successfully for {original_filename}",
+                "filename": original_filename,
+                "job_id": job_id,
+                "file_id": file_id,
+                "total_files": 1,
+                "successful_files": 1,
+                "failed_files": 0,
+                "results": [{
+                    "file_path": file_path,
+                    "status": "completed",
+                    "result_path": result["output"],
+                    "download_url": result.get("download_url"),
+                    "model_format": result.get("model_format", "glb"),
+                    "rendered_image": result.get("rendered_image")
+                }]
+            }
             
-            logger.info(f"Tripo3D generation completed successfully for job {job_id}")
+            current_task.update_state(
+                state="SUCCESS",
+                meta=task_meta
+            )
+            
+            logger.info(f"FAL.AI Tripo3D generation completed successfully for job {job_id}")
             
             return {
                 "job_id": job_id,
                 "file_id": file_id,
                 "status": "completed",
-                "result_path": result["output"],
+                "result_path": result["output"],  # FAL.AI client returns "output" field
                 "model_format": result.get("model_format", "glb"),
                 "rendered_image": result.get("rendered_image"),
                 "processing_time": result.get("processing_time", 0),
-                "message": "3D model generated successfully using Tripo3D"
+                "message": f"3D model generated successfully for {original_filename}",
+                "filename": original_filename
             }
         else:
             # Handle failure case
-            error_message = result.get("error", "Unknown error during Tripo3D generation")
-            logger.error(f"Tripo3D generation failed for job {job_id}: {error_message}")
+            error_message = result.get("error", "Unknown error during FAL.AI Tripo3D generation")
+            logger.error(f"FAL.AI Tripo3D generation failed for job {job_id}: {error_message}")
             
             current_task.update_state(
                 state="FAILURE",
@@ -116,7 +166,7 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
             )
             
             raise ProcessingException(
-                message=f"Tripo3D generation failed: {error_message}",
+                message=f"FAL.AI Tripo3D generation failed: {error_message}",
                 job_id=job_id,
                 stage="model_generation"
             )
@@ -197,18 +247,50 @@ def process_batch_task(self, batch_id: str, job_id: str, file_paths: List[str], 
                     }
                 )
                 
-                # TODO: Replace with actual 3D model generation
-                # For now, simulate processing
-                import time
-                time.sleep(1)  # Simulate processing time
+                # Process image using FAL.AI for real 3D model generation
+                start_time = time.time()
                 
-                # Create individual file result
+                # Initialize FAL.AI client
+                fal_client = FalAIClient()
+                
+                # Progress callback to update Celery task state
+                def progress_callback(progress_percent, message="Processing..."):
+                    current_task.update_state(
+                        state="PROGRESS",
+                        meta={
+                            "current": i,
+                            "total": total_files,
+                            "status": f"File {i+1}/{total_files}: {message}",
+                            "progress": progress_percent,
+                            "batch_id": batch_id,
+                            "job_id": job_id
+                        }
+                    )
+                
+                # Call real 3D model generation using async wrapper
+                import asyncio
+                result = asyncio.run(fal_client.process_single_image(
+                    file_path=file_path,
+                    face_limit=face_limit,
+                    texture_enabled=True,
+                    progress_callback=progress_callback,
+                    job_id=job_id  # Pass job_id for proper download URL generation
+                ))
+                
+                processing_time = time.time() - start_time
+                
+                # Create file result from FAL.AI response
                 file_result = {
                     "file_path": file_path,
-                    "status": "completed",
-                    "result_path": f"results/{batch_id}/{os.path.splitext(os.path.basename(file_path))[0]}.obj",
-                    "face_count": face_limit if face_limit else 1000,  # Default face count
-                    "processing_time": 1.0
+                    "status": "success" if result.get("status") == "success" else "failed",
+                    "result_path": result.get("output", f"results/{batch_id}/{os.path.splitext(os.path.basename(file_path))[0]}.glb"),
+                    "face_count": result.get("face_count", face_limit if face_limit else 1000),
+                    "processing_time": processing_time,
+                    "download_url": result.get("download_url"),
+                    "model_format": result.get("model_format", "glb"),
+                    "rendered_image": result.get("rendered_image"),  # Include rendered_image for preview
+                    "filename": result.get("filename", os.path.basename(file_path)),  # Include filename for display
+                    "error": result.get("error") if result.get("status") != "success" else None
                 }
                 
                 results.append(file_result)
@@ -340,7 +422,7 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
                     file_result = {
                         "file_path": file_path,
                         "status": "completed",
-                        "result_path": result["output"],
+                        "result_path": result["output"],  # FAL.AI client returns "output" field
                         "face_count": face_limit if face_limit else 1000,
                         "processing_time": actual_processing_time,
                         "model_format": result.get("model_format", "glb")
@@ -809,7 +891,7 @@ def process_batch_with_enhanced_retry(self, batch_id: str, job_id: str, file_pat
                     file_result = {
                         "file_path": file_path,
                         "status": "completed",
-                        "result_path": result["output"],
+                        "result_path": result["output"],  # FAL.AI client returns "output" field
                         "face_count": face_limit if face_limit else 1000,
                         "processing_time": actual_processing_time,
                         "model_format": result.get("model_format", "glb")

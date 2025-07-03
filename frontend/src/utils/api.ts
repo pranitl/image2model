@@ -5,10 +5,10 @@ import type { ApiResponse, ApiError } from '@/types'
 const getApiBaseURL = () => {
   // If we're in development and accessing from host machine, use direct backend URL
   if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
-    return 'http://localhost:8000/api/v1'
+    return 'http://localhost:8000'
   }
-  // Otherwise use the proxy
-  return '/api/v1'
+  // Otherwise use the proxy (which should reach backend service in Docker)
+  return ''
 }
 
 // Create axios instance with default config

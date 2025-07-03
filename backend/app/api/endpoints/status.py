@@ -105,7 +105,8 @@ async def stream_task_status(
                         meta = task_result.info or {}
                         current = meta.get('current', 0)
                         total = meta.get('total', 1)
-                        progress = round((current / max(total, 1)) * 100, 2)
+                        # Use progress directly from meta if available, otherwise calculate
+                        progress = meta.get('progress', round((current / max(total, 1)) * 100, 2))
                         
                         # Enhanced progress data with additional metadata
                         data = {

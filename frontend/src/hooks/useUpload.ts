@@ -1,10 +1,10 @@
 import { useState, useCallback } from 'react'
 import { apiRequest, handleApiError } from '@/utils/api'
 import { validateImageFiles } from '@/utils/validation'
-import type { UploadJob, GenerationOptions } from '@/types'
+import type { UploadJob, UploadJobWithTaskId, GenerationOptions } from '@/types'
 
 interface UseUploadReturn {
-  uploadFiles: (files: File[], options?: GenerationOptions) => Promise<UploadJob | null>
+  uploadFiles: (files: File[], options?: GenerationOptions) => Promise<UploadJobWithTaskId | null>
   isUploading: boolean
   uploadProgress: number
   error: string | null
@@ -28,7 +28,7 @@ export const useUpload = (): UseUploadReturn => {
       generateTextures: true,
       optimizeForPrinting: false,
     }
-  ): Promise<UploadJob | null> => {
+  ): Promise<UploadJobWithTaskId | null> => {
     setError(null)
     setUploadProgress(0)
 
@@ -45,53 +45,47 @@ export const useUpload = (): UseUploadReturn => {
       // Prepare form data
       const formData = new FormData()
       
-      // For single file upload, use 'file' parameter
-      if (files.length === 1) {
-        formData.append('file', files[0])
-      } else {
-        // For multiple files, append each as 'file'
-        files.forEach((file) => {
-          formData.append('file', file)
-        })
-      }
+      // Always use batch endpoint for consistent background processing
+      const endpoint = '/api/v1/upload/batch'
+      files.forEach((file) => {
+        formData.append('files', file)
+      })
       
-      // Add generation options
-      formData.append('options', JSON.stringify(options))
+      // Add face_limit from options if specified
+      if (options.faceLimit) {
+        formData.append('face_limit', options.faceLimit.toString())
+      }
 
       // Upload files with progress tracking
-      const response = await apiRequest.upload<any>(
-        '/upload/image',
+      const response = await apiRequest.upload<UploadJob>(
+        endpoint,
         formData,
         (progress) => {
           setUploadProgress(progress)
         }
       )
 
-      // Backend returns direct UploadResponse, not wrapped in ApiResponse
-      const uploadData = response.data
-      if (uploadData && uploadData.file_id) {
-        // Convert backend response to UploadJob format
-        const uploadJob: UploadJob = {
-          id: uploadData.file_id,
-          taskId: uploadData.task_id,  // Include task ID for monitoring
-          status: 'pending',
-          progress: 0,
-          inputImages: [{
-            id: uploadData.file_id,
-            filename: uploadData.filename,
-            originalName: uploadData.filename,
-            size: uploadData.file_size,
-            mimeType: uploadData.content_type,
-            url: `/download/${uploadData.file_id}`,
-            uploadedAt: new Date().toISOString()
-          }],
-          outputModels: [],
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+      // Backend returns direct response, not wrapped in ApiResponse
+      if (response.data) {
+        // Extract the actual upload job from the response
+        const uploadJob = (response.data as any).success !== undefined 
+          ? (response.data as any).data as UploadJob
+          : response.data as UploadJob
+        
+        // Always using batch endpoint, so extract task_id for SSE streaming
+        if ('job_id' in uploadJob) {
+          // Prefer task_id if available (actual Celery task ID), fallback to job_id for backward compatibility
+          const taskId = uploadJob.task_id || uploadJob.job_id
+          
+          return {
+            taskId,
+            data: uploadJob
+          }
+        } else {
+          throw new Error('Upload response missing job_id field')
         }
-        return uploadJob
       } else {
-        throw new Error('Upload failed: Invalid response format')
+        throw new Error('Upload failed - no response data')
       }
     } catch (err: any) {
       const errorMessage = handleApiError(err)

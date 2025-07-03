@@ -16,7 +16,7 @@ class TestUploadWorkflow:
     """Test complete upload workflow integration."""
     
     def test_single_image_upload_success(self, http_session, test_config, sample_image_file, services_ready):
-        """Test successful single image upload."""
+        """Test successful single image upload (using single file endpoint)."""
         url = f"{test_config['backend_url']}/api/v1/upload/image"
         
         with open(sample_image_file, 'rb') as f:
@@ -26,16 +26,13 @@ class TestUploadWorkflow:
         assert response.status_code == 200, f"Upload failed: {response.text}"
         
         data = response.json()
-        assert 'job_id' in data
-        assert 'task_id' in data
+        # Single file upload returns file_id (not job_id/task_id)
+        assert 'file_id' in data
+        assert 'filename' in data
+        assert 'file_size' in data
+        assert 'content_type' in data
         assert 'status' in data
-        assert data['status'] in ['queued', 'processing', 'completed']
-        
-        # Verify we can check the task status
-        task_id = data['task_id']
-        status_url = f"{test_config['backend_url']}/api/v1/status/tasks/{task_id}/status"
-        status_response = http_session.get(status_url, timeout=test_config['timeout'])
-        assert status_response.status_code == 200
+        assert data['status'] == 'uploaded'
     
     def test_batch_upload_success(self, http_session, test_config, multiple_image_files, services_ready):
         """Test successful batch upload."""
@@ -51,15 +48,19 @@ class TestUploadWorkflow:
             assert response.status_code == 200, f"Batch upload failed: {response.text}"
             
             data = response.json()
-            assert 'job_id' in data
-            assert 'tasks' in data
-            assert len(data['tasks']) == 3
+            assert 'batch_id' in data
+            assert 'job_id' in data  # This is the Celery task ID
+            assert 'uploaded_files' in data
+            assert 'total_files' in data
+            assert data['total_files'] == 3
+            assert len(data['uploaded_files']) == 3
             
-            # Verify each task has required fields
-            for task in data['tasks']:
-                assert 'task_id' in task
-                assert 'filename' in task
-                assert 'status' in task
+            # Verify each uploaded file has required fields
+            for file_data in data['uploaded_files']:
+                assert 'file_id' in file_data
+                assert 'filename' in file_data
+                assert 'status' in file_data
+                assert file_data['status'] == 'uploaded'
                 
         finally:
             # Close file handles
@@ -163,17 +164,17 @@ class TestUploadWorkflow:
     
     @pytest.mark.slow
     def test_upload_and_task_tracking(self, http_session, test_config, sample_image_file, services_ready):
-        """Test complete upload and task tracking workflow."""
-        # Upload file
-        upload_url = f"{test_config['backend_url']}/api/v1/upload/image"
+        """Test complete upload and task tracking workflow using batch endpoint."""
+        # Use batch upload for proper task tracking (matches frontend behavior)
+        upload_url = f"{test_config['backend_url']}/api/v1/upload/batch"
         
         with open(sample_image_file, 'rb') as f:
-            files = {'file': (sample_image_file.name, f, 'image/jpeg')}
+            files = [('files', (sample_image_file.name, f, 'image/jpeg'))]
             upload_response = http_session.post(upload_url, files=files, timeout=test_config['timeout'])
         
         assert upload_response.status_code == 200
         upload_data = upload_response.json()
-        task_id = upload_data['task_id']
+        task_id = upload_data['job_id']  # Use job_id for task tracking
         
         # Track task progress
         status_url = f"{test_config['backend_url']}/api/v1/status/tasks/{task_id}/status"
@@ -201,8 +202,8 @@ class TestUploadWorkflow:
         
         # If completed successfully, check if we can download results
         if final_status == 'completed':
-            job_id = upload_data['job_id']
-            download_url = f"{test_config['backend_url']}/api/v1/download/{job_id}/all"
+            batch_id = upload_data['batch_id']
+            download_url = f"{test_config['backend_url']}/api/v1/download/{batch_id}/all"
             download_response = http_session.get(download_url, timeout=test_config['timeout'])
             
             # Should return list of available files or redirect to file
