@@ -24,6 +24,7 @@
 - Commit after each subtask completion
 - **NEVER update README.md during task work** - only coordinator updates README after all merges
 - Reference tasks in commits: `git commit -m "feat: implement feature (task X)"`
+- When going through a todo list or phase after planning, for each todo you complete, do a git commit for those relevant files.
 
 ## Commands
 Always use docker compose not docker-compose

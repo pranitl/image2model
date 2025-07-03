@@ -21,7 +21,7 @@ from app.core.error_handlers import (
     handle_file_validation_error,
     safe_file_operation
 )
-from app.workers.tasks import process_batch_task, generate_3d_model_task
+from app.workers.tasks import process_batch_task, generate_3d_model_task, process_batch_parallel
 
 logger = logging.getLogger(__name__)
 
@@ -349,13 +349,33 @@ async def upload_batch(
         ]
         
         # Start background processing task
-        task_result = process_batch_task.delay(
-            batch_id=batch_id,
-            job_id=job_id,
-            file_paths=file_paths,
-            face_limit=face_limit
-        )
+        # Use parallel processing for better performance with multiple files
+        if len(file_paths) > 1:
+            # Use parallel processing for multiple files
+            task_result = process_batch_parallel.delay(
+                job_id=job_id,
+                file_paths=file_paths,
+                quality="medium",  # Default quality
+                texture_enabled=True  # Default texture enabled
+            )
+            logger.info(f"Started parallel batch processing for {len(file_paths)} files, task_id: {task_result.id}")
+        else:
+            # Use single task for single file
+            task_result = generate_3d_model_task.delay(
+                file_id=uploaded_files[0].file_id,
+                file_path=file_paths[0],
+                job_id=job_id,
+                quality="medium",
+                texture_enabled=True
+            )
+            logger.info(f"Started single file processing, task_id: {task_result.id}")
+        
         actual_task_id = task_result.id
+        
+        # Ensure we have a task ID
+        if not actual_task_id:
+            logger.error("No task ID generated for job")
+            raise Exception("Failed to generate task ID")
         
     except Exception as e:
         # Log error but don't fail the upload

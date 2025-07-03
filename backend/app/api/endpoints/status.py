@@ -13,6 +13,7 @@ from fastapi.responses import StreamingResponse
 
 from app.core.celery_app import celery_app
 from app.core.exceptions import ProcessingException, NetworkException, log_exception
+from app.core.progress_tracker import progress_tracker
 
 logger = logging.getLogger(__name__)
 
@@ -455,4 +456,59 @@ async def get_task_status(task_id: str):
             job_id=task_id,
             stage="status_check",
             details={"task_id": task_id}
+        )
+
+
+@router.get("/jobs/{job_id}/progress")
+async def get_job_progress(job_id: str):
+    """
+    Get aggregated progress for a parallel batch job from Redis.
+    
+    This endpoint provides real-time progress information for jobs
+    being processed in parallel, including individual file statuses.
+    
+    Args:
+        job_id: The job identifier
+        
+    Returns:
+        Dict with job progress information including:
+        - overall_progress: Overall percentage (0-100)
+        - total_files: Total number of files
+        - completed_files: Number of completed files
+        - failed_files: Number of failed files
+        - files: Dict of file statuses and progress
+    """
+    try:
+        # Get progress data from Redis
+        progress_data = progress_tracker.get_job_progress(job_id)
+        
+        if not progress_data:
+            # No progress data found, check if job exists in Celery
+            # This could mean the job hasn't started yet or has expired
+            raise HTTPException(
+                status_code=404,
+                detail=f"No progress data found for job {job_id}"
+            )
+        
+        # Calculate overall progress
+        overall_progress = progress_tracker.get_overall_progress(job_id)
+        
+        # Return progress information
+        return {
+            "job_id": job_id,
+            "overall_progress": overall_progress,
+            "total_files": progress_data["total_files"],
+            "completed_files": progress_data["completed_files"],
+            "failed_files": progress_data["failed_files"],
+            "files": progress_data["files"],
+            "timestamp": int(time.time() * 1000)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting job progress for {job_id}: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to retrieve job progress: {str(e)}"
         )

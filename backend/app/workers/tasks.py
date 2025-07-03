@@ -7,7 +7,7 @@ import logging
 import time
 from typing import Dict, Any, List, Optional
 
-from celery import current_task
+from celery import current_task, group, chord
 from celery.exceptions import SoftTimeLimitExceeded, Retry
 
 from app.core.celery_app import celery_app
@@ -22,6 +22,7 @@ from app.core.exceptions import (
 # Use enhanced logging from core
 from app.core.logging_config import get_task_logger, set_correlation_id
 from app.core.monitoring import monitor_task, task_monitor
+from app.core.progress_tracker import progress_tracker
 
 # Import FAL.AI client for real 3D model generation
 from app.workers.fal_client import FalAIClient
@@ -87,6 +88,7 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
         original_filename = os.path.basename(file_path)
         
         def progress_callback(message, progress_percent):
+            # Update Celery task state
             current_task.update_state(
                 state="PROGRESS",
                 meta={
@@ -99,6 +101,18 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
                     "file_id": file_id
                 }
             )
+            
+            # Also update Redis progress tracker if this is part of a batch
+            if job_id:
+                try:
+                    progress_tracker.update_file_progress(
+                        job_id=job_id,
+                        file_path=file_path,
+                        status="processing",
+                        progress=progress_percent
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to update progress tracker: {e}")
         
         # Call real 3D model generation using async wrapper
         import asyncio
@@ -162,6 +176,18 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
             
             logger.info(f"FAL.AI Tripo3D generation completed successfully for job {job_id}")
             
+            # Update progress tracker for completion
+            if job_id:
+                try:
+                    progress_tracker.update_file_progress(
+                        job_id=job_id,
+                        file_path=file_path,
+                        status="completed",
+                        progress=100
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to update progress tracker: {e}")
+            
             # Return the full result including all necessary fields for SSE
             return {
                 "job_id": job_id,
@@ -175,12 +201,27 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
                 "filename": original_filename,
                 "total_files": 1,
                 "successful_files": 1,
-                "failed_files": 0
+                "failed_files": 0,
+                # Include job_result for download endpoint's Redis scan fallback
+                "job_result": job_result
             }
         else:
             # Handle failure case
             error_message = result.get("error", "Unknown error during FAL.AI Tripo3D generation")
             logger.error(f"FAL.AI Tripo3D generation failed for job {job_id}: {error_message}")
+            
+            # Update progress tracker for failure
+            if job_id:
+                try:
+                    progress_tracker.update_file_progress(
+                        job_id=job_id,
+                        file_path=file_path,
+                        status="failed",
+                        progress=100,
+                        error=error_message
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to update progress tracker: {e}")
             
             current_task.update_state(
                 state="FAILURE",
@@ -1073,6 +1114,218 @@ def process_batch_with_enhanced_retry(self, batch_id: str, job_id: str, file_pat
             job_id=job_id,
             stage="batch_processing"
         )
+
+
+@celery_app.task(bind=True)
+def process_batch_parallel(self, job_id: str, file_paths: List[str], quality: str = "medium", texture_enabled: bool = True):
+    """
+    Process batch of images in parallel using Celery group/chord.
+    
+    This task creates individual subtasks for each file and processes them
+    concurrently across available workers.
+    
+    Args:
+        job_id: Unique job identifier
+        file_paths: List of paths to uploaded image files
+        quality: Quality setting for all files
+        texture_enabled: Whether to enable texture generation
+        
+    Returns:
+        Dict with batch processing results
+    """
+    try:
+        total_files = len(file_paths)
+        logger.info(f"Starting parallel batch processing for job {job_id} with {total_files} files")
+        
+        # Initialize progress tracking in Redis
+        progress_tracker.init_job(job_id, file_paths)
+        
+        # Update initial state with proper structure expected by status endpoint
+        current_task.update_state(
+            state="PROGRESS",
+            meta={
+                "current": 0,
+                "total": total_files,
+                "status": f"Preparing parallel processing for {total_files} files...",
+                "job_id": job_id,
+                "batch_type": "parallel",
+                "progress": 0,
+                "files": [
+                    {
+                        "file_name": os.path.basename(file_path),
+                        "status": "pending",
+                        "progress": 0
+                    }
+                    for file_path in file_paths
+                ],
+                "total_files": total_files,
+                "successful_files": 0,
+                "failed_files": 0
+            }
+        )
+        
+        # Create a group of parallel tasks
+        job_group = group(
+            process_single_file_task.s(
+                file_id=f"{job_id}_{i}",
+                file_path=file_path,
+                job_id=job_id,
+                quality=quality,
+                texture_enabled=texture_enabled,
+                file_index=i,
+                total_files=total_files
+            )
+            for i, file_path in enumerate(file_paths)
+        )
+        
+        # Use chord to execute all tasks in parallel and collect results
+        # The callback will be executed after all tasks complete
+        chord_result = chord(job_group)(
+            finalize_batch_results.s(job_id=job_id)
+        )
+        
+        # Store the chord task ID for tracking
+        from app.core.job_store import job_store
+        job_store.set_job_metadata(job_id, {
+            "chord_task_id": chord_result.id,
+            "total_files": total_files,
+            "file_paths": file_paths,
+            "start_time": time.time()
+        })
+        
+        logger.info(f"Launched {total_files} parallel tasks for job {job_id}")
+        
+        # Return immediately with the chord task ID
+        # The finalize_batch_results task will handle completion
+        return {
+            "status": "processing",
+            "job_id": job_id,
+            "chord_task_id": chord_result.id,
+            "total_files": total_files,
+            "message": f"Processing {total_files} files in parallel"
+        }
+        
+    except Exception as exc:
+        logger.error(f"Failed to start parallel batch processing for job {job_id}: {str(exc)}")
+        current_task.update_state(
+            state="FAILURE",
+            meta={
+                "error": str(exc),
+                "job_id": job_id
+            }
+        )
+        raise ProcessingException(
+            message=f"Failed to start parallel processing: {str(exc)}",
+            job_id=job_id,
+            stage="batch_init"
+        )
+
+
+@celery_app.task(bind=True)
+def process_single_file_task(self, file_id: str, file_path: str, job_id: str, 
+                            quality: str = "medium", texture_enabled: bool = True,
+                            file_index: int = 0, total_files: int = 1):
+    """
+    Process a single file as part of a parallel batch.
+    
+    This is a wrapper around generate_3d_model_task that handles progress
+    updates for batch processing.
+    """
+    try:
+        logger.info(f"Processing file {file_index + 1}/{total_files}: {os.path.basename(file_path)}")
+        
+        # Use the existing generate_3d_model_task
+        result = generate_3d_model_task.apply_async(
+            args=[file_id, file_path, job_id, quality, texture_enabled],
+            task_id=f"{self.request.id}_generate"
+        ).get()
+        
+        # Return result with additional batch context
+        return {
+            "file_id": file_id,
+            "file_path": file_path,
+            "file_index": file_index,
+            "status": "success" if result.get("status") == "completed" else "failed",
+            "result": result,
+            "filename": os.path.basename(file_path)
+        }
+        
+    except Exception as exc:
+        logger.error(f"Failed to process file {file_path}: {str(exc)}")
+        return {
+            "file_id": file_id,
+            "file_path": file_path,
+            "file_index": file_index,
+            "status": "failed",
+            "error": str(exc),
+            "filename": os.path.basename(file_path)
+        }
+
+
+@celery_app.task
+def finalize_batch_results(results: List[Dict[str, Any]], job_id: str):
+    """
+    Finalize batch results after all parallel tasks complete.
+    
+    This task is called by the chord after all files are processed.
+    """
+    try:
+        logger.info(f"Finalizing batch results for job {job_id} with {len(results)} results")
+        
+        # Count successes and failures
+        success_count = sum(1 for r in results if r.get("status") == "success")
+        failure_count = len(results) - success_count
+        
+        # Get job metadata
+        from app.core.job_store import job_store
+        job_metadata = job_store.get_job_metadata(job_id) or {}
+        processing_time = time.time() - job_metadata.get("start_time", time.time())
+        
+        # Prepare final job result
+        job_result = {
+            "job_id": job_id,
+            "status": "completed",
+            "files": [],
+            "total_files": len(results),
+            "successful_files": success_count,
+            "failed_files": failure_count,
+            "processing_time": processing_time,
+            "parallel_processing": True
+        }
+        
+        # Collect successful file results
+        for result in results:
+            if result.get("status") == "success" and result.get("result"):
+                file_result = result["result"]
+                job_result["files"].append({
+                    "filename": result.get("filename", os.path.basename(result["file_path"])),
+                    "model_url": file_result.get("download_url"),
+                    "file_size": file_result.get("original_file_size", 0),
+                    "content_type": "model/gltf-binary",
+                    "rendered_image": file_result.get("rendered_image")
+                })
+        
+        # Store final results
+        job_store.set_job_result(job_id, job_result)
+        
+        logger.info(f"Batch processing completed for job {job_id}: {success_count} successful, {failure_count} failed")
+        
+        # Return summary with job_result for Redis scan fallback
+        return {
+            "job_id": job_id,
+            "status": "completed",
+            "total_files": len(results),
+            "successful_files": success_count,
+            "failed_files": failure_count,
+            "processing_time": processing_time,
+            "message": f"Parallel batch processing completed. {success_count} successful, {failure_count} failed.",
+            # Include job_result for download endpoint's Redis scan fallback
+            "job_result": job_result
+        }
+        
+    except Exception as exc:
+        logger.error(f"Failed to finalize batch results for job {job_id}: {str(exc)}")
+        raise
 
 
 @celery_app.task
