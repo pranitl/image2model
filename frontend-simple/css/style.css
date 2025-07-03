@@ -351,6 +351,13 @@ small {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-bottom: var(--spacing-xs);
+}
+
+.file-card small {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    display: block;
     margin-bottom: var(--spacing-sm);
 }
 
@@ -1093,5 +1100,45 @@ small {
     .btn:focus-visible,
     *:focus-visible {
         outline-width: 3px;
+    }
+}
+
+/* =================================================================
+   Error Toast Notification
+   ================================================================= */
+.error-toast {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background-color: rgba(239, 68, 68, 0.95);
+    color: white;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    max-width: 400px;
+    z-index: 1000;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all var(--transition-normal);
+    font-weight: 500;
+}
+
+.error-toast.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.error-toast svg {
+    flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+    .error-toast {
+        left: 1rem;
+        right: 1rem;
+        bottom: 1rem;
     }
 }
