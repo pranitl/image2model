@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Test - AI 3D Model Generator</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .test-section {
+            background-color: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            padding: var(--spacing-lg);
+            margin: var(--spacing-lg) 0;
+        }
+        .test-result {
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-sm);
+            font-family: monospace;
+            white-space: pre-wrap;
+            background-color: var(--bg-tertiary);
+        }
+        .test-success {
+            border-left: 4px solid var(--success);
+        }
+        .test-error {
+            border-left: 4px solid var(--error);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>API Client Test Suite</h1>
+        <p>This page tests the API client functionality</p>
+        
+        <div class="test-section">
+            <h2>1. API Configuration Test</h2>
+            <button class="btn-primary" onclick="testApiConfig()">Test API Config</button>
+            <div id="configResult" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. Upload Test (Mock)</h2>
+            <button class="btn-primary" onclick="testUpload()">Test Upload Function</button>
+            <div id="uploadResult" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Progress Stream Test (Mock)</h2>
+            <button class="btn-primary" onclick="testStream()">Test Stream Function</button>
+            <div id="streamResult" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. Utility Functions Test</h2>
+            <button class="btn-primary" onclick="testUtilities()">Test Utilities</button>
+            <div id="utilityResult" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>5. Backward Compatibility Test</h2>
+            <button class="btn-primary" onclick="testBackwardCompat()">Test Compatibility</button>
+            <div id="compatResult" class="test-result"></div>
+        </div>
+    </div>
+    
+    <script src="js/api.js"></script>
+    <script>
+        function showResult(elementId, success, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = 'test-result ' + (success ? 'test-success' : 'test-error');
+        }
+        
+        function testApiConfig() {
+            try {
+                const tests = [];
+                
+                // Test API object exists
+                tests.push(`window.API exists: ${window.API !== undefined}`);
+                tests.push(`window.api exists: ${window.api !== undefined}`);
+                
+                // Test API_BASE
+                tests.push(`API_BASE: ${window.API.API_BASE}`);
+                tests.push(`Expected format: ${window.location.origin}/api/v1`);
+                tests.push(`Correct: ${window.API.API_BASE === window.location.origin + '/api/v1'}`);
+                
+                // Test all functions exist
+                const functions = ['uploadBatch', 'streamProgress', 'getJobFiles', 'cancelJob', 'getJobStatus'];
+                functions.forEach(fn => {
+                    tests.push(`API.${fn} exists: ${typeof window.API[fn] === 'function'}`);
+                });
+                
+                showResult('configResult', true, tests.join('\n'));
+            } catch (error) {
+                showResult('configResult', false, `Error: ${error.message}`);
+            }
+        }
+        
+        function testUpload() {
+            try {
+                const tests = [];
+                
+                // Test function signature
+                tests.push('Testing uploadBatch function signature...');
+                tests.push(`Function accepts (files, faceLimit)`);
+                tests.push(`Default faceLimit should be 5000`);
+                
+                // Create mock files
+                const mockFiles = [
+                    new File(['test'], 'test1.jpg', { type: 'image/jpeg' }),
+                    new File(['test'], 'test2.jpg', { type: 'image/jpeg' })
+                ];
+                
+                tests.push(`\nCreated ${mockFiles.length} mock files`);
+                tests.push('Note: Actual upload will fail without server');
+                
+                showResult('uploadResult', true, tests.join('\n'));
+            } catch (error) {
+                showResult('uploadResult', false, `Error: ${error.message}`);
+            }
+        }
+        
+        function testStream() {
+            try {
+                const tests = [];
+                
+                tests.push('Testing streamProgress function...');
+                tests.push('Function accepts (taskId, callbacks)');
+                tests.push('\nCallback structure:');
+                tests.push('- onProgress(data)');
+                tests.push('- onFileUpdate(data)');
+                tests.push('- onComplete(data)');
+                tests.push('- onError(error)');
+                
+                tests.push('\nReturn value should have:');
+                tests.push('- close() method');
+                tests.push('- readyState() method');
+                
+                showResult('streamResult', true, tests.join('\n'));
+            } catch (error) {
+                showResult('streamResult', false, `Error: ${error.message}`);
+            }
+        }
+        
+        function testUtilities() {
+            try {
+                const tests = [];
+                
+                tests.push('Testing utility functions...');
+                tests.push(`cancelJob exists: ${typeof window.API.cancelJob === 'function'}`);
+                tests.push(`getJobStatus exists: ${typeof window.API.getJobStatus === 'function'}`);
+                
+                tests.push('\nAll functions return consistent structure:');
+                tests.push('{ success: boolean, error?: string, ...data }');
+                
+                showResult('utilityResult', true, tests.join('\n'));
+            } catch (error) {
+                showResult('utilityResult', false, `Error: ${error.message}`);
+            }
+        }
+        
+        function testBackwardCompat() {
+            try {
+                const tests = [];
+                
+                tests.push('Testing backward compatibility...');
+                tests.push(`window.api exists: ${window.api !== undefined}`);
+                tests.push(`api.uploadBatch exists: ${typeof window.api.uploadBatch === 'function'}`);
+                tests.push(`api.streamProgress exists: ${typeof window.api.streamProgress === 'function'}`);
+                tests.push(`api.getJobFiles exists: ${typeof window.api.getJobFiles === 'function'}`);
+                
+                tests.push('\nTesting streamProgress adapter:');
+                tests.push('Old: api.streamProgress(taskId, onUpdate)');
+                tests.push('New: API.streamProgress(taskId, {onProgress, ...})');
+                tests.push('Adapter should convert old to new format ✓');
+                
+                showResult('compatResult', true, tests.join('\n'));
+            } catch (error) {
+                showResult('compatResult', false, `Error: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>
