@@ -27,7 +27,7 @@ const HomePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Hero Section */}
-      <section className="text-center py-20">
+      <section className="text-center py-20 bg-gradient-to-b from-gray-900 to-gray-800">
         <div className="container mx-auto px-4">
           <h1 className="text-4xl md:text-6xl font-bold mb-6">
             Transform Images into 3D Models

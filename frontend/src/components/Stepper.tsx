@@ -11,7 +11,7 @@ const Stepper: React.FC<{ steps: Omit<StepProps, 'isActive'>[] }> = ({ steps }) 
   return (
     <div className="relative">
       {steps.map((step, index) => (
-        <div key={index} className="flex items-start mb-8">
+        <div key={index} className="flex items-start mb-8 p-4 rounded-lg transition-colors duration-300 hover:bg-gray-800">
           <div className="flex flex-col items-center mr-4">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center ${index === 1 ? 'bg-indigo-600' : 'bg-gray-700'}`}>
               <step.icon className="h-6 w-6 text-white" />
