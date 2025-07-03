@@ -1,22 +1,24 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Upload, Zap, Download } from 'lucide-react';
 import Stepper from '../components/Stepper';
+import UploadIcon from '../components/icons/UploadIcon';
+import ZapIcon from '../components/icons/ZapIcon';
+import DownloadIcon from '../components/icons/DownloadIcon';
 
 const HomePage: React.FC = () => {
   const steps = [
     {
-      icon: Upload,
+      icon: UploadIcon,
       title: "Upload Images",
       description: "Simply upload your images for our AI to analyze and generate 3D models.",
     },
     {
-      icon: Zap,
+      icon: ZapIcon,
       title: "AI Processing",
       description: "Our AI processes your images and generates detailed 3D models.",
     },
     {
-      icon: Download,
+      icon: DownloadIcon,
       title: "Download Models",
       description: "Download your 3D models and use them in your projects.",
     },
@@ -53,7 +55,7 @@ const HomePage: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <Stepper steps={steps} />
             <div>
-              <img src="/human-head.png" alt="3D Model" className="rounded-lg" />
+              <img src="/human-head.jpg" alt="3D Model" className="rounded-lg" />
             </div>
           </div>
         </div>

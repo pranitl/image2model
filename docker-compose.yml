@@ -148,12 +148,10 @@ services:
       - /app/dist
     depends_on:
       - backend
-    command: npm run dev
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
     networks:
       - image2model-network
     restart: unless-stopped
-    stdin_open: true
-    tty: true
 
 networks:
   image2model-network:

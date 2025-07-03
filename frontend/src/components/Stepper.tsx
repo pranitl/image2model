@@ -1,8 +1,7 @@
 import React from 'react';
-import { Icon } from 'lucide-react';
 
 interface StepProps {
-  icon: Icon;
+  icon: React.ElementType;
   title: string;
   description: string;
   isActive?: boolean;
