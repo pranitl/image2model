@@ -549,3 +549,307 @@ p {
         padding: 1rem;
     }
 }
+
+/* Processing Page Styles */
+.processing-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.processing-subtitle {
+    color: #999;
+    font-size: 1.1rem;
+}
+
+/* Batch Information Section */
+.batch-info-section {
+    background-color: #2a2a2a;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.batch-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+}
+
+.batch-item {
+    text-align: center;
+}
+
+.batch-label {
+    display: block;
+    font-size: 0.875rem;
+    color: #999;
+    margin-bottom: 0.25rem;
+}
+
+.batch-value {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* Overall Progress Section */
+.overall-progress-section {
+    margin-bottom: 3rem;
+}
+
+.progress-container {
+    background-color: #2a2a2a;
+    border-radius: 12px;
+    padding: 2rem;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 40px;
+    background-color: #1a1a1a;
+    border-radius: 20px;
+    overflow: hidden;
+    position: relative;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #5865F2 0%, #7983FF 100%);
+    transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.progress-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+}
+
+.progress-fill.progress-complete {
+    background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+}
+
+.progress-fill.progress-error {
+    background: linear-gradient(90deg, #ef4444 0%, #f87171 100%);
+}
+
+.progress-text {
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    z-index: 1;
+}
+
+.progress-stats {
+    text-align: center;
+    margin-top: 1rem;
+    color: #999;
+}
+
+/* File Processing Grid */
+.files-grid-section {
+    margin-bottom: 2rem;
+}
+
+.file-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.file-card {
+    background-color: #2a2a2a;
+    border: 2px solid #333;
+    border-radius: 12px;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.file-card-content {
+    display: flex;
+    gap: 1rem;
+    align-items: start;
+}
+
+.file-thumbnail {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.file-thumbnail-placeholder {
+    width: 60px;
+    height: 60px;
+    background-color: #1a1a1a;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+}
+
+.file-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.file-name {
+    font-size: 1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.file-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.status-icon {
+    width: 16px;
+    height: 16px;
+}
+
+.status-icon.spinning {
+    animation: spin 1s linear infinite;
+}
+
+.status-text {
+    font-size: 0.875rem;
+    color: #999;
+}
+
+/* File Status States */
+.file-status-pending {
+    border-color: #666;
+}
+
+.file-status-processing {
+    border-color: #5865F2;
+    background-color: rgba(88, 101, 242, 0.1);
+}
+
+.file-status-processing .status-icon {
+    color: #5865F2;
+}
+
+.file-status-completed {
+    border-color: #10b981;
+    background-color: rgba(16, 185, 129, 0.1);
+}
+
+.file-status-completed .status-icon {
+    color: #10b981;
+}
+
+.file-status-failed {
+    border-color: #ef4444;
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+.file-status-failed .status-icon {
+    color: #ef4444;
+}
+
+/* File Progress Bar */
+.file-progress-bar {
+    width: 100%;
+    height: 4px;
+    background-color: #1a1a1a;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.file-progress-fill {
+    height: 100%;
+    background-color: #5865F2;
+    transition: width 0.3s ease;
+}
+
+.file-error {
+    font-size: 0.75rem;
+    color: #ef4444;
+    margin-top: 0.5rem;
+}
+
+/* Action Section */
+.action-section {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.icon {
+    margin-right: 0.5rem;
+}
+
+/* Error Overlay */
+.error-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.error-content {
+    background-color: #2a2a2a;
+    border-radius: 12px;
+    padding: 3rem;
+    text-align: center;
+    max-width: 400px;
+}
+
+.error-icon {
+    color: #ef4444;
+    margin-bottom: 1rem;
+}
+
+/* Processing Page Mobile Responsive */
+@media (max-width: 768px) {
+    .batch-details {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .file-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .progress-bar {
+        height: 30px;
+    }
+    
+    .file-card-content {
+        gap: 0.75rem;
+    }
+    
+    .file-thumbnail,
+    .file-thumbnail-placeholder {
+        width: 50px;
+        height: 50px;
+    }
+}
