@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - AI 3D Model Generator</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Task Complete</h1>
+        <p>The 3D models have been generated and are ready for download.</p>
+        
+        <button id="downloadAllBtn" class="btn-primary">Download All</button>
+        
+        <div id="modelList" class="model-list">
+            <!-- Model download cards will be inserted here -->
+        </div>
+        
+        <div class="model-preview">
+            <img id="previewImage" src="" alt="3D Model Preview">
+        </div>
+    </div>
+    
+    <script src="js/api.js"></script>
+    <script>
+        // Simple results page logic
+        const jobId = new URLSearchParams(window.location.search).get('jobId');
+        // Load results...
+    </script>
+</body>
+</html>

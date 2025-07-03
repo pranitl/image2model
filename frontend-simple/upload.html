@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Images - AI 3D Model Generator</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Images</h1>
+        <p>Choose your images to generate a 3D model</p>
+        
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div id="dropZone" class="drop-zone">
+                <svg class="upload-icon" viewBox="0 0 24 24" width="48" height="48">
+                    <path d="M12 2L12 16M12 2L8 6M12 2L16 6M4 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+                </svg>
+                <p>Drag & drop files here,</p>
+                <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png" hidden>
+                <button type="button" onclick="document.getElementById('fileInput').click()" class="btn-secondary">
+                    Browse Files
+                </button>
+            </div>
+            
+            <div id="fileList" class="file-list"></div>
+            
+            <div class="config-section">
+                <label for="faceLimit">Face Limit (optional):</label>
+                <input type="number" id="faceLimit" name="faceLimit" placeholder="Auto">
+                <small>Controls the level of detail. Leave blank for auto.</small>
+            </div>
+            
+            <button type="submit" id="generateBtn" class="btn-primary" disabled>
+                Generate 3D Model
+            </button>
+        </form>
+    </div>
+    
+    <script src="js/api.js"></script>
+    <script src="js/upload.js"></script>
+</body>
+</html>
