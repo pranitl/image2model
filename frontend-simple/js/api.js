@@ -45,7 +45,7 @@
                 success: true,
                 jobId: data.job_id,
                 taskId: data.task_id,
-                fileCount: data.file_count || files.length
+                fileCount: data.total_files || files.length
             };
         } catch (error) {
             console.error('Upload failed:', error);
@@ -67,43 +67,110 @@
         
         const eventSource = new EventSource(`${API_BASE}/status/tasks/${taskId}/stream`);
         
-        eventSource.onmessage = (event) => {
+        // Helper function to parse and handle event data
+        const handleEventData = (event, eventType) => {
             try {
                 const data = JSON.parse(event.data);
                 
-                // Handle different event types based on data structure
-                if (data.status === 'completed' && data.job_id) {
-                    onComplete({
-                        jobId: data.job_id,
-                        successCount: data.success_count || 0,
-                        failureCount: data.failure_count || 0
-                    });
-                    eventSource.close();
-                } else if (data.status === 'failed') {
-                    onError(new Error(data.error || 'Processing failed'));
-                    eventSource.close();
-                } else if (data.progress !== undefined) {
-                    // Overall progress update
-                    onProgress({
-                        overall: data.progress,
-                        currentFile: data.current_file,
-                        status: data.status,
-                        totalFiles: data.total_files,
-                        files: data.files
-                    });
-                } else if (data.file_name) {
-                    // Individual file update
-                    onFileUpdate({
-                        fileName: data.file_name,
-                        status: data.status,
-                        progress: data.progress,
-                        error: data.error
-                    });
+                // Handle different event types
+                switch (eventType) {
+                    case 'task_completed':
+                        // Task completed successfully
+                        if (data.result && data.result.job_id) {
+                            onComplete({
+                                jobId: data.result.job_id,
+                                successCount: data.result.successful_files || 0,
+                                failureCount: data.result.failed_files || 0
+                            });
+                        } else {
+                            onComplete({
+                                jobId: data.job_id || taskId,
+                                successCount: data.summary?.successful_files || 0,
+                                failureCount: data.summary?.failed_files || 0
+                            });
+                        }
+                        eventSource.close();
+                        break;
+                        
+                    case 'task_failed':
+                        onError(new Error(data.error || 'Processing failed'));
+                        eventSource.close();
+                        break;
+                        
+                    case 'task_progress':
+                    case 'task_queued':
+                    case 'task_status':
+                        // Overall progress update
+                        onProgress({
+                            overall: data.progress || 0,
+                            currentFile: data.current_file,
+                            status: data.status,
+                            totalFiles: data.total || data.total_files,
+                            files: data.files,
+                            current: data.current,
+                            total: data.total
+                        });
+                        break;
+                        
+                    case 'file_update':
+                        // Individual file update
+                        onFileUpdate({
+                            fileName: data.file_name || data.filename,
+                            status: data.status,
+                            progress: data.progress,
+                            error: data.error
+                        });
+                        break;
+                        
+                    default:
+                        // Handle generic message events
+                        if (data.status === 'completed' && data.job_id) {
+                            onComplete({
+                                jobId: data.job_id,
+                                successCount: data.success_count || 0,
+                                failureCount: data.failure_count || 0
+                            });
+                            eventSource.close();
+                        } else if (data.status === 'failed') {
+                            onError(new Error(data.error || 'Processing failed'));
+                            eventSource.close();
+                        } else if (data.progress !== undefined) {
+                            onProgress({
+                                overall: data.progress,
+                                currentFile: data.current_file,
+                                status: data.status,
+                                totalFiles: data.total_files,
+                                files: data.files
+                            });
+                        } else if (data.file_name) {
+                            onFileUpdate({
+                                fileName: data.file_name,
+                                status: data.status,
+                                progress: data.progress,
+                                error: data.error
+                            });
+                        }
                 }
             } catch (error) {
                 console.error('Error parsing SSE data:', error);
             }
         };
+        
+        // Add specific event listeners for named events
+        eventSource.addEventListener('task_completed', (event) => handleEventData(event, 'task_completed'));
+        eventSource.addEventListener('task_failed', (event) => handleEventData(event, 'task_failed'));
+        eventSource.addEventListener('task_progress', (event) => handleEventData(event, 'task_progress'));
+        eventSource.addEventListener('task_queued', (event) => handleEventData(event, 'task_queued'));
+        eventSource.addEventListener('task_retry', (event) => handleEventData(event, 'task_retry'));
+        eventSource.addEventListener('task_cancelled', (event) => handleEventData(event, 'task_cancelled'));
+        eventSource.addEventListener('task_status', (event) => handleEventData(event, 'task_status'));
+        eventSource.addEventListener('task_error', (event) => handleEventData(event, 'task_error'));
+        eventSource.addEventListener('stream_error', (event) => handleEventData(event, 'stream_error'));
+        eventSource.addEventListener('connection_timeout', (event) => handleEventData(event, 'connection_timeout'));
+        eventSource.addEventListener('heartbeat', (event) => handleEventData(event, 'heartbeat'));
+        
+        // Also keep the generic message handler for backward compatibility
+        eventSource.onmessage = (event) => handleEventData(event, 'generic');
         
         eventSource.onerror = (error) => {
             console.error('SSE connection error:', error);
@@ -125,29 +192,28 @@
     // Get list of processed files for a job
     async function getJobFiles(jobId) {
         try {
-            // First try the documented endpoint
-            let response = await fetch(`${API_BASE}/jobs/${jobId}/files`);
-            
-            // If that fails, try the alternative endpoint
-            if (!response.ok && response.status === 404) {
-                response = await fetch(`${API_BASE}/download/${jobId}/all`);
-            }
+            // Use the correct endpoint from OpenAPI schema
+            const response = await fetch(`${API_BASE}/download/${jobId}/all`);
             
             await handleApiError(response);
             const data = await response.json();
             
-            // Handle different response formats
-            let files = data.files || data.models || [];
+            // According to schema, response is JobFilesResponse with:
+            // job_id, files[], download_urls[], total_files
+            // Each file has: filename, size, mime_type, created_time
             
             return {
                 success: true,
-                files: files.map(file => ({
-                    name: file.name || file.filename,
+                files: (data.files || []).map((file, index) => ({
+                    name: file.filename,
                     size: file.size || 0,
-                    downloadUrl: file.download_url || `${API_BASE}/download/${jobId}/${file.name || file.filename}`,
-                    thumbnailUrl: file.thumbnail_url || file.preview_url || null
+                    downloadUrl: data.download_urls?.[index] || `${API_BASE}/download/${jobId}/${file.filename}`,
+                    thumbnailUrl: null, // Not provided in schema
+                    mimeType: file.mime_type,
+                    createdTime: file.created_time
                 })),
-                downloadAllUrl: `${API_BASE}/download/${jobId}/all`
+                downloadAllUrl: `${API_BASE}/download/${jobId}/all`,
+                totalFiles: data.total_files
             };
         } catch (error) {
             console.error('Failed to fetch job files:', error);
@@ -159,20 +225,14 @@
     }
     
     // Cancel a processing job
+    // NOTE: Cancel endpoint not available in current API
     async function cancelJob(taskId) {
-        try {
-            const response = await fetch(`${API_BASE}/tasks/${taskId}/cancel`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-            await handleApiError(response);
-            return { success: true };
-        } catch (error) {
-            console.error('Failed to cancel job:', error);
-            return { success: false, error: error.message };
-        }
+        console.warn('Cancel endpoint not available in current API');
+        // For now, just close the SSE connection on client side
+        return { 
+            success: false, 
+            error: 'Cancel functionality not available in current API version' 
+        };
     }
     
     // Check job status (non-streaming)
