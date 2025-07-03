@@ -94,9 +94,6 @@ celery_app.conf.task_routes = {
     # Batch processing tasks
     'app.workers.tasks.process_batch_task': {'queue': 'batch_processing'},
     'app.workers.tasks.process_batch': {'queue': 'batch_processing'},
-    'app.workers.tasks.process_batch_parallel': {'queue': 'batch_processing'},
-    'app.workers.tasks.process_single_file_task': {'queue': 'model_generation'},
-    'app.workers.tasks.finalize_batch_results': {'queue': 'batch_processing'},
     
     # Model generation tasks
     'app.workers.tasks.generate_3d_model_task': {'queue': 'model_generation'},
