@@ -26,7 +26,19 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await api.getJobFiles(jobId);
             
             if (!response.files || response.files.length === 0) {
-                modelList.innerHTML = '<p style="text-align: center;">No files found for this job.</p>';
+                modelList.innerHTML = `
+                    <div style="text-align: center; padding: 2rem;">
+                        <svg style="width: 64px; height: 64px; color: var(--text-muted); margin-bottom: 1rem;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="12"></line>
+                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                        </svg>
+                        <h3>No files generated</h3>
+                        <p style="color: var(--text-muted); margin: 1rem 0;">The processing completed but no 3D models were generated.</p>
+                        <p style="color: var(--text-muted); font-size: 0.875rem;">This may happen if the API quota is exceeded or if there were processing errors.</p>
+                        <a href="upload.html" class="btn-primary" style="margin-top: 1.5rem;">Try Again</a>
+                    </div>
+                `;
                 downloadAllBtn.style.display = 'none';
                 document.querySelector('.model-preview').style.display = 'none';
                 return;

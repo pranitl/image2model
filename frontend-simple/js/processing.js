@@ -205,19 +205,45 @@ const ProcessingModule = (function() {
         // Close SSE connection
         cleanup();
         
-        // Update UI
-        updateOverallProgress(100);
-        showStatus('All files processed successfully!');
+        // Check if there were any successful files
+        const hasSuccess = data.successCount && data.successCount > 0;
+        const hasFailures = data.failureCount && data.failureCount > 0;
         
-        // Disable cancel button
-        if (elements.cancelBtn) {
+        // Update UI based on results
+        updateOverallProgress(100);
+        
+        if (!hasSuccess && hasFailures) {
+            // All files failed
+            showError('All files failed to process. Please check the error messages.');
+            if (elements.cancelBtn) {
+                elements.cancelBtn.disabled = false;
+                elements.cancelBtn.textContent = 'Back to Upload';
+                elements.cancelBtn.onclick = () => window.location.href = 'upload.html';
+            }
+        } else if (hasSuccess && hasFailures) {
+            // Partial success
+            showStatus(`Processing complete: ${data.successCount} succeeded, ${data.failureCount} failed`);
+            redirectToResults(data.jobId || state.taskId);
+        } else if (hasSuccess) {
+            // All succeeded
+            showStatus('All files processed successfully!');
+            redirectToResults(data.jobId || state.taskId);
+        } else {
+            // No count information - still redirect
+            showStatus('Processing complete');
+            redirectToResults(data.jobId || state.taskId);
+        }
+        
+        // Disable cancel button if proceeding to results
+        if (elements.cancelBtn && (hasSuccess || (!hasSuccess && !hasFailures))) {
             elements.cancelBtn.disabled = true;
             elements.cancelBtn.textContent = 'Completed';
         }
-        
-        // Redirect to results page after short delay
+    }
+    
+    // Helper function to redirect to results
+    function redirectToResults(jobId) {
         setTimeout(() => {
-            const jobId = data.jobId || state.taskId;
             window.location.href = `results.html?jobId=${jobId}`;
         }, 1500);
     }
