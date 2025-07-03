@@ -508,13 +508,20 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
                 # Process single image using FAL.AI
                 file_start_time = time.time()
                 import asyncio
-                result = asyncio.run(process_single_image(
-                    file_path, 
-                    face_limit, 
-                    texture_enabled=True,
-                    progress_callback=batch_file_progress_callback
-                ))
+                try:
+                    result = asyncio.run(process_single_image(
+                        file_path, 
+                        face_limit, 
+                        texture_enabled=True,
+                        progress_callback=batch_file_progress_callback
+                    ))
+                except Exception as async_error:
+                    logger.error(f"Error in asyncio.run: {str(async_error)}", exc_info=True)
+                    raise
                 actual_processing_time = time.time() - file_start_time
+                
+                # Debug: Check if result contains any non-serializable objects
+                logger.debug(f"Result type: {type(result)}, keys: {result.keys() if isinstance(result, dict) else 'not a dict'}")
                 
                 if result["status"] == "success":
                     file_result = {
