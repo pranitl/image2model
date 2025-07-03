@@ -173,6 +173,19 @@ const ProcessingPage: React.FC = () => {
           return file
         })
         setFiles(updatedFiles)
+        
+        // Save job data to localStorage for ResultsPage
+        if (status.result.job_id || status.job_id) {
+          const jobId = status.result.job_id || status.job_id
+          const jobData = {
+            taskId: taskId,
+            fileId: status.result.file_id || status.file_id,
+            filename: status.result.filename || status.filename || updatedFiles[0]?.filename || 'uploaded_image.jpg',
+            uploadPath: status.result.input_image || status.inputImage || '/api/placeholder/300/300'
+          }
+          localStorage.setItem(`job_${jobId}`, JSON.stringify(jobData))
+          console.log('Saved job data to localStorage:', jobData)
+        }
       }
     }
   }, [status, taskId, jobResults])
@@ -667,7 +680,7 @@ const ProcessingPage: React.FC = () => {
           {isCompleted && (
             <div className="space-y-3">
               <Link
-                to={`/results/${taskId}`}
+                to={`/results/${jobResults?.job_id || status?.job_id || taskId}`}
                 className="inline-block bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
               >
                 View Results
