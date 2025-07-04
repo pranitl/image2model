@@ -7,7 +7,7 @@ import logging
 import time
 from typing import Dict, Any, List, Optional
 
-from celery import current_task
+from celery import current_task, group, chord
 from celery.exceptions import SoftTimeLimitExceeded, Retry
 
 from app.core.celery_app import celery_app
@@ -450,6 +450,100 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
         )
         raise exc
 
+
+async def process_single_image(file_path: str, face_limit: Optional[int] = None, texture_enabled: bool = True, progress_callback=None) -> Dict[str, Any]:
+    """
+    Process a single image file using FAL.AI API for 3D model generation.
+    
+    Args:
+        file_path: Path to the image file
+        face_limit: Optional limit on number of faces
+        
+    Returns:
+        Dict with processing result
+    """
+    from app.workers.fal_client import (
+        fal_client, 
+        FalAIError, 
+        FalAIAuthenticationError, 
+        FalAIRateLimitError, 
+        FalAITimeoutError, 
+        FalAIAPIError, 
+        FalAIDownloadError
+    )
+    
+    try:
+        logger.info(f"Starting FAL.AI processing for image: {file_path}")
+        
+        # Use FAL.AI client to process the image
+        result = await fal_client.process_single_image(file_path, face_limit, texture_enabled, progress_callback)
+        
+        logger.info(f"FAL.AI processing completed for {file_path}: {result['status']}")
+        return result
+        
+    except FalAIAuthenticationError as e:
+        logger.error(f"Authentication error for {file_path}: {str(e)}")
+        return {
+            "status": "failed",
+            "input": file_path,
+            "error": f"Authentication failed: {str(e)}",
+            "error_type": "authentication_error",
+            "retryable": False
+        }
+    except FalAIRateLimitError as e:
+        logger.error(f"Rate limit error for {file_path}: {str(e)}")
+        return {
+            "status": "failed",
+            "input": file_path,
+            "error": f"Rate limit exceeded: {str(e)}",
+            "error_type": "rate_limit_error",
+            "retryable": True
+        }
+    except FalAITimeoutError as e:
+        logger.error(f"Timeout error for {file_path}: {str(e)}")
+        return {
+            "status": "failed",
+            "input": file_path,
+            "error": f"Request timed out: {str(e)}",
+            "error_type": "timeout_error",
+            "retryable": True
+        }
+    except FalAIDownloadError as e:
+        logger.error(f"Download error for {file_path}: {str(e)}")
+        return {
+            "status": "failed",
+            "input": file_path,
+            "error": f"Download failed: {str(e)}",
+            "error_type": "download_error",
+            "retryable": True
+        }
+    except FalAIAPIError as e:
+        logger.error(f"API error for {file_path}: {str(e)}")
+        return {
+            "status": "failed",
+            "input": file_path,
+            "error": f"API error: {str(e)}",
+            "error_type": "api_error",
+            "retryable": False
+        }
+    except FalAIError as e:
+        logger.error(f"FAL.AI error for {file_path}: {str(e)}")
+        return {
+            "status": "failed",
+            "input": file_path,
+            "error": f"FAL.AI error: {str(e)}",
+            "error_type": "fal_error",
+            "retryable": False
+        }
+    except Exception as e:
+        logger.error(f"Unexpected error processing {file_path}: {str(e)}", exc_info=True)
+        return {
+            "status": "failed",
+            "input": file_path,
+            "error": f"Unexpected error: {str(e)}",
+            "error_type": "unknown_error",
+            "retryable": False
+        }
 
 
 @celery_app.task(bind=True, max_retries=5)
