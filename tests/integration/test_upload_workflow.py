@@ -15,13 +15,13 @@ import requests
 class TestUploadWorkflow:
     """Test complete upload workflow integration."""
     
-    def test_single_image_upload_success(self, http_session, test_config, sample_image_file, services_ready):
+    def test_single_image_upload_success(self, auth_http_session, test_config, sample_image_file, services_ready):
         """Test successful single image upload (using single file endpoint)."""
         url = f"{test_config['backend_url']}/api/v1/upload/image"
         
         with open(sample_image_file, 'rb') as f:
             files = {'file': (sample_image_file.name, f, 'image/jpeg')}
-            response = http_session.post(url, files=files, timeout=test_config['timeout'])
+            response = auth_http_session.post(url, files=files, timeout=test_config['timeout'])
         
         assert response.status_code == 200, f"Upload failed: {response.text}"
         
@@ -34,7 +34,7 @@ class TestUploadWorkflow:
         assert 'status' in data
         assert data['status'] == 'uploaded'
     
-    def test_batch_upload_success(self, http_session, test_config, multiple_image_files, services_ready):
+    def test_batch_upload_success(self, auth_http_session, test_config, multiple_image_files, services_ready):
         """Test successful batch upload."""
         url = f"{test_config['backend_url']}/api/v1/upload"
         
@@ -43,7 +43,7 @@ class TestUploadWorkflow:
             files.append(('files', (img_file.name, open(img_file, 'rb'), 'image/jpeg')))
         
         try:
-            response = http_session.post(url, files=files, timeout=test_config['timeout'])
+            response = auth_http_session.post(url, files=files, timeout=test_config['timeout'])
             
             assert response.status_code == 200, f"Batch upload failed: {response.text}"
             
@@ -67,13 +67,13 @@ class TestUploadWorkflow:
             for _, file_tuple in files:
                 file_tuple[1].close()
     
-    def test_upload_file_validation_errors(self, http_session, test_config, invalid_file, services_ready):
+    def test_upload_file_validation_errors(self, auth_http_session, test_config, invalid_file, services_ready):
         """Test file validation error handling."""
         url = f"{test_config['backend_url']}/api/v1/upload/image"
         
         with open(invalid_file, 'rb') as f:
             files = {'file': (invalid_file.name, f, 'text/plain')}
-            response = http_session.post(url, files=files, timeout=test_config['timeout'])
+            response = auth_http_session.post(url, files=files, timeout=test_config['timeout'])
         
         assert response.status_code == 400
         
@@ -82,7 +82,7 @@ class TestUploadWorkflow:
         assert 'FILE_VALIDATION_ERROR' in error_data.get('error_code', '')
         assert 'message' in error_data
     
-    def test_upload_large_file_handling(self, http_session, test_config, large_image_file, services_ready):
+    def test_upload_large_file_handling(self, auth_http_session, test_config, large_image_file, services_ready):
         """Test handling of large files."""
         url = f"{test_config['backend_url']}/api/v1/upload/image"
         
@@ -92,7 +92,7 @@ class TestUploadWorkflow:
             # This might succeed or fail depending on file size limits
             # We're testing that it handles the large file gracefully
             try:
-                response = http_session.post(url, files=files, timeout=60)  # Longer timeout for large file
+                response = auth_http_session.post(url, files=files, timeout=60)  # Longer timeout for large file
                 
                 if response.status_code == 200:
                     # Large file was accepted
@@ -111,18 +111,18 @@ class TestUploadWorkflow:
                 # Timeout is acceptable for very large files
                 pass
     
-    def test_upload_missing_file(self, http_session, test_config, services_ready):
+    def test_upload_missing_file(self, auth_http_session, test_config, services_ready):
         """Test upload with missing file parameter."""
         url = f"{test_config['backend_url']}/api/v1/upload/image"
         
         # Send request without file
-        response = http_session.post(url, timeout=test_config['timeout'])
+        response = auth_http_session.post(url, timeout=test_config['timeout'])
         
         assert response.status_code == 400
         error_data = response.json()
         assert error_data.get('error') == True
     
-    def test_upload_empty_file(self, http_session, test_config, temp_dir, services_ready):
+    def test_upload_empty_file(self, auth_http_session, test_config, temp_dir, services_ready):
         """Test upload with empty file."""
         url = f"{test_config['backend_url']}/api/v1/upload/image"
         
@@ -132,13 +132,13 @@ class TestUploadWorkflow:
         
         with open(empty_file, 'rb') as f:
             files = {'file': (empty_file.name, f, 'image/jpeg')}
-            response = http_session.post(url, files=files, timeout=test_config['timeout'])
+            response = auth_http_session.post(url, files=files, timeout=test_config['timeout'])
         
         assert response.status_code == 400
         error_data = response.json()
         assert error_data.get('error') == True
     
-    def test_batch_upload_size_limit(self, http_session, test_config, multiple_image_files, services_ready):
+    def test_batch_upload_size_limit(self, auth_http_session, test_config, multiple_image_files, services_ready):
         """Test batch upload with too many files."""
         url = f"{test_config['backend_url']}/api/v1/upload"
         
@@ -149,7 +149,7 @@ class TestUploadWorkflow:
             files.append(('files', (f"{i}_{img_file.name}", open(img_file, 'rb'), 'image/jpeg')))
         
         try:
-            response = http_session.post(url, files=files, timeout=test_config['timeout'])
+            response = auth_http_session.post(url, files=files, timeout=test_config['timeout'])
             
             # Should return error for too many files
             assert response.status_code == 400
@@ -163,14 +163,14 @@ class TestUploadWorkflow:
                 file_tuple[1].close()
     
     @pytest.mark.slow
-    def test_upload_and_task_tracking(self, http_session, test_config, sample_image_file, services_ready):
+    def test_upload_and_task_tracking(self, auth_http_session, test_config, sample_image_file, services_ready):
         """Test complete upload and task tracking workflow using batch endpoint."""
         # Use batch upload for proper task tracking (matches frontend behavior)
         upload_url = f"{test_config['backend_url']}/api/v1/upload/batch"
         
         with open(sample_image_file, 'rb') as f:
             files = [('files', (sample_image_file.name, f, 'image/jpeg'))]
-            upload_response = http_session.post(upload_url, files=files, timeout=test_config['timeout'])
+            upload_response = auth_http_session.post(upload_url, files=files, timeout=test_config['timeout'])
         
         assert upload_response.status_code == 200
         upload_data = upload_response.json()
@@ -184,7 +184,7 @@ class TestUploadWorkflow:
         final_status = None
         
         while attempt < max_attempts:
-            status_response = http_session.get(status_url, timeout=test_config['timeout'])
+            status_response = auth_http_session.get(status_url, timeout=test_config['timeout'])
             assert status_response.status_code == 200
             
             status_data = status_response.json()
@@ -204,7 +204,7 @@ class TestUploadWorkflow:
         if final_status == 'completed':
             batch_id = upload_data['batch_id']
             download_url = f"{test_config['backend_url']}/api/v1/download/{batch_id}/all"
-            download_response = http_session.get(download_url, timeout=test_config['timeout'])
+            download_response = auth_http_session.get(download_url, timeout=test_config['timeout'])
             
             # Should return list of available files or redirect to file
             assert download_response.status_code in [200, 302]
