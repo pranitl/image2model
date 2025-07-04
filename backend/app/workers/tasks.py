@@ -296,8 +296,7 @@ def process_file_in_batch(self, file_path: str, job_id: str, face_limit: Optiona
                     job_id=job_id,
                     file_path=file_path,
                     status="processing",
-                    progress=progress,
-                    message=message
+                    progress=progress
                 )
             except Exception as e:
                 logger.warning(f"Failed to update progress tracker: {e}")

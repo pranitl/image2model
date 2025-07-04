@@ -48,14 +48,22 @@ class JobStore:
         """Get job result if exists."""
         try:
             key = self._get_key(job_id)
+            logger.debug(f"Looking for job result with key: {key}")
+            
             data = self._redis_client.get(key)
             
             if data:
+                logger.info(f"Found job result for {job_id}, size: {len(data)} bytes")
                 return json.loads(data)
+            else:
+                logger.warning(f"No job result found for {job_id} with key {key}")
+                # Debug: List all job_result keys
+                all_keys = list(self._redis_client.scan_iter(match=f"{self._key_prefix}*", count=10))
+                logger.debug(f"Available job keys: {all_keys[:5]}...")
             return None
             
         except Exception as e:
-            logger.error(f"Failed to get job result from Redis: {e}")
+            logger.error(f"Failed to get job result from Redis for job {job_id}: {e}", exc_info=True)
             return None
     
     def set_job_metadata(self, job_id: str, metadata: Dict[str, Any]) -> None:

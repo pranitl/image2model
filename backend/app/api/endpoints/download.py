@@ -409,3 +409,40 @@ async def download_model(job_id: str, filename: str, request: Request):
         # Log unexpected errors
         logger.error(f"Unexpected error serving file {filename} to {client_ip}: {str(e)}")
         raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/debug/job/{job_id}")
+async def debug_job_store(job_id: str):
+    """Debug endpoint to check job store connectivity and data."""
+    import redis
+    from app.core.config import settings
+    
+    debug_info = {
+        "job_id": job_id,
+        "redis_url": settings.CELERY_RESULT_BACKEND,
+        "job_store_result": None,
+        "direct_redis_result": None,
+        "redis_keys": [],
+        "error": None
+    }
+    
+    try:
+        # Try job store
+        from app.core.job_store import job_store
+        job_result = job_store.get_job_result(job_id)
+        debug_info["job_store_result"] = bool(job_result)
+        
+        # Try direct Redis connection
+        r = redis.from_url(settings.CELERY_RESULT_BACKEND, decode_responses=True)
+        key = f"job_result:{job_id}"
+        direct_result = r.get(key)
+        debug_info["direct_redis_result"] = bool(direct_result)
+        
+        # List some keys
+        debug_info["redis_keys"] = list(r.scan_iter(match="job_result:*", count=5))[:5]
+        
+    except Exception as e:
+        debug_info["error"] = str(e)
+        logger.error(f"Debug endpoint error: {e}", exc_info=True)
+    
+    return debug_info
