@@ -29,6 +29,9 @@
         const headers = {};
         if (API_KEY) {
             headers['Authorization'] = `Bearer ${API_KEY}`;
+            console.log('Using API key:', API_KEY.substring(0, 10) + '...');
+        } else {
+            console.warn('No API key available!');
         }
         return { ...headers, ...additionalHeaders };
     }
@@ -46,13 +49,18 @@
         formData.append('face_limit', faceLimit.toString());
         
         try {
+            console.log('Uploading to:', `${API_BASE}/upload/`);
+            const headers = getHeaders();
+            console.log('Request headers:', headers);
+            
             const response = await fetch(`${API_BASE}/upload/`, {
                 method: 'POST',
-                headers: getHeaders(),
+                headers: headers,
                 body: formData
                 // Don't set Content-Type header - browser will set it with boundary
             });
             
+            console.log('Upload response status:', response.status);
             await handleApiError(response);
             const data = await response.json();
             

@@ -139,14 +139,59 @@ async def stream_task_status(
                     elif task_result.state == 'SUCCESS':
                         # Task completed successfully
                         result = task_result.result or {}
-                        data = {
-                            'status': 'completed',
-                            'progress': 100,
-                            'message': 'Task completed successfully',
-                            'task_id': task_id,
-                            'result': result,
-                            'timestamp': int(time.time() * 1000),
-                            'task_name': task_result.name if hasattr(task_result, 'name') else 'unknown'
+                        
+                        # Check if this is a chord starter task
+                        if isinstance(result, dict) and result.get('chord_task_id'):
+                            # This is a batch processing task that started a chord
+                            # Track the chord instead
+                            chord_id = result['chord_task_id']
+                            logger.info(f"Main task {task_id} started chord {chord_id}, switching to track chord")
+                            
+                            # Get chord result
+                            from celery.result import AsyncResult
+                            chord_result = AsyncResult(chord_id, app=celery_app)
+                            
+                            if chord_result.ready():
+                                # Chord completed - get the finalized results
+                                if chord_result.successful():
+                                    final_result = chord_result.result or {}
+                                    data = {
+                                        'status': 'completed',
+                                        'progress': 100,
+                                        'message': 'All files processed successfully',
+                                        'task_id': task_id,
+                                        'result': final_result,
+                                        'timestamp': int(time.time() * 1000)
+                                    }
+                                else:
+                                    data = {
+                                        'status': 'failed',
+                                        'progress': 100,
+                                        'message': 'Processing failed',
+                                        'task_id': task_id,
+                                        'error': str(chord_result.info),
+                                        'timestamp': int(time.time() * 1000)
+                                    }
+                            else:
+                                # Chord still processing
+                                data = {
+                                    'status': 'processing', 
+                                    'progress': 50,  # Assume halfway since main task is done
+                                    'message': f'Processing files... (tracking chord {chord_id[:8]})',
+                                    'task_id': task_id,
+                                    'chord_task_id': chord_id,
+                                    'timestamp': int(time.time() * 1000)
+                                }
+                        else:
+                            # Regular task completion
+                            data = {
+                                'status': 'completed',
+                                'progress': 100,
+                                'message': 'Task completed successfully',
+                                'task_id': task_id,
+                                'result': result,
+                                'timestamp': int(time.time() * 1000),
+                                'task_name': task_result.name if hasattr(task_result, 'name') else 'unknown'
                         }
                         
                         # Add result summary if available

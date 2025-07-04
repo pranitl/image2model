@@ -247,9 +247,25 @@ const ProcessingModule = (function() {
     
     // Helper function to redirect to results
     function redirectToResults(jobId) {
+        console.log('Processing complete! Redirecting to results in 5 seconds...', {
+            jobId: jobId,
+            successCount: state.completedCount,
+            failedCount: state.failedCount
+        });
+        
+        // Show countdown in status message
+        let countdown = 5;
+        const countdownInterval = setInterval(() => {
+            showStatus(`Processing complete! Redirecting to results in ${countdown}...`, 'success');
+            countdown--;
+            if (countdown < 0) {
+                clearInterval(countdownInterval);
+            }
+        }, 1000);
+        
         setTimeout(() => {
             window.location.href = `results.html?jobId=${jobId}`;
-        }, 1500);
+        }, 5000); // 5 second delay
     }
     
     // Handle errors

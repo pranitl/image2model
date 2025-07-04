@@ -270,13 +270,37 @@ const UploadModule = (function() {
             // Clean up object URLs before redirect
             cleanupObjectUrls();
             
-            // Redirect to processing page
-            window.location.href = `processing.html?taskId=${response.taskId}`;
+            // Log success for debugging
+            console.log('Upload successful!', {
+                success: response.success,
+                jobId: response.jobId,
+                taskId: response.taskId,
+                fileCount: response.fileCount
+            });
+            
+            // Show success message with countdown
+            let countdown = 5;
+            const countdownInterval = setInterval(() => {
+                generateBtn.textContent = `Upload successful! Redirecting in ${countdown}...`;
+                countdown--;
+                if (countdown < 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 1000);
+            
+            // Add delay for debugging
+            setTimeout(() => {
+                // Redirect to processing page
+                window.location.href = `processing.html?taskId=${response.taskId}`;
+            }, 5000); // 5 second delay
             
         } catch (error) {
             console.error('Upload error:', error);
             showError(`Upload failed: ${error.message}`);
             setUIState('ready');
+            
+            // Keep error visible for debugging
+            alert(`Upload error: ${error.message}\n\nCheck console for details.`);
         }
     }
     
