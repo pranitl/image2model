@@ -1,5 +1,14 @@
 # Claude Guide
 
+## Production Roadmap
+**IMPORTANT**: See `PRODUCTION_ROADMAP.md` for the comprehensive SaaS transformation plan. This includes:
+- 7 implementation phases with detailed tasks
+- Database schemas and code examples
+- Timeline and revenue projections
+- Security and deployment instructions
+
+Also see `docs/SAAS_ARCHITECTURE.md` for technical architecture details.
+
 ### Standard Implementation Process
 
 1. `task-master show <id>` - Understand requirements
