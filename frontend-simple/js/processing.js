@@ -5,6 +5,7 @@ const ProcessingModule = (function() {
     // State management
     const state = {
         taskId: null,
+        jobId: null,  // Add jobId to state
         eventSource: null,
         streamController: null,
         files: new Map(), // Map of filename -> file status
@@ -23,9 +24,10 @@ const ProcessingModule = (function() {
     
     // Initialize on DOM ready
     function init() {
-        // Extract task_id from URL
+        // Extract task_id and job_id from URL
         const urlParams = new URLSearchParams(window.location.search);
         state.taskId = urlParams.get('taskId') || urlParams.get('task_id');
+        state.jobId = urlParams.get('jobId') || urlParams.get('job_id');
         
         if (!state.taskId) {
             showError('No task ID provided');
@@ -222,15 +224,15 @@ const ProcessingModule = (function() {
         } else if (hasSuccess && hasFailures) {
             // Partial success
             showStatus(`Processing complete: ${data.successCount} succeeded, ${data.failureCount} failed`);
-            redirectToResults(data.jobId || state.taskId);
+            redirectToResults(data.jobId || state.jobId || state.taskId);
         } else if (hasSuccess) {
             // All succeeded
             showStatus('All files processed successfully!');
-            redirectToResults(data.jobId || state.taskId);
+            redirectToResults(data.jobId || state.jobId || state.taskId);
         } else {
             // No count information - still redirect
             showStatus('Processing complete');
-            redirectToResults(data.jobId || state.taskId);
+            redirectToResults(data.jobId || state.jobId || state.taskId);
         }
         
         // Disable cancel button if proceeding to results

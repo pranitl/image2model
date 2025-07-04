@@ -160,6 +160,7 @@ async def stream_task_status(
                                         'progress': 100,
                                         'message': 'All files processed successfully',
                                         'task_id': task_id,
+                                        'job_id': final_result.get('job_id'),  # Extract job_id from result
                                         'result': final_result,
                                         'timestamp': int(time.time() * 1000)
                                     }

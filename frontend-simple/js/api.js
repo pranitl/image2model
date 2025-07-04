@@ -148,11 +148,11 @@
                         
                     default:
                         // Handle generic message events
-                        if (data.status === 'completed' && data.job_id) {
+                        if (data.status === 'completed') {
                             onComplete({
-                                jobId: data.job_id,
-                                successCount: data.success_count || 0,
-                                failureCount: data.failure_count || 0
+                                jobId: data.job_id || data.result?.job_id || taskId,
+                                successCount: data.success_count || data.result?.successful_files || 0,
+                                failureCount: data.failure_count || data.result?.failed_files || 0
                             });
                             eventSource.close();
                         } else if (data.status === 'failed') {

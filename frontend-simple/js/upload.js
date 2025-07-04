@@ -273,8 +273,8 @@ const UploadModule = (function() {
             // Show success message
             generateBtn.textContent = 'Upload successful! Redirecting...';
             
-            // Redirect immediately to processing page
-            window.location.href = `processing.html?taskId=${response.taskId}`;
+            // Redirect immediately to processing page with both IDs
+            window.location.href = `processing.html?taskId=${response.taskId}&jobId=${response.jobId}`;
             
         } catch (error) {
             console.error('Upload error:', error);
