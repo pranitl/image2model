@@ -165,11 +165,6 @@ const ProcessingModule = (function() {
     function handleProgressUpdate(data) {
         console.log('Progress update:', data);
         
-        // Update overall progress
-        if (data.overall !== undefined) {
-            updateOverallProgress(data.overall);
-        }
-        
         // Update file counts
         if (data.totalFiles !== undefined) {
             if (elements.fileCount) elements.fileCount.textContent = data.totalFiles;
@@ -187,6 +182,9 @@ const ProcessingModule = (function() {
             updateFileGrid(data.files);
             updateCompletedCount();
         }
+        
+        // Calculate and update overall progress based on individual file progress
+        updateOverallProgressFromFiles();
     }
     
     // Handle individual file updates
@@ -194,12 +192,12 @@ const ProcessingModule = (function() {
         console.log('File update:', data);
         
         if (data.fileName) {
-            updateFileCard(data.fileName, data.status, data.error || formatStatus(data.status));
-            
-            // Update file progress if provided
-            if (data.progress !== undefined && data.status === 'processing') {
-                updateFileProgress(data.fileName, data.progress);
-            }
+            updateFileCard(
+                data.fileName, 
+                data.status, 
+                data.error || formatStatus(data.status),
+                data.progress
+            );
         }
     }
     
@@ -279,6 +277,28 @@ const ProcessingModule = (function() {
         }
     }
     
+    // Calculate overall progress from individual file progress
+    function updateOverallProgressFromFiles() {
+        if (state.files.size === 0) return;
+        
+        let totalProgress = 0;
+        let fileCount = 0;
+        
+        state.files.forEach((file) => {
+            fileCount++;
+            if (file.status === 'completed') {
+                totalProgress += 100;
+            } else if (file.status === 'processing' && file.progress) {
+                totalProgress += file.progress;
+            } else if (file.status === 'failed') {
+                totalProgress += 100; // Count failed as "processed"
+            }
+        });
+        
+        const overallProgress = fileCount > 0 ? Math.round(totalProgress / fileCount) : 0;
+        updateOverallProgress(overallProgress);
+    }
+    
     // Update file grid
     function updateFileGrid(files) {
         if (!elements.fileGrid) return;
@@ -308,6 +328,8 @@ const ProcessingModule = (function() {
         card.dataset.filename = filename;
         
         const statusIcon = getStatusIcon(fileData.status);
+        const showProgress = fileData.status === 'processing' || fileData.status === 'pending';
+        const progressValue = fileData.progress || 0;
         
         card.innerHTML = `
             <div class="file-card-content">
@@ -327,8 +349,10 @@ const ProcessingModule = (function() {
                         ${statusIcon}
                         <span class="status-text">${formatStatus(fileData.status)}</span>
                     </div>
-                    <div class="file-progress-bar" style="display: ${fileData.status === 'processing' ? 'block' : 'none'}">
-                        <div class="file-progress-fill" style="width: ${fileData.progress || 0}%"></div>
+                    <div class="file-progress-bar" style="display: ${showProgress ? 'block' : 'none'}">
+                        <div class="file-progress-fill" style="width: ${progressValue}%">
+                            <span class="file-progress-text">${progressValue}%</span>
+                        </div>
                     </div>
                     ${fileData.error ? 
                         `<div class="file-error">${fileData.error}</div>` : ''
@@ -341,11 +365,15 @@ const ProcessingModule = (function() {
     }
     
     // Update file card status
-    function updateFileCard(filename, status, message) {
+    function updateFileCard(filename, status, message, progress = null) {
         const card = document.querySelector(`[data-filename="${filename}"]`);
         if (!card) {
             // Create card if it doesn't exist
-            const fileData = { status: status, error: status === 'failed' ? message : null };
+            const fileData = { 
+                status: status, 
+                error: status === 'failed' ? message : null,
+                progress: progress || 0
+            };
             state.files.set(filename, fileData);
             createFileCard(filename, fileData);
             return;
@@ -355,6 +383,7 @@ const ProcessingModule = (function() {
         const fileData = state.files.get(filename) || {};
         fileData.status = status;
         if (status === 'failed') fileData.error = message;
+        if (progress !== null) fileData.progress = progress;
         state.files.set(filename, fileData);
         
         // Update card appearance
@@ -376,14 +405,26 @@ const ProcessingModule = (function() {
             }
         }
         
-        // Handle progress bar visibility
+        // Handle progress bar visibility and value
         const progressBar = card.querySelector('.file-progress-bar');
+        const showProgress = status === 'processing' || status === 'pending';
         if (progressBar) {
-            progressBar.style.display = status === 'processing' ? 'block' : 'none';
+            progressBar.style.display = showProgress ? 'block' : 'none';
+            if (showProgress && progress !== null) {
+                const progressFill = progressBar.querySelector('.file-progress-fill');
+                const progressText = progressBar.querySelector('.file-progress-text');
+                if (progressFill) {
+                    progressFill.style.width = `${progress}%`;
+                }
+                if (progressText) {
+                    progressText.textContent = `${progress}%`;
+                }
+            }
         }
         
-        // Update completed count
+        // Update completed count and overall progress
         updateCompletedCount();
+        updateOverallProgressFromFiles();
     }
     
     // Update file progress

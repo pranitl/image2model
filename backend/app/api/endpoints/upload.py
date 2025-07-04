@@ -21,7 +21,7 @@ from app.core.error_handlers import (
     handle_file_validation_error,
     safe_file_operation
 )
-from app.workers.tasks import process_batch_task, generate_3d_model_task
+from app.workers.tasks import process_batch
 
 logger = logging.getLogger(__name__)
 
@@ -259,13 +259,13 @@ async def save_validated_file(file: UploadFile, batch_id: str) -> UploadResponse
     )
 
 
-@router.post("/batch", response_model=BatchUploadResponse)
-async def upload_batch(
+@router.post("/", response_model=BatchUploadResponse)
+async def upload(
     files: List[UploadFile] = File(...),
     face_limit: Optional[int] = Form(None, description="Maximum number of faces for 3D model generation")
 ):
     """
-    Upload a batch of image files for 3D model generation.
+    Upload image files for 3D model generation.
     
     Args:
         files: List of image files to upload (max 25 files)
@@ -349,13 +349,20 @@ async def upload_batch(
         ]
         
         # Start background processing task
-        task_result = process_batch_task.delay(
-            batch_id=batch_id,
+        # Always use process_batch for consistency (handles both single and multiple files)
+        task_result = process_batch.delay(
             job_id=job_id,
             file_paths=file_paths,
             face_limit=face_limit
         )
+        logger.info(f"Started batch processing for {len(file_paths)} files, task_id: {task_result.id}")
+        
         actual_task_id = task_result.id
+        
+        # Ensure we have a task ID
+        if not actual_task_id:
+            logger.error("No task ID generated for job")
+            raise Exception("Failed to generate task ID")
         
     except Exception as e:
         # Log error but don't fail the upload

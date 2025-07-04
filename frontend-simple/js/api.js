@@ -32,7 +32,7 @@
         formData.append('face_limit', faceLimit.toString());
         
         try {
-            const response = await fetch(`${API_BASE}/upload/batch`, {
+            const response = await fetch(`${API_BASE}/upload/`, {
                 method: 'POST',
                 body: formData
                 // Don't set Content-Type header - browser will set it with boundary

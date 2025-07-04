@@ -101,7 +101,39 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=2 -Q default,batch_processing,model_generation,maintenance,priority
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=4 -Q default,batch_processing,model_generation,maintenance,priority --max-tasks-per-child=50
+    networks:
+      - image2model-network
+    restart: unless-stopped
+
+  # Additional Celery worker dedicated to model generation
+  worker-model:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile
+      target: production
+    container_name: image2model-worker-model
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@postgres:5432/image2model
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ENVIRONMENT=development
+      - LOG_LEVEL=debug
+    env_file:
+      - .env
+    volumes:
+      - ./backend:/app:delegated
+      - backend_uploads:/app/uploads
+      - backend_results:/app/results
+      - backend_models:/app/models
+      - /app/__pycache__
+      - /app/.pytest_cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: celery -A app.core.celery_app worker --loglevel=info --concurrency=3 -Q model_generation --max-tasks-per-child=20 -n worker-model@%h
     networks:
       - image2model-network
     restart: unless-stopped

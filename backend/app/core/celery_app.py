@@ -40,13 +40,15 @@ celery_app.conf.update(
     # Result expiration
     result_expires=3600,  # 1 hour
     
-    # Worker settings
-    worker_prefetch_multiplier=1,
-    worker_max_tasks_per_child=1000,
+    # Worker settings optimized for parallel processing
+    worker_prefetch_multiplier=1,  # Disable prefetching for fair distribution
+    worker_max_tasks_per_child=50,  # Restart workers more frequently to avoid memory leaks
+    task_acks_on_failure_or_timeout=True,  # Acknowledge failed tasks
     
     # Task routing (can be expanded later)
     task_routes={
         'app.workers.tasks.process_batch': {'queue': 'batch_processing'},
+        'app.workers.tasks.process_file_in_batch': {'queue': 'model_generation'},  # Distribute file processing across workers
         'app.workers.tasks.generate_3d_model_task': {'queue': 'model_generation'},
         'app.workers.cleanup.cleanup_old_files': {'queue': 'maintenance'},
         'app.workers.cleanup.get_disk_usage': {'queue': 'maintenance'},
@@ -75,6 +77,11 @@ celery_app.conf.update(
     task_reject_on_worker_lost=True,
     task_acks_late=True,
     
+    # Connection pool settings for Redis
+    broker_pool_limit=10,  # Redis connection pool size
+    result_backend_pool_limit=10,  # Result backend pool size
+    broker_connection_retry_on_startup=True,  # Retry broker connection on startup
+    
     # Monitoring
     worker_send_task_events=True,
     task_send_events=True,
@@ -86,10 +93,10 @@ celery_app.conf.task_routes = {
     'app.workers.tasks.health_check_task': {'queue': 'priority'},
     
     # Batch processing tasks
-    'app.workers.tasks.process_batch_task': {'queue': 'batch_processing'},
     'app.workers.tasks.process_batch': {'queue': 'batch_processing'},
     
-    # Model generation tasks
+    # Model generation tasks - distributed across workers
+    'app.workers.tasks.process_file_in_batch': {'queue': 'model_generation'},
     'app.workers.tasks.generate_3d_model_task': {'queue': 'model_generation'},
     
     # Maintenance tasks
@@ -147,26 +154,7 @@ def task_retry_handler(sender=None, task_id=None, reason=None, einfo=None, **kwd
     logger.warning(f"Task {sender.name if sender else 'unknown'} retry: {reason}")
 
 # Dead letter queue configuration for failed tasks
-celery_app.conf.update(
-    # Dead letter queue settings
-    task_reject_on_worker_lost=True,
-    task_acks_late=True,
-    
-    # Queue configuration for dead letters
-    task_routes={
-        **celery_app.conf.task_routes,
-        'app.workers.tasks.*': {
-            'queue': 'default',
-            'routing_key': 'default',
-            # Dead letter exchange configuration
-            'options': {
-                'x-dead-letter-exchange': 'dlx',
-                'x-dead-letter-routing-key': 'failed',
-                'x-message-ttl': 86400000,  # 24 hours
-            }
-        }
-    }
-)
+# Note: task_reject_on_worker_lost and task_acks_late are already set above
 
 # Error handling configuration
 celery_app.conf.update(

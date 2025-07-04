@@ -97,7 +97,7 @@ class TestCompleteWorkflow:
     def test_batch_processing_workflow(self, http_session, test_config, multiple_image_files, services_ready):
         """Test batch processing workflow with multiple files."""
         # Step 1: Upload batch
-        upload_url = f"{test_config['backend_url']}/api/v1/upload/batch"
+        upload_url = f"{test_config['backend_url']}/api/v1/upload"
         
         # Use first 3 images for faster testing
         test_files = multiple_image_files[:3]

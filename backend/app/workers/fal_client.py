@@ -12,7 +12,6 @@ from typing import Dict, Any, Optional
 import requests
 import fal_client as fal
 from app.core.config import settings
-from app.core.monitoring import monitor_fal_api_call
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +61,8 @@ class FalAIClient:
         self.max_retries = 3
         self.base_timeout = 300  # 5 minutes
         self.max_wait_time = 1800  # 30 minutes max
+        self._processed_log_timestamps = set()  # Track processed logs to avoid duplicates
+        self._last_progress = {}  # Track last progress per file to ensure monotonic updates
         
     def _setup_authentication(self) -> None:
         """Set up FAL.AI authentication using API key from settings."""
@@ -85,8 +86,8 @@ class FalAIClient:
         delay = min(base_delay * (2 ** attempt), max_delay)
         return delay
     
-    def _handle_queue_update(self, update, progress_callback):
-        """Handle FAL.AI queue updates and forward progress."""
+    def _handle_queue_update(self, update, progress_callback, file_id=None):
+        """Handle FAL.AI queue updates and forward progress with deduplication."""
         try:
             import fal_client
             logger.info(f"FAL.AI queue update received: {type(update).__name__}")
@@ -99,6 +100,16 @@ class FalAIClient:
                 if hasattr(update, 'logs') and update.logs:
                     logger.info(f"Processing {len(update.logs)} log entries")
                     for log in update.logs:
+                        # Check if we've already processed this log entry
+                        log_timestamp = log.get('timestamp') or log.get('logged_at')
+                        if log_timestamp and log_timestamp in self._processed_log_timestamps:
+                            logger.debug(f"Skipping duplicate log entry: {log_timestamp}")
+                            continue
+                        
+                        # Mark as processed
+                        if log_timestamp:
+                            self._processed_log_timestamps.add(log_timestamp)
+                        
                         logger.info(f"FAL.AI log entry: {log}")
                         if progress_callback and 'message' in log:
                             raw_message = log['message']
@@ -128,11 +139,23 @@ class FalAIClient:
                                     except:
                                         pass
                             
+                            # Ensure monotonic progress (never decrease)
+                            last_progress = self._last_progress.get(file_id, 0)
+                            if progress_percent < last_progress:
+                                logger.debug(f"Skipping progress update {progress_percent}% < {last_progress}%")
+                                continue
+                            
+                            # Update last progress
+                            self._last_progress[file_id] = progress_percent
+                            
                             logger.info(f"Sending progress update: {user_message} ({progress_percent}%)")
                             progress_callback(user_message, progress_percent)
                 elif progress_callback:
                     logger.info("No logs in update, sending default progress")
-                    progress_callback("Generating 3D model...", 10)
+                    # Only send default if we haven't sent any progress yet
+                    if file_id not in self._last_progress or self._last_progress[file_id] == 0:
+                        progress_callback("Generating 3D model...", 10)
+                        self._last_progress[file_id] = 10
             else:
                 logger.info(f"Non-InProgress update type: {type(update)}")
         except Exception as e:
@@ -209,6 +232,11 @@ class FalAIClient:
         Returns:
             Dictionary containing processing result with status, paths, and metadata
         """
+        # Clear progress tracking for this file
+        file_id = job_id or file_path
+        if file_id in self._last_progress:
+            del self._last_progress[file_id]
+        
         for attempt in range(self.max_retries + 1):
             try:
                 logger.info(f"Starting FAL.AI processing for image: {file_path} (attempt {attempt + 1})")
@@ -241,27 +269,49 @@ class FalAIClient:
                 if progress_callback:
                     progress_callback("Submitting job to FAL.AI API...", 25)
                 
-                async with monitor_fal_api_call("submit_job") as monitor_logger:
+                # Track timing for monitoring
+                submit_start_time = time.time()
+                
+                try:
                     # Use the correct fal_client.subscribe method for real-time execution
                     # This will handle the queue/progress automatically and provide real-time updates
                     result = fal.subscribe(
                         self.model_endpoint,
                         arguments=input_data,
                         with_logs=True,
-                        on_queue_update=lambda update: self._handle_queue_update(update, progress_callback) if progress_callback else None
+                        on_queue_update=lambda update: self._handle_queue_update(update, progress_callback, file_id=job_id or file_path) if progress_callback else None
                     )
                     
-                    monitor_logger.logger.info(
-                        "FAL.AI job completed successfully",
-                        model_endpoint=self.model_endpoint,
-                        image_path=file_path,
-                        face_limit=face_limit,
-                        result_keys=list(result.keys()) if isinstance(result, dict) else None
+                    # Log success metrics
+                    submit_duration_ms = (time.time() - submit_start_time) * 1000
+                    logger.info(
+                        f"FAL.AI job completed successfully in {submit_duration_ms:.2f}ms",
+                        extra={
+                            "model_endpoint": self.model_endpoint,
+                            "image_path": file_path,
+                            "face_limit": face_limit,
+                            "result_keys": list(result.keys()) if isinstance(result, dict) else None,
+                            "duration_ms": submit_duration_ms
+                        }
                     )
                     
                     logger.info("FAL.AI processing completed")
                     if progress_callback:
                         progress_callback("3D model generation completed", 90)
+                        
+                except Exception as e:
+                    # Log failure metrics
+                    submit_duration_ms = (time.time() - submit_start_time) * 1000
+                    logger.error(
+                        f"FAL.AI job failed after {submit_duration_ms:.2f}ms: {str(e)}",
+                        extra={
+                            "model_endpoint": self.model_endpoint,
+                            "image_path": file_path,
+                            "error": str(e),
+                            "duration_ms": submit_duration_ms
+                        }
+                    )
+                    raise
                 
                 if not result:
                     raise FalAIAPIError("No result received from FAL.AI API")
@@ -269,7 +319,7 @@ class FalAIClient:
                 logger.info(f"FAL.AI API response received: {result}")
                 
                 # Process the successful result
-                return await self._process_result(result, file_path, progress_callback, job_id)
+                return self._process_result(result, file_path, progress_callback, job_id)
                 
             except (FalAIAuthenticationError, FalAIRateLimitError, FalAITimeoutError, FalAIAPIError):
                 # These are already properly handled exceptions
@@ -296,7 +346,7 @@ class FalAIClient:
             'error': f'Failed after {self.max_retries + 1} attempts'
         }
     
-    async def _process_result(self, result: Dict[str, Any], file_path: str, progress_callback: Optional[callable] = None, job_id: Optional[str] = None) -> Dict[str, Any]:
+    def _process_result(self, result: Dict[str, Any], file_path: str, progress_callback: Optional[callable] = None, job_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Process the FAL.AI API result and return direct URLs without downloading.
         
@@ -389,6 +439,40 @@ class FalAIClient:
 
 
     # Storage management methods removed - no longer needed with direct FAL.AI URLs
+
+    def process_single_image_sync(
+        self, 
+        file_path: str, 
+        face_limit: Optional[int] = None,
+        texture_enabled: bool = True,
+        progress_callback: Optional[callable] = None,
+        job_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Synchronous wrapper for process_single_image to use in Celery tasks.
+        
+        This avoids the coroutine serialization issues when using async functions
+        in Celery tasks.
+        """
+        import asyncio
+        
+        # Create a new event loop for this thread if needed
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        
+        # Run the async function in the event loop
+        return loop.run_until_complete(
+            self.process_single_image(
+                file_path=file_path,
+                face_limit=face_limit,
+                texture_enabled=texture_enabled,
+                progress_callback=progress_callback,
+                job_id=job_id
+            )
+        )
 
 
 # Global instance for use in tasks

@@ -257,7 +257,13 @@ const UploadModule = (function() {
             // Upload using API client
             const response = await api.uploadBatch(files, faceLimit);
             
-            if (!response || (!response.task_id && !response.taskId)) {
+            // Check if upload was successful
+            if (!response || !response.success) {
+                throw new Error(response?.error || 'Upload failed');
+            }
+            
+            // Check for task ID in the response
+            if (!response.taskId) {
                 throw new Error('No task ID received from server');
             }
             
@@ -265,8 +271,7 @@ const UploadModule = (function() {
             cleanupObjectUrls();
             
             // Redirect to processing page
-            const taskId = response.task_id || response.taskId;
-            window.location.href = `processing.html?taskId=${taskId}`;
+            window.location.href = `processing.html?taskId=${response.taskId}`;
             
         } catch (error) {
             console.error('Upload error:', error);
