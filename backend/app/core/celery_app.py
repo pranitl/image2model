@@ -92,7 +92,6 @@ celery_app.conf.task_routes = {
     'app.workers.tasks.health_check_task': {'queue': 'priority'},
     
     # Batch processing tasks
-    'app.workers.tasks.process_batch_task': {'queue': 'batch_processing'},
     'app.workers.tasks.process_batch': {'queue': 'batch_processing'},
     
     # Model generation tasks
