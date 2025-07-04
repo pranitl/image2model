@@ -30,8 +30,8 @@ class TestCompleteWorkflow:
         assert upload_response.status_code == 200, f"Upload failed: {upload_response.text}"
         upload_data = upload_response.json()
         
-        job_id = upload_data.get('batch_id', upload_data.get('job_id'))  # Try batch_id first, then job_id
-        task_id = upload_data.get('task_id', upload_data.get('job_id'))  # Task ID might be same as job_id
+        job_id = upload_data.get('job_id')  # Job ID for results
+        task_id = upload_data.get('task_id')  # Celery task ID for status tracking
         
         print(f"Started job {job_id} with task {task_id}")
         

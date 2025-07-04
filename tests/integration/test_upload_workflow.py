@@ -49,7 +49,8 @@ class TestUploadWorkflow:
             
             data = response.json()
             assert 'batch_id' in data
-            assert 'job_id' in data  # This is the Celery task ID
+            assert 'job_id' in data  # Unique job identifier for results
+            assert 'task_id' in data  # Celery task ID for tracking
             assert 'uploaded_files' in data
             assert 'total_files' in data
             assert data['total_files'] == 3
@@ -202,8 +203,8 @@ class TestUploadWorkflow:
         
         # If completed successfully, check if we can download results
         if final_status == 'completed':
-            batch_id = upload_data['batch_id']
-            download_url = f"{test_config['backend_url']}/api/v1/download/{batch_id}/all"
+            job_id = upload_data['job_id']
+            download_url = f"{test_config['backend_url']}/api/v1/download/{job_id}/all"
             download_response = auth_http_session.get(download_url, timeout=test_config['timeout'])
             
             # Should return list of available files or redirect to file
