@@ -7,11 +7,12 @@ import logging
 from typing import List, Dict, Any
 from pathlib import Path
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from app.core.config import settings
+from app.middleware.auth import RequireAuth, OptionalAuth
 
 logger = logging.getLogger(__name__)
 
@@ -335,7 +336,7 @@ async def list_job_files(job_id: str, request: Request):
 
 
 @router.get("/download/{job_id}/{filename}")
-async def download_model(job_id: str, filename: str, request: Request):
+async def download_model(job_id: str, filename: str, request: Request, api_key: str = Depends(OptionalAuth)):
     """
     Download a single 3D model file from a completed job.
     
@@ -356,6 +357,13 @@ async def download_model(job_id: str, filename: str, request: Request):
         # Validate inputs using security helpers
         _validate_job_id(job_id)
         _validate_filename(filename)
+        
+        # Check job ownership if API key is provided
+        if api_key and settings.ENVIRONMENT == "production":
+            from app.core.session_store import session_store
+            if not session_store.verify_job_access(job_id, api_key):
+                logger.warning(f"Unauthorized access attempt for job {job_id} by {client_ip}")
+                raise HTTPException(status_code=403, detail="Access denied")
         
         # Construct file path
         file_path = os.path.join(settings.OUTPUT_DIR, job_id, filename)
