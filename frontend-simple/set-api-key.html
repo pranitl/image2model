@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Set API Key - AI 3D Model Generator</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Set API Key</h1>
+        <p>Configure your API key for authentication</p>
+        
+        <div class="config-section">
+            <label for="apiKey">API Key:</label>
+            <input type="password" id="apiKey" placeholder="Enter your API key">
+            <button class="btn-primary" onclick="setApiKey()">Save API Key</button>
+            
+            <div id="currentKey" style="margin-top: 20px;"></div>
+        </div>
+        
+        <div style="margin-top: 40px;">
+            <h3>Development API Keys:</h3>
+            <p>For development, you can use: <code>dev-api-key-123456</code></p>
+            <p>For admin access, use: <code>dev-admin-api-key-789012</code></p>
+        </div>
+        
+        <div style="margin-top: 20px;">
+            <a href="/" class="btn-secondary">Back to Home</a>
+        </div>
+    </div>
+    
+    <script src="js/api.js"></script>
+    <script>
+        // Show current API key status
+        function showCurrentKey() {
+            const key = API.getApiKey();
+            const elem = document.getElementById('currentKey');
+            if (key) {
+                elem.innerHTML = '<p style="color: green;">✓ API Key is configured</p>';
+            } else {
+                elem.innerHTML = '<p style="color: red;">✗ No API Key configured</p>';
+            }
+        }
+        
+        // Set API key
+        function setApiKey() {
+            const keyInput = document.getElementById('apiKey');
+            const key = keyInput.value.trim();
+            
+            if (!key) {
+                alert('Please enter an API key');
+                return;
+            }
+            
+            API.setApiKey(key);
+        }
+        
+        // Show current status on load
+        showCurrentKey();
+    </script>
+</body>
+</html>
