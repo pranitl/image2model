@@ -111,7 +111,6 @@ const ProcessingModule = (function() {
     // Establish SSE connection
     function connectSSE() {
         try {
-            console.log('Connecting to SSE for task:', state.taskId);
             
             // Use API client's streamProgress function with callbacks
             state.streamController = window.API.streamProgress(state.taskId, {
@@ -144,7 +143,6 @@ const ProcessingModule = (function() {
             !state.isComplete && !state.isCancelled) {
             
             state.reconnectAttempts++;
-            console.log(`Reconnecting... Attempt ${state.reconnectAttempts}/${state.maxReconnectAttempts}`);
             
             // Show reconnection status
             showStatus(`Connection lost. Reconnecting... (${state.reconnectAttempts}/${state.maxReconnectAttempts})`);
@@ -163,7 +161,6 @@ const ProcessingModule = (function() {
     
     // Handle overall progress updates
     function handleProgressUpdate(data) {
-        console.log('Progress update:', data);
         
         // Update file counts
         if (data.totalFiles !== undefined) {
@@ -189,7 +186,6 @@ const ProcessingModule = (function() {
     
     // Handle individual file updates
     function handleFileUpdate(data) {
-        console.log('File update:', data);
         
         if (data.fileName) {
             updateFileCard(
@@ -203,7 +199,6 @@ const ProcessingModule = (function() {
     
     // Handle completion
     function handleComplete(data) {
-        console.log('Processing complete:', data);
         state.isComplete = true;
         
         // Close SSE connection
@@ -247,25 +242,11 @@ const ProcessingModule = (function() {
     
     // Helper function to redirect to results
     function redirectToResults(jobId) {
-        console.log('Processing complete! Redirecting to results in 5 seconds...', {
-            jobId: jobId,
-            successCount: state.completedCount,
-            failedCount: state.failedCount
-        });
         
-        // Show countdown in status message
-        let countdown = 5;
-        const countdownInterval = setInterval(() => {
-            showStatus(`Processing complete! Redirecting to results in ${countdown}...`, 'success');
-            countdown--;
-            if (countdown < 0) {
-                clearInterval(countdownInterval);
-            }
-        }, 1000);
+        showStatus('Processing complete! Redirecting to results...', 'success');
         
-        setTimeout(() => {
-            window.location.href = `results.html?jobId=${jobId}`;
-        }, 5000); // 5 second delay
+        // Redirect immediately
+        window.location.href = `results.html?jobId=${jobId}`;
     }
     
     // Handle errors
@@ -280,7 +261,6 @@ const ProcessingModule = (function() {
     
     // Update overall progress bar
     function updateOverallProgress(progress) {
-        console.log('Updating overall progress to:', progress);
         state.overallProgress = Math.min(Math.max(progress, 0), 100);
         
         if (elements.progressFill) {
