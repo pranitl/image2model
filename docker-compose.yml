@@ -9,8 +9,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: image2model
-    ports:
-      - "5432:5432"
+    # Port removed for security - access via Docker network only
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -26,8 +25,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: image2model-redis
-    ports:
-      - "6379:6379"
+    # Port removed for security - access via Docker network only
     volumes:
       - redis_data:/data
     healthcheck:
@@ -81,6 +79,9 @@ services:
       dockerfile: ./backend/Dockerfile
       target: production
     container_name: image2model-worker
+    # Disable health check - not applicable for Celery workers
+    healthcheck:
+      test: ["CMD", "true"]
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/image2model
       - CELERY_BROKER_URL=redis://redis:6379/0
@@ -113,6 +114,9 @@ services:
       dockerfile: ./backend/Dockerfile
       target: production
     container_name: image2model-worker-model
+    # Disable health check - not applicable for Celery workers
+    healthcheck:
+      test: ["CMD", "true"]
     environment:
       - DATABASE_URL=postgresql://postgres:password@postgres:5432/image2model
       - CELERY_BROKER_URL=redis://redis:6379/0
