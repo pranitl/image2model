@@ -21,5 +21,3 @@ Each agent will independently implement the engineering plan based on task in th
 When the subagent completes it's work, have the subagent to report their final changes made in a comprehensive 'RESULTS.md' file at the root of their respective workspace.
 
 Make sure agents don't run start.sh or any other script that would start the server or client - focus on the code changes only.
-
-Use taskmaster mcp to track progress. However, don't use task master's expand tool and instead think through what should be logical subtasks yourself and then add those as subtasks direclty instead of relying on the `expand` tool. DO NOT USE TASK MASTER EXPAND.
