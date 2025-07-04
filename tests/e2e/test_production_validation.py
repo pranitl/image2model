@@ -124,15 +124,15 @@ class TestProductionSmokeTest:
         
         print("✓ All critical endpoints responding")
     
-    def test_upload_endpoint_basic_functionality(self, http_session, test_config, services_ready):
+    def test_upload_endpoint_basic_functionality(self, auth_http_session, test_config, services_ready):
         """Test upload endpoint basic functionality (error handling)."""
         url = f"{test_config['backend_url']}/api/v1/upload/image"
         
-        # Should return 422 for missing file (validation error)
-        response = http_session.post(url, timeout=5)
+        # Should return 422 for missing file (validation error) when authenticated
+        response = auth_http_session.post(url, timeout=5)
         assert response.status_code == 422
         
         error_data = response.json()
         assert error_data.get('error') is True
         
-        print("✓ Upload endpoint error handling functional")
+        print("✓ Upload endpoint error handling functional with auth")

@@ -270,7 +270,7 @@ async def upload(
     request: Request,
     files: List[UploadFile] = File(...),
     face_limit: Optional[int] = Form(None, description="Maximum number of faces for 3D model generation"),
-    api_key: str = Depends(RequireAuth)
+    api_key: str = RequireAuth
 ):
     """
     Upload image files for 3D model generation.

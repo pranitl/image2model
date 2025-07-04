@@ -130,7 +130,7 @@ def get_disk_usage() -> Dict[str, Any]:
             # Get disk space for the filesystem containing this directory
             statvfs = os.statvfs(path)
             disk_total = statvfs.f_frsize * statvfs.f_blocks
-            disk_free = statvfs.f_frsize * statvfs.f_available
+            disk_free = statvfs.f_frsize * statvfs.f_bavail
             disk_used = disk_total - disk_free
             
             usage_info[name] = {

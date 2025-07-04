@@ -336,7 +336,7 @@ async def list_job_files(job_id: str, request: Request):
 
 
 @router.get("/download/{job_id}/{filename}")
-async def download_model(job_id: str, filename: str, request: Request, api_key: str = Depends(OptionalAuth)):
+async def download_model(job_id: str, filename: str, request: Request, api_key: str = OptionalAuth):
     """
     Download a single 3D model file from a completed job.
     
