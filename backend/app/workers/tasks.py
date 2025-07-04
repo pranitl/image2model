@@ -21,7 +21,6 @@ from app.core.exceptions import (
 
 # Use enhanced logging from core
 from app.core.logging_config import get_task_logger, set_correlation_id
-from app.core.monitoring import monitor_task, task_monitor
 from app.core.progress_tracker import progress_tracker
 
 # Import FAL.AI client for real 3D model generation
@@ -269,144 +268,122 @@ def cleanup_old_files():
 
 
 
-@celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 60})
-@monitor_task("process_batch")
-def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional[int] = None):
+@celery_app.task(bind=True)
+def process_file_in_batch(self, file_path: str, job_id: str, face_limit: Optional[int] = None, file_index: int = 0, total_files: int = 1):
     """
-    Enhanced batch processing task for 3D model generation as specified in Task 6.
+    Process a single file as part of a batch operation.
+    This task is designed to be run in parallel with other files from the same batch.
     
     Args:
+        file_path: Path to the image file to process
+        job_id: Unique job identifier for the batch
+        face_limit: Optional limit on number of faces in generated models
+        file_index: Index of this file in the batch (for progress tracking)
+        total_files: Total number of files in the batch
+        
+    Returns:
+        Dict with processing result for this file
+    """
+    try:
+        logger.info(f"Processing file {file_index + 1}/{total_files} in parallel: {os.path.basename(file_path)}")
+        
+        # Create progress callback for this specific file
+        def parallel_file_progress_callback(message: str, progress: int):
+            """Callback to update progress for individual file in parallel batch."""
+            # Update progress tracker for this specific file
+            try:
+                progress_tracker.update_file_progress(
+                    job_id=job_id,
+                    file_path=file_path,
+                    status="processing",
+                    progress=progress,
+                    message=message
+                )
+            except Exception as e:
+                logger.warning(f"Failed to update progress tracker: {e}")
+            
+            # Don't update Celery task state here since we're in a subtask
+            return None
+
+        # Process single image using FAL.AI with synchronous wrapper
+        file_start_time = time.time()
+        from app.workers.fal_client import fal_client
+        
+        try:
+            # Use synchronous wrapper to avoid coroutine serialization issues
+            result = fal_client.process_single_image_sync(
+                file_path=file_path, 
+                face_limit=face_limit, 
+                texture_enabled=True,
+                progress_callback=parallel_file_progress_callback,
+                job_id=job_id
+            )
+        except Exception as process_error:
+            logger.error(f"Error processing image: {str(process_error)}", exc_info=True)
+            raise
+        
+        actual_processing_time = time.time() - file_start_time
+        
+        if result["status"] == "success":
+            file_result = {
+                "file_path": file_path,
+                "status": "completed",
+                "result_path": result.get("download_url"),  # FAL.AI URL
+                "download_url": result.get("download_url"),
+                "model_url": result.get("model_url"),
+                "rendered_image": result.get("rendered_image"),
+                "filename": result.get("filename"),
+                "face_count": face_limit if face_limit else 1000,
+                "processing_time": actual_processing_time,
+                "model_format": result.get("model_format", "glb"),
+                "file_size": result.get("file_size", 0),
+                "content_type": result.get("content_type", "model/gltf-binary"),
+                "task_id": result.get("task_id")
+            }
+            logger.info(f"Successfully processed {os.path.basename(file_path)} in {actual_processing_time:.2f}s")
+        else:
+            file_result = {
+                "file_path": file_path,
+                "status": "failed",
+                "error": result.get("error", "Unknown error"),
+                "processing_time": actual_processing_time
+            }
+            logger.error(f"Failed to process {os.path.basename(file_path)}: {result.get('error', 'Unknown error')}")
+        
+        return file_result
+        
+    except Exception as exc:
+        logger.error(f"File processing failed for {file_path}: {str(exc)}", exc_info=True)
+        return {
+            "file_path": file_path,
+            "status": "failed",
+            "error": str(exc),
+            "processing_time": time.time() - (file_start_time if 'file_start_time' in locals() else 0)
+        }
+
+
+@celery_app.task(bind=True)
+def finalize_batch_results(self, results: List[Dict[str, Any]], job_id: str, total_files: int, face_limit: Optional[int] = None):
+    """
+    Callback task to finalize batch processing results after all files are processed.
+    
+    This task is called by the chord after all parallel file processing tasks complete.
+    It aggregates results and stores them in the job store.
+    
+    Args:
+        results: List of results from each file processing task
         job_id: Unique job identifier
-        file_paths: List of paths to uploaded image files
+        total_files: Total number of files in the batch
         face_limit: Optional limit on number of faces in generated models
         
     Returns:
-        Dict with batch processing results
+        Dict with batch processing summary
     """
     try:
-        total_files = len(file_paths)
-        logger.info(f"Starting batch processing for job {job_id} with {total_files} files")
-        
-        # Store start time for timeout tracking
-        start_time = time.time()
-        
-        # Update progress to starting
-        current_task.update_state(
-            state="PROGRESS",
-            meta={
-                "current": 0, 
-                "total": total_files, 
-                "status": f"Starting batch processing for {total_files} files...",
-                "job_id": job_id
-            }
-        )
-        
-        results = []
-        
-        # Process each file in the batch
-        for i, file_path in enumerate(file_paths):
-            try:
-                # Check for soft time limit
-                time_elapsed = time.time() - start_time
-                if time_elapsed > 25 * 60:  # 25 minutes soft limit
-                    raise SoftTimeLimitExceeded()
-                
-                # Update progress for current file
-                current_task.update_state(
-                    state="PROGRESS",
-                    meta={
-                        "current": i,
-                        "total": total_files,
-                        "status": f"Processing file {i+1}/{total_files}: {os.path.basename(file_path)}",
-                        "job_id": job_id
-                    }
-                )
-                
-                logger.info(f"Processing file {i+1}/{total_files}: {os.path.basename(file_path)}")
-                
-                # Create progress callback for batch processing
-                def batch_file_progress_callback(message: str, progress: int):
-                    """Callback to update progress for individual file in batch."""
-                    # Calculate overall batch progress
-                    file_progress = (i / total_files) * 100  # Progress from completed files
-                    current_file_progress = (progress / 100) * (100 / total_files)  # Progress from current file
-                    overall_progress = min(95, file_progress + current_file_progress)  # Cap at 95% until batch complete
-                    
-                    current_task.update_state(
-                        state="PROGRESS",
-                        meta={
-                            "current": i,
-                            "total": total_files,
-                            "status": f"File {i+1}/{total_files}: {message}",
-                            "job_id": job_id,
-                            "overall_progress": overall_progress
-                        }
-                    )
-                    # Important: Don't return anything from callback
-                    return None
-
-                # Process single image using FAL.AI with synchronous wrapper
-                file_start_time = time.time()
-                from app.workers.fal_client import fal_client
-                
-                try:
-                    # Use synchronous wrapper to avoid coroutine serialization issues
-                    result = fal_client.process_single_image_sync(
-                        file_path=file_path, 
-                        face_limit=face_limit, 
-                        texture_enabled=True,
-                        progress_callback=batch_file_progress_callback,
-                        job_id=job_id
-                    )
-                except Exception as process_error:
-                    logger.error(f"Error processing image: {str(process_error)}", exc_info=True)
-                    raise
-                actual_processing_time = time.time() - file_start_time
-                
-                if result["status"] == "success":
-                    file_result = {
-                        "file_path": file_path,
-                        "status": "completed",
-                        "result_path": result["output"],  # FAL.AI client returns "output" field
-                        "face_count": face_limit if face_limit else 1000,
-                        "processing_time": actual_processing_time,
-                        "model_format": result.get("model_format", "glb")
-                    }
-                    logger.info(f"Successfully processed {os.path.basename(file_path)} in {actual_processing_time:.2f}s")
-                else:
-                    file_result = {
-                        "file_path": file_path,
-                        "status": "failed",
-                        "error": result.get("error", "Unknown error"),
-                        "processing_time": actual_processing_time
-                    }
-                    logger.error(f"Failed to process {os.path.basename(file_path)}: {result.get('error', 'Unknown error')}")
-                
-                results.append(file_result)
-                
-            except SoftTimeLimitExceeded:
-                logger.warning(f"Soft time limit exceeded while processing {file_path}")
-                file_result = {
-                    "file_path": file_path,
-                    "status": "timeout",
-                    "error": "Processing time limit exceeded"
-                }
-                results.append(file_result)
-                break  # Stop processing remaining files
-                
-            except Exception as file_error:
-                logger.error(f"Failed to process file {file_path}: {str(file_error)}", exc_info=True)
-                file_result = {
-                    "file_path": file_path,
-                    "status": "failed",
-                    "error": str(file_error)
-                }
-                results.append(file_result)
-        
         # Final completion update
         success_count = sum(1 for r in results if r["status"] == "completed")
         failure_count = sum(1 for r in results if r["status"] == "failed")
-        timeout_count = sum(1 for r in results if r["status"] == "timeout")
+        timeout_count = sum(1 for r in results if r.get("status") == "timeout")
         
         final_status = "completed" if success_count > 0 else "failed"
         if timeout_count > 0:
@@ -424,8 +401,122 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
             "message": f"Batch processing completed. {success_count} successful, {failure_count} failed, {timeout_count} timed out."
         }
         
+        # Store job results for later retrieval by the download API
+        if success_count > 0:
+            from app.core.job_store import job_store
+            
+            # Prepare job result data in the format expected by download API
+            job_result = {
+                "job_id": job_id,
+                "files": [],
+                "total_files": total_files,
+                "successful_files": success_count,
+                "failed_files": failure_count
+            }
+            
+            # Add successful files to job result
+            for result in results:
+                if result["status"] == "completed" and result.get("download_url"):
+                    job_result["files"].append({
+                        "filename": result.get("filename", os.path.basename(result["file_path"])),
+                        "model_url": result.get("download_url"),
+                        "file_size": result.get("file_size", 0),
+                        "content_type": result.get("content_type", "model/gltf-binary"),
+                        "rendered_image": result.get("rendered_image"),
+                        "task_id": result.get("task_id")
+                    })
+            
+            # Store in job store
+            job_store.set_job_result(job_id, job_result)
+            logger.info(f"Stored job results for {job_id} with {len(job_result['files'])} files")
+        
         logger.info(f"Batch processing completed for job {job_id}: {result_summary['message']}")
         return result_summary
+        
+    except Exception as exc:
+        logger.error(f"Failed to finalize batch results for job {job_id}: {str(exc)}", exc_info=True)
+        raise
+
+
+@celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 60})
+def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional[int] = None):
+    """
+    Enhanced batch processing task that processes files in parallel across multiple workers.
+    
+    This task creates individual subtasks for each file and executes them in parallel
+    using Celery's chord primitive, which handles the callback automatically.
+    
+    Args:
+        job_id: Unique job identifier
+        file_paths: List of paths to uploaded image files
+        face_limit: Optional limit on number of faces in generated models
+        
+    Returns:
+        Dict with batch processing results
+    """
+    try:
+        total_files = len(file_paths)
+        logger.info(f"Starting parallel batch processing for job {job_id} with {total_files} files")
+        
+        # Store start time for timeout tracking
+        start_time = time.time()
+        
+        # Update progress to starting
+        current_task.update_state(
+            state="PROGRESS",
+            meta={
+                "current": 0, 
+                "total": total_files, 
+                "status": f"Starting parallel batch processing for {total_files} files...",
+                "job_id": job_id
+            }
+        )
+        
+        # Import Celery's chord primitive for parallel execution with callback
+        from celery import chord
+        
+        # Create a list of parallel tasks for each file
+        parallel_tasks = [
+            process_file_in_batch.s(
+                file_path=file_path,
+                job_id=job_id,
+                face_limit=face_limit,
+                file_index=i,
+                total_files=total_files
+            ) for i, file_path in enumerate(file_paths)
+        ]
+        
+        # Execute all tasks in parallel with a callback to finalize results
+        logger.info(f"Dispatching {total_files} files to process in parallel")
+        
+        # Update progress while processing
+        current_task.update_state(
+            state="PROGRESS",
+            meta={
+                "current": 0,
+                "total": total_files,
+                "status": f"Processing {total_files} files in parallel across workers...",
+                "job_id": job_id
+            }
+        )
+        
+        # Use chord to execute tasks in parallel and call finalize_batch_results when done
+        # The chord will automatically handle result collection without blocking
+        chord_result = chord(parallel_tasks)(
+            finalize_batch_results.s(job_id=job_id, total_files=total_files, face_limit=face_limit)
+        )
+        
+        # Return the chord result ID so the upload endpoint can track it
+        logger.info(f"Batch processing initiated for job {job_id} with chord ID: {chord_result.id}")
+        
+        # Return a response indicating processing has started
+        return {
+            "job_id": job_id,
+            "status": "processing",
+            "total_files": total_files,
+            "message": f"Processing {total_files} files in parallel",
+            "chord_task_id": chord_result.id
+        }
         
     except SoftTimeLimitExceeded:
         logger.error(f"Batch task soft time limit exceeded for job {job_id}")
@@ -453,7 +544,6 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
 
 
 @celery_app.task(bind=True, max_retries=5)
-@monitor_task("process_single_image_with_retry")
 def process_single_image_with_retry(self, file_path: str, face_limit: Optional[int] = None):
     """
     Enhanced task to process a single image with comprehensive retry logic.

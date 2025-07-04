@@ -12,7 +12,6 @@ from typing import Dict, Any, Optional
 import requests
 import fal_client as fal
 from app.core.config import settings
-from app.core.monitoring import monitor_fal_api_call
 
 logger = logging.getLogger(__name__)
 
@@ -270,7 +269,10 @@ class FalAIClient:
                 if progress_callback:
                     progress_callback("Submitting job to FAL.AI API...", 25)
                 
-                async with monitor_fal_api_call("submit_job") as monitor_logger:
+                # Track timing for monitoring
+                submit_start_time = time.time()
+                
+                try:
                     # Use the correct fal_client.subscribe method for real-time execution
                     # This will handle the queue/progress automatically and provide real-time updates
                     result = fal.subscribe(
@@ -280,17 +282,36 @@ class FalAIClient:
                         on_queue_update=lambda update: self._handle_queue_update(update, progress_callback, file_id=job_id or file_path) if progress_callback else None
                     )
                     
-                    monitor_logger.logger.info(
-                        "FAL.AI job completed successfully",
-                        model_endpoint=self.model_endpoint,
-                        image_path=file_path,
-                        face_limit=face_limit,
-                        result_keys=list(result.keys()) if isinstance(result, dict) else None
+                    # Log success metrics
+                    submit_duration_ms = (time.time() - submit_start_time) * 1000
+                    logger.info(
+                        f"FAL.AI job completed successfully in {submit_duration_ms:.2f}ms",
+                        extra={
+                            "model_endpoint": self.model_endpoint,
+                            "image_path": file_path,
+                            "face_limit": face_limit,
+                            "result_keys": list(result.keys()) if isinstance(result, dict) else None,
+                            "duration_ms": submit_duration_ms
+                        }
                     )
                     
                     logger.info("FAL.AI processing completed")
                     if progress_callback:
                         progress_callback("3D model generation completed", 90)
+                        
+                except Exception as e:
+                    # Log failure metrics
+                    submit_duration_ms = (time.time() - submit_start_time) * 1000
+                    logger.error(
+                        f"FAL.AI job failed after {submit_duration_ms:.2f}ms: {str(e)}",
+                        extra={
+                            "model_endpoint": self.model_endpoint,
+                            "image_path": file_path,
+                            "error": str(e),
+                            "duration_ms": submit_duration_ms
+                        }
+                    )
+                    raise
                 
                 if not result:
                     raise FalAIAPIError("No result received from FAL.AI API")
@@ -298,7 +319,7 @@ class FalAIClient:
                 logger.info(f"FAL.AI API response received: {result}")
                 
                 # Process the successful result
-                return await self._process_result(result, file_path, progress_callback, job_id)
+                return self._process_result(result, file_path, progress_callback, job_id)
                 
             except (FalAIAuthenticationError, FalAIRateLimitError, FalAITimeoutError, FalAIAPIError):
                 # These are already properly handled exceptions
@@ -325,7 +346,7 @@ class FalAIClient:
             'error': f'Failed after {self.max_retries + 1} attempts'
         }
     
-    async def _process_result(self, result: Dict[str, Any], file_path: str, progress_callback: Optional[callable] = None, job_id: Optional[str] = None) -> Dict[str, Any]:
+    def _process_result(self, result: Dict[str, Any], file_path: str, progress_callback: Optional[callable] = None, job_id: Optional[str] = None) -> Dict[str, Any]:
         """
         Process the FAL.AI API result and return direct URLs without downloading.
         

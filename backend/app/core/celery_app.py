@@ -48,6 +48,7 @@ celery_app.conf.update(
     # Task routing (can be expanded later)
     task_routes={
         'app.workers.tasks.process_batch': {'queue': 'batch_processing'},
+        'app.workers.tasks.process_file_in_batch': {'queue': 'model_generation'},  # Distribute file processing across workers
         'app.workers.tasks.generate_3d_model_task': {'queue': 'model_generation'},
         'app.workers.cleanup.cleanup_old_files': {'queue': 'maintenance'},
         'app.workers.cleanup.get_disk_usage': {'queue': 'maintenance'},
@@ -94,7 +95,8 @@ celery_app.conf.task_routes = {
     # Batch processing tasks
     'app.workers.tasks.process_batch': {'queue': 'batch_processing'},
     
-    # Model generation tasks
+    # Model generation tasks - distributed across workers
+    'app.workers.tasks.process_file_in_batch': {'queue': 'model_generation'},
     'app.workers.tasks.generate_3d_model_task': {'queue': 'model_generation'},
     
     # Maintenance tasks
