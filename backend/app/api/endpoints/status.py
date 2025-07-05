@@ -64,8 +64,11 @@ async def stream_task_status(
         """
         Async generator that yields SSE formatted messages with task progress.
         """
+        # Keep original task_id for logging and use a mutable tracking_id for chord switching
+        original_task_id = task_id
+        tracking_id = task_id  # This is what we'll update when tracking chord
         try:
-            logger.info(f"Starting SSE stream for task {task_id} with {timeout}s timeout")
+            logger.info(f"Starting SSE stream for task {tracking_id} with {timeout}s timeout")
             start_time = time.time()
             last_heartbeat = time.time()
             heartbeat_interval = 30  # Send heartbeat every 30 seconds
@@ -73,16 +76,16 @@ async def stream_task_status(
             while True:
                 # Check if client has disconnected
                 if await request.is_disconnected():
-                    logger.info(f"Client disconnected from SSE stream for task {task_id}")
+                    logger.info(f"Client disconnected from SSE stream for task {original_task_id}")
                     break
                 
                 # Check for connection timeout
                 if time.time() - start_time > timeout:
-                    logger.info(f"SSE stream timeout reached for task {task_id}")
+                    logger.info(f"SSE stream timeout reached for task {original_task_id}")
                     timeout_data = {
                         'status': 'timeout',
                         'message': f'Connection timeout after {timeout} seconds',
-                        'task_id': task_id,
+                        'task_id': tracking_id,
                         'timestamp': int(time.time() * 1000)
                     }
                     yield f"event: connection_timeout\ndata: {json.dumps(timeout_data)}\n\n"
@@ -90,7 +93,7 @@ async def stream_task_status(
                 
                 try:
                     # Get task status from Celery
-                    task_result = celery_app.AsyncResult(task_id)
+                    task_result = celery_app.AsyncResult(tracking_id)
                     
                     # Format data based on task state
                     if task_result.state == 'PENDING':
@@ -98,7 +101,7 @@ async def stream_task_status(
                             'status': 'queued',
                             'progress': 0,
                             'message': 'Task is queued and waiting to start',
-                            'task_id': task_id
+                            'task_id': tracking_id
                         }
                         
                     elif task_result.state == 'PROGRESS':
@@ -116,7 +119,7 @@ async def stream_task_status(
                             'current': current,
                             'total': total,
                             'message': meta.get('status', 'Processing...'),
-                            'task_id': task_id,
+                            'task_id': tracking_id,
                             'timestamp': int(time.time() * 1000),  # Milliseconds
                             'task_name': task_result.name if hasattr(task_result, 'name') else 'unknown'
                         }
@@ -143,71 +146,55 @@ async def stream_task_status(
                         # Check if this is a chord starter task
                         if isinstance(result, dict) and result.get('chord_task_id'):
                             # This is a batch processing task that started a chord
-                            # Track the chord instead
+                            # We need to continue tracking the chord
                             chord_id = result['chord_task_id']
-                            logger.info(f"Main task {task_id} started chord {chord_id}, switching to track chord")
+                            logger.info(f"Main task {original_task_id} started chord {chord_id}, continuing to track chord")
                             
-                            # Get chord result
-                            from celery.result import AsyncResult
-                            chord_result = AsyncResult(chord_id, app=celery_app)
+                            # Switch to tracking the chord task
+                            tracking_id = chord_id  # Update tracking_id to track the chord
                             
-                            if chord_result.ready():
-                                # Chord completed - get the finalized results
-                                if chord_result.successful():
-                                    final_result = chord_result.result or {}
-                                    data = {
-                                        'status': 'completed',
-                                        'progress': 100,
-                                        'message': 'All files processed successfully',
-                                        'task_id': task_id,
-                                        'job_id': final_result.get('job_id'),  # Extract job_id from result
-                                        'result': final_result,
-                                        'timestamp': int(time.time() * 1000)
-                                    }
-                                else:
-                                    data = {
-                                        'status': 'failed',
-                                        'progress': 100,
-                                        'message': 'Processing failed',
-                                        'task_id': task_id,
-                                        'error': str(chord_result.info),
-                                        'timestamp': int(time.time() * 1000)
-                                    }
-                            else:
-                                # Chord still processing
-                                data = {
-                                    'status': 'processing', 
-                                    'progress': 50,  # Assume halfway since main task is done
-                                    'message': f'Processing files... (tracking chord {chord_id[:8]})',
-                                    'task_id': task_id,
-                                    'chord_task_id': chord_id,
-                                    'timestamp': int(time.time() * 1000)
-                                }
+                            # Send a progress update about switching to chord tracking
+                            data = {
+                                'status': 'processing',
+                                'progress': 10,  # Just started processing files
+                                'message': 'Starting to process files...',
+                                'task_id': tracking_id,
+                                'chord_task_id': chord_id,
+                                'job_id': result.get('job_id'),  # Include job_id from main task result
+                                'timestamp': int(time.time() * 1000)
+                            }
+                            
+                            # Send progress update and continue the loop
+                            yield f"event: task_progress\ndata: {json.dumps(data)}\n\n"
+                            
+                            # Continue the loop to track the chord task
+                            continue
+                            
                         else:
-                            # Regular task completion
+                            # Regular task completion (not a chord)
                             data = {
                                 'status': 'completed',
                                 'progress': 100,
                                 'message': 'Task completed successfully',
-                                'task_id': task_id,
+                                'task_id': tracking_id,
                                 'result': result,
                                 'timestamp': int(time.time() * 1000),
                                 'task_name': task_result.name if hasattr(task_result, 'name') else 'unknown'
-                        }
+                            }
                         
-                        # Add result summary if available
-                        if isinstance(result, dict):
-                            if 'total_files' in result:
-                                data['summary'] = {
-                                    'total_files': result.get('total_files', 0),
-                                    'successful_files': result.get('successful_files', 0),
-                                    'failed_files': result.get('failed_files', 0)
-                                }
+                            # Add result summary if available
+                            if isinstance(result, dict):
+                                if 'total_files' in result:
+                                    data['summary'] = {
+                                        'total_files': result.get('total_files', 0),
+                                        'successful_files': result.get('successful_files', 0),
+                                        'failed_files': result.get('failed_files', 0)
+                                    }
                         
-                        # Send final success message and terminate stream
-                        yield f"event: task_completed\ndata: {json.dumps(data)}\n\n"
-                        logger.info(f"Task {task_id} completed successfully, ending SSE stream")
-                        break
+                            # Send final success message and terminate stream
+                            yield f"event: task_completed\ndata: {json.dumps(data)}\n\n"
+                            logger.info(f"Task {tracking_id} completed successfully, ending SSE stream")
+                            break
                         
                     elif task_result.state == 'FAILURE':
                         # Task failed
@@ -216,7 +203,7 @@ async def stream_task_status(
                             'status': 'failed',
                             'progress': 0,
                             'message': 'Task failed',
-                            'task_id': task_id,
+                            'task_id': tracking_id,
                             'error': str(error_info) if error_info else 'Unknown error occurred',
                             'timestamp': int(time.time() * 1000),
                             'task_name': task_result.name if hasattr(task_result, 'name') else 'unknown'
@@ -233,7 +220,7 @@ async def stream_task_status(
                         
                         # Send failure message and terminate stream
                         yield f"event: task_failed\ndata: {json.dumps(data)}\n\n"
-                        logger.error(f"Task {task_id} failed, ending SSE stream")
+                        logger.error(f"Task {tracking_id} failed, ending SSE stream")
                         break
                         
                     elif task_result.state == 'RETRY':
@@ -242,7 +229,7 @@ async def stream_task_status(
                             'status': 'retrying',
                             'progress': 0,
                             'message': 'Task is being retried',
-                            'task_id': task_id
+                            'task_id': tracking_id
                         }
                         
                     elif task_result.state == 'REVOKED':
@@ -251,12 +238,12 @@ async def stream_task_status(
                             'status': 'cancelled',
                             'progress': 0,
                             'message': 'Task was cancelled',
-                            'task_id': task_id
+                            'task_id': tracking_id
                         }
                         
                         # Send cancellation message and terminate stream
                         yield f"data: {json.dumps(data)}\n\n"
-                        logger.info(f"Task {task_id} was cancelled, ending SSE stream")
+                        logger.info(f"Task {tracking_id} was cancelled, ending SSE stream")
                         break
                         
                     else:
@@ -265,7 +252,7 @@ async def stream_task_status(
                             'status': 'unknown',
                             'progress': 0,
                             'message': f'Unknown task state: {task_result.state}',
-                            'task_id': task_id
+                            'task_id': tracking_id
                         }
                     
                     # Determine event type based on status
@@ -284,7 +271,7 @@ async def stream_task_status(
                     yield f"event: {event_type}\ndata: {json.dumps(data)}\n\n"
                     
                 except Exception as task_error:
-                    logger.error(f"Error getting task status for {task_id}: {str(task_error)}")
+                    logger.error(f"Error getting task status for {tracking_id}: {str(task_error)}")
                     
                     # Try to determine if this is a recoverable error
                     error_type = type(task_error).__name__
@@ -294,7 +281,7 @@ async def stream_task_status(
                         'status': 'error',
                         'progress': 0,
                         'message': 'Error retrieving task status',
-                        'task_id': task_id,
+                        'task_id': tracking_id,
                         'error': str(task_error),
                         'error_type': error_type,
                         'recoverable': is_recoverable,
@@ -305,7 +292,7 @@ async def stream_task_status(
                     
                     # If it's not recoverable, break the loop
                     if not is_recoverable:
-                        logger.error(f"Non-recoverable error for task {task_id}, ending stream")
+                        logger.error(f"Non-recoverable error for task {tracking_id}, ending stream")
                         break
                     
                     # For recoverable errors, wait a bit longer before retrying
@@ -317,7 +304,7 @@ async def stream_task_status(
                     heartbeat_data = {
                         'status': 'heartbeat',
                         'timestamp': int(current_time * 1000),
-                        'task_id': task_id
+                        'task_id': tracking_id
                     }
                     yield f"event: heartbeat\ndata: {json.dumps(heartbeat_data)}\n\n"
                     last_heartbeat = current_time
@@ -326,11 +313,11 @@ async def stream_task_status(
                 await asyncio.sleep(1)
                 
         except asyncio.CancelledError:
-            logger.info(f"SSE stream cancelled for task {task_id}")
+            logger.info(f"SSE stream cancelled for task {original_task_id}")
             # Don't yield anything for cancelled streams - client already disconnected
             
         except Exception as e:
-            logger.error(f"SSE stream error for task {task_id}: {str(e)}", exc_info=True)
+            logger.error(f"SSE stream error for task {original_task_id}: {str(e)}", exc_info=True)
             try:
                 error_data = {
                     'status': 'stream_error',
@@ -343,11 +330,11 @@ async def stream_task_status(
                 yield f"event: stream_error\ndata: {json.dumps(error_data)}\n\n"
             except Exception:
                 # If we can't even send the error message, just log it
-                logger.error(f"Failed to send error message for task {task_id}")
+                logger.error(f"Failed to send error message for task {original_task_id}")
                 
         finally:
             # Cleanup resources
-            logger.info(f"SSE stream ended for task {task_id}")
+            logger.info(f"SSE stream ended for task {original_task_id}")
     
     # Return StreamingResponse with proper SSE headers
     return StreamingResponse(
