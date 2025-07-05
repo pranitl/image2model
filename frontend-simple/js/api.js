@@ -7,7 +7,7 @@
     
     // API Key configuration - can be set via localStorage or environment
     // In development, use default key if none is set
-    const DEFAULT_DEV_KEY = 'test-api-key-for-development';
+    const DEFAULT_DEV_KEY = 'dev-api-key-123456';
     const API_KEY = localStorage.getItem('api_key') || window.API_KEY || DEFAULT_DEV_KEY;
     
     // Helper function for handling API errors
