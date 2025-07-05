@@ -32,4 +32,3 @@ Always use docker compose not docker-compose
 
 ## Testing
 When we are making source code changes, we need to ensure we co-develop the test suite so it stays updated!
-Tests need to be run with API_KEY=dev-api-key-123456 environment variable
