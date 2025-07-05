@@ -43,7 +43,7 @@ check_prerequisites() {
         exit 1
     fi
     
-    if ! command_exists docker-compose; then
+    if ! command_exists docker compose; then
         print_error "Docker Compose is not installed. Please install Docker Compose first."
         exit 1
     fi
@@ -75,10 +75,10 @@ start_dev() {
     print_status "Starting development environment..."
     
     # Stop any existing containers
-    docker-compose down 2>/dev/null || true
+    docker compose down 2>/dev/null || true
     
     # Build and start services
-    docker-compose up --build -d
+    docker compose up --build -d
     
     print_success "Development environment started"
     
@@ -92,16 +92,16 @@ start_with_logs() {
     print_status "Starting development environment with logs..."
     
     # Stop any existing containers
-    docker-compose down 2>/dev/null || true
+    docker compose down 2>/dev/null || true
     
     # Build and start services with logs
-    docker-compose up --build
+    docker compose up --build
 }
 
 # Function to stop development services
 stop_dev() {
     print_status "Stopping development environment..."
-    docker-compose down
+    docker compose down
     print_success "Development environment stopped"
 }
 
@@ -115,7 +115,7 @@ restart_service() {
     fi
     
     print_status "Restarting $service..."
-    docker-compose restart "$service"
+    docker compose restart "$service"
     print_success "$service restarted"
 }
 
@@ -123,16 +123,16 @@ restart_service() {
 show_logs() {
     local service=$1
     if [ -z "$service" ]; then
-        docker-compose logs -f
+        docker compose logs -f
     else
-        docker-compose logs -f "$service"
+        docker compose logs -f "$service"
     fi
 }
 
 # Function to show service status
 show_status() {
     print_status "Service status:"
-    docker-compose ps
+    docker compose ps
     
     echo
     print_status "Service URLs:"
@@ -149,17 +149,17 @@ run_tests() {
     print_status "Running tests..."
     
     # Backend tests
-    if docker-compose ps | grep -q "backend.*Up"; then
+    if docker compose ps | grep -q "backend.*Up"; then
         print_status "Running backend tests..."
-        docker-compose exec backend pytest
+        docker compose exec backend pytest
     else
         print_warning "Backend container is not running"
     fi
     
     # Frontend tests (if they exist)
-    if docker-compose ps | grep -q "frontend.*Up"; then
+    if docker compose ps | grep -q "frontend.*Up"; then
         print_status "Running frontend tests..."
-        docker-compose exec frontend npm test -- --run --reporter=verbose
+        docker compose exec frontend npm test -- --run --reporter=verbose
     else
         print_warning "Frontend container is not running"
     fi
@@ -170,7 +170,7 @@ cleanup() {
     print_status "Cleaning up development environment..."
     
     # Stop and remove containers
-    docker-compose down -v --remove-orphans
+    docker compose down -v --remove-orphans
     
     # Remove unused images
     docker image prune -f
@@ -196,11 +196,11 @@ shell() {
     
     print_status "Opening shell in $service container..."
     if [ "$service" = "postgres" ]; then
-        docker-compose exec "$service" psql -U postgres -d image2model
+        docker compose exec "$service" psql -U postgres -d image2model
     elif [ "$service" = "redis" ]; then
-        docker-compose exec "$service" redis-cli
+        docker compose exec "$service" redis-cli
     else
-        docker-compose exec "$service" /bin/bash
+        docker compose exec "$service" /bin/bash
     fi
 }
 

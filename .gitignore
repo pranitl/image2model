@@ -248,7 +248,7 @@ data/cache/
 
 # Docker
 Dockerfile.prod
-docker-compose.override.yml
+docker compose.override.yml
 .dockerignore
 
 # Docker volumes and data

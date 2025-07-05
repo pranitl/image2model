@@ -13,7 +13,7 @@ The Celery configuration in `backend/app/core/celery_app.py` defines multiple qu
 - `maintenance`
 - `priority`
 
-However, the worker command in `docker-compose.yml` doesn't specify which queues to listen to:
+However, the worker command in `docker compose.yml` doesn't specify which queues to listen to:
 ```bash
 celery -A app.core.celery_app worker --loglevel=info --concurrency=2
 ```
@@ -49,7 +49,7 @@ When no queues are specified, Celery workers only listen to the `default` queue,
 
 ## Solution
 
-Update the worker command in `docker-compose.yml` (line 104) to specify all queues:
+Update the worker command in `docker compose.yml` (line 104) to specify all queues:
 
 ```bash
 celery -A app.core.celery_app worker --loglevel=info --concurrency=2 -Q default,batch_processing,model_generation,maintenance,priority
@@ -70,16 +70,16 @@ celery -A app.core.celery_app worker --loglevel=info --concurrency=2 -Q default,
 
 ## Files Affected
 
-- `/docker-compose.yml` (line 104)
-- `/docker-compose.prod.yml` (if production config exists)
-- `/docker-compose.override.yml` (if override config exists)
+- `/docker compose.yml` (line 104)
+- `/docker compose.prod.yml` (if production config exists)
+- `/docker compose.override.yml` (if override config exists)
 - Any deployment scripts that start Celery workers
 
 ## Verification Steps
 
 After implementing the fix:
-1. Update docker-compose.yml with the new worker command
-2. Restart the worker container: `docker-compose restart worker`
+1. Update docker compose.yml with the new worker command
+2. Restart the worker container: `docker compose restart worker`
 3. Submit a test task to each queue
 4. Monitor worker logs to ensure it's listening to all queues
 5. Check Redis to confirm queues are being consumed
@@ -89,7 +89,7 @@ After implementing the fix:
 
 For immediate testing, restart the worker with all queues:
 ```bash
-docker-compose exec worker celery -A app.core.celery_app worker --loglevel=info -Q default,batch_processing,model_generation,maintenance,priority
+docker compose exec worker celery -A app.core.celery_app worker --loglevel=info -Q default,batch_processing,model_generation,maintenance,priority
 ```
 
 ## Additional Recommendations
@@ -97,7 +97,7 @@ docker-compose exec worker celery -A app.core.celery_app worker --loglevel=info 
 1. Add queue monitoring to the health check endpoint
 2. Implement alerts for queue depth thresholds
 3. Document queue configuration in README
-4. Consider using Flower (already in docker-compose) for queue monitoring
+4. Consider using Flower (already in docker compose) for queue monitoring
 5. Add integration tests that verify queue processing
 
 ## Related Configuration

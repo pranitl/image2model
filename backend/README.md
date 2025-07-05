@@ -8,7 +8,7 @@ FastAPI backend service for generating 3D models from images using AI/ML models.
 
 1. **Start all services:**
    ```bash
-   docker-compose up -d
+   docker compose up -d
    ```
 
 2. **Check service health:**
@@ -86,7 +86,7 @@ backend/
 │       └── tasks.py        # Background tasks
 ├── requirements.txt        # Python dependencies
 ├── Dockerfile             # Docker configuration
-├── docker-compose.yml     # Multi-service setup
+├── docker compose.yml     # Multi-service setup
 └── .env.example          # Environment variables template
 ```
 

@@ -1,0 +1,86 @@
+# Development overrides for docker-compose.yml
+# This file is automatically loaded by docker compose and overrides the base configuration
+
+services:
+  backend:
+    # Use development target for faster builds
+    build:
+      target: development
+    # Mount source code for hot reload
+    volumes:
+      - ./backend:/app:delegated
+      - backend_uploads:/app/uploads
+      - backend_results:/app/results
+      - backend_models:/app/models
+      # Exclude cache directories to improve performance
+      - /app/__pycache__
+      - /app/.pytest_cache
+    # Enable debug mode
+    environment:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=debug
+      - PYTHONPATH=/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    # Development command with auto-reload
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload --log-level debug
+
+  worker:
+    # Use development target
+    build:
+      target: development
+    # Mount source code
+    volumes:
+      - ./backend:/app:delegated
+      - backend_uploads:/app/uploads
+      - backend_results:/app/results
+      - backend_models:/app/models
+      - /app/__pycache__
+      - /app/.pytest_cache
+    environment:
+      - ENVIRONMENT=development
+      - LOG_LEVEL=debug
+      - PYTHONPATH=/app
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    # Development command with auto-reload
+    command: watchmedo auto-restart --directory=/app --pattern="*.py" --recursive -- celery -A app.core.celery_app worker --loglevel=debug --concurrency=1 -Q default,batch_processing,model_generation,maintenance,priority
+
+  # Frontend service removed - simple frontend is configured in docker-compose.yml
+
+  # Add additional development services
+  
+  # Database admin interface
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: image2model-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@image2model.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    networks:
+      - image2model-network
+    restart: unless-stopped
+
+  # Redis admin interface
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: image2model-redis-commander
+    environment:
+      REDIS_HOSTS: "local:redis:6379"
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - image2model-network
+    restart: unless-stopped
+
+volumes:
+  pgadmin_data:
+    name: image2model-pgadmin-data

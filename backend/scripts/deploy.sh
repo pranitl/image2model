@@ -43,7 +43,7 @@ check_prerequisites() {
         exit 1
     fi
     
-    if ! command_exists docker-compose; then
+    if ! command_exists docker compose; then
         print_error "Docker Compose is not installed. Please install Docker Compose first."
         exit 1
     fi
@@ -92,7 +92,7 @@ check_environment() {
 build_images() {
     print_status "Building Docker images..."
     
-    docker-compose -f docker-compose.prod.yml build --no-cache
+    docker compose -f docker-compose.prod.yml build --no-cache
     
     print_success "Docker images built successfully"
 }
@@ -102,13 +102,13 @@ deploy() {
     print_status "Deploying application..."
     
     # Stop existing containers
-    docker-compose -f docker-compose.prod.yml down
+    docker compose -f docker-compose.prod.yml down
     
     # Remove orphaned containers
-    docker-compose -f docker-compose.prod.yml down --remove-orphans
+    docker compose -f docker-compose.prod.yml down --remove-orphans
     
     # Start services
-    docker-compose -f docker-compose.prod.yml up -d
+    docker compose -f docker-compose.prod.yml up -d
     
     print_success "Application deployed successfully"
 }
@@ -123,11 +123,11 @@ check_health() {
     services=("postgres" "redis" "backend" "frontend")
     
     for service in "${services[@]}"; do
-        if docker-compose -f docker-compose.prod.yml ps | grep -q "${service}.*Up"; then
+        if docker compose -f docker-compose.prod.yml ps | grep -q "${service}.*Up"; then
             print_success "$service is running"
         else
             print_error "$service is not running"
-            docker-compose -f docker-compose.prod.yml logs "$service"
+            docker compose -f docker-compose.prod.yml logs "$service"
             exit 1
         fi
     done
@@ -155,9 +155,9 @@ show_info() {
     echo "  Flower (Celery Monitor): http://localhost:5555"
     echo
     echo "Useful commands:"
-    echo "  View logs: docker-compose -f docker-compose.prod.yml logs -f [service]"
-    echo "  Stop services: docker-compose -f docker-compose.prod.yml down"
-    echo "  Restart service: docker-compose -f docker-compose.prod.yml restart [service]"
+    echo "  View logs: docker compose -f docker-compose.prod.yml logs -f [service]"
+    echo "  Stop services: docker compose -f docker-compose.prod.yml down"
+    echo "  Restart service: docker compose -f docker-compose.prod.yml restart [service]"
     echo
 }
 
@@ -202,14 +202,14 @@ case "${1:-deploy}" in
         ;;
     "down")
         print_status "Stopping all services..."
-        docker-compose -f docker-compose.prod.yml down
+        docker compose -f docker-compose.prod.yml down
         print_success "All services stopped"
         ;;
     "logs")
-        docker-compose -f docker-compose.prod.yml logs -f
+        docker compose -f docker-compose.prod.yml logs -f
         ;;
     "status")
-        docker-compose -f docker-compose.prod.yml ps
+        docker compose -f docker-compose.prod.yml ps
         ;;
     "help"|"-h"|"--help")
         show_help

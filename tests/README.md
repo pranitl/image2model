@@ -172,7 +172,7 @@ The test suite requires the following services to be running:
 docker compose up -d
 
 # Production environment (for production validation tests)
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker compose.yml -f docker compose.prod.yml up -d
 ```
 
 ## Advanced Usage

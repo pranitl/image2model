@@ -42,11 +42,11 @@ help:
 
 # Build all images
 build:
-	docker-compose build
+	docker compose build
 
 # Start all services
 up:
-	docker-compose up -d
+	docker compose up -d
 	@echo "Services starting..."
 	@echo "Frontend: http://localhost:3000"
 	@echo "Backend API: http://localhost:8000"
@@ -57,67 +57,67 @@ up:
 
 # Start services with logs
 up-logs:
-	docker-compose up
+	docker compose up
 
 # Stop all services
 down:
-	docker-compose down
+	docker compose down
 
 # Restart all services
 restart:
-	docker-compose restart
+	docker compose restart
 
 # Show logs from all services
 logs:
-	docker-compose logs -f
+	docker compose logs -f
 
 # Show logs from specific service
 logs-backend:
-	docker-compose logs -f backend
+	docker compose logs -f backend
 
 logs-frontend:
-	docker-compose logs -f frontend
+	docker compose logs -f frontend
 
 logs-worker:
-	docker-compose logs -f worker
+	docker compose logs -f worker
 
 logs-db:
-	docker-compose logs -f postgres
+	docker compose logs -f postgres
 
 # Open shell in backend container
 shell-backend:
-	docker-compose exec backend /bin/bash
+	docker compose exec backend /bin/bash
 
 # Open shell in frontend container
 shell-frontend:
-	docker-compose exec frontend /bin/sh
+	docker compose exec frontend /bin/sh
 
 # Open shell in worker container
 shell-worker:
-	docker-compose exec worker /bin/bash
+	docker compose exec worker /bin/bash
 
 # Open PostgreSQL shell
 shell-db:
-	docker-compose exec postgres psql -U postgres -d image2model
+	docker compose exec postgres psql -U postgres -d image2model
 
 # Show container status
 status:
-	docker-compose ps
+	docker compose ps
 
 # Run database migrations
 db-migrate:
-	docker-compose exec backend alembic upgrade head
+	docker compose exec backend alembic upgrade head
 
 # Reset database (DESTRUCTIVE)
 db-reset:
 	@echo "WARNING: This will destroy all data in the database!"
 	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ]
-	docker-compose down
+	docker compose down
 	docker volume rm image2model-postgres-data || true
-	docker-compose up -d postgres
+	docker compose up -d postgres
 	@echo "Waiting for database to be ready..."
 	@sleep 10
-	docker-compose up -d
+	docker compose up -d
 
 # Open Celery Flower monitoring
 flower:
@@ -126,17 +126,17 @@ flower:
 
 # Run tests
 test:
-	docker-compose exec backend python -m pytest
-	docker-compose exec frontend npm test
+	docker compose exec backend python -m pytest
+	docker compose exec frontend npm test
 
 # Run linting
 lint:
-	docker-compose exec backend flake8 app/
-	docker-compose exec frontend npm run lint
+	docker compose exec backend flake8 app/
+	docker compose exec frontend npm run lint
 
 # Clean up - stop containers and remove volumes
 clean:
-	docker-compose down -v
+	docker compose down -v
 	docker system prune -f
 
 # Prune unused Docker resources
@@ -146,12 +146,12 @@ prune:
 
 # Install dependencies
 install:
-	docker-compose exec backend pip install -r requirements.txt
-	docker-compose exec frontend npm install
+	docker compose exec backend pip install -r requirements.txt
+	docker compose exec frontend npm install
 
 # Development mode - start with hot reload
 dev:
-	docker-compose up --build
+	docker compose up --build
 
 # Production Commands
 prod-build:
@@ -161,24 +161,24 @@ prod-deploy:
 	./scripts/deploy.sh deploy
 
 prod-start:
-	docker-compose -f docker-compose.prod.yml up -d
+	docker compose -f docker-compose.prod.yml up -d
 
 prod-stop:
-	docker-compose -f docker-compose.prod.yml down
+	docker compose -f docker-compose.prod.yml down
 
 prod-logs:
-	docker-compose -f docker-compose.prod.yml logs -f
+	docker compose -f docker-compose.prod.yml logs -f
 
 prod-status:
-	docker-compose -f docker-compose.prod.yml ps
+	docker compose -f docker-compose.prod.yml ps
 
 # Show environment information
 env-info:
 	@echo "Environment Information:"
 	@echo "Docker version: $(shell docker --version)"
-	@echo "Docker Compose version: $(shell docker-compose --version)"
+	@echo "Docker Compose version: $(shell docker compose --version)"
 	@echo "Current directory: $(PWD)"
-	@echo "Active containers: $(shell docker-compose ps -q | wc -l)"
+	@echo "Active containers: $(shell docker compose ps -q | wc -l)"
 
 # Quick setup for new developers
 setup:

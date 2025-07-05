@@ -27,7 +27,7 @@ An AI-powered platform that converts 2D images into 3D models using advanced mac
    make up
    
    # Alternative legacy command (if using older Docker)
-   docker-compose up -d
+   docker compose up -d
    ```
 
 3. **Access the application**
@@ -102,7 +102,7 @@ image2model/
 ### Available Commands
 
 ```bash
-# Docker operations (automatically uses 'docker compose' or 'docker-compose')
+# Docker operations (automatically uses 'docker compose' or 'docker compose')
 make up              # Start all services
 make down            # Stop all services
 make restart         # Restart all services
@@ -359,8 +359,8 @@ docker compose -f docker-compose.prod.yml build
 docker compose -f docker-compose.prod.yml up -d
 
 # Legacy approach (older Docker versions)
-docker-compose -f docker-compose.prod.yml build
-docker-compose -f docker-compose.prod.yml up -d
+docker compose -f docker-compose.prod.yml build
+docker compose -f docker-compose.prod.yml up -d
 ```
 
 ### Environment-Specific Configurations
@@ -459,7 +459,7 @@ task-master set-status --id=<task-id> --status=done
 
 **Docker Compose command not found:**
 ```bash
-# If you get "zsh: command not found: docker-compose"
+# If you get "zsh: command not found: docker compose"
 # Use the newer Docker Compose v2 syntax instead:
 docker compose up -d
 
@@ -475,7 +475,7 @@ make up
 
 **Environment validation errors:**
 ```bash
-# Fix environment mapping errors in docker-compose.override.yml
+# Fix environment mapping errors in docker compose.override.yml
 # Make sure all environment variables use proper YAML syntax:
 environment:
   REDIS_HOSTS: "local:redis:6379"  # ✅ Correct (quoted)
@@ -494,7 +494,7 @@ make db-reset  # Reset database
 ```
 
 **Frontend/Backend not hot reloading:**
-- Ensure volume mounts are working in docker-compose.override.yml
+- Ensure volume mounts are working in docker compose.override.yml
 - Check file permissions on mounted volumes
 
 See `DOCKER.md` for comprehensive troubleshooting guide.

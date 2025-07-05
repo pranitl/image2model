@@ -31,7 +31,7 @@ This document provides instructions for setting up and running the Image2Model a
 4. **Start the application:**
    ```bash
    # Using Docker Compose
-   docker-compose up -d
+   docker compose up -d
 
    # OR using Makefile
    make up
@@ -124,25 +124,25 @@ make prune
 
 ```bash
 # Start all services
-docker-compose up -d
+docker compose up -d
 
 # View logs
-docker-compose logs -f
+docker compose logs -f
 
 # Access backend shell
-docker-compose exec backend bash
+docker compose exec backend bash
 
 # Access frontend shell
-docker-compose exec frontend sh
+docker compose exec frontend sh
 
 # Database shell
-docker-compose exec postgres psql -U postgres -d image2model
+docker compose exec postgres psql -U postgres -d image2model
 
 # Stop services
-docker-compose down
+docker compose down
 
 # Rebuild and start
-docker-compose up --build
+docker compose up --build
 ```
 
 ## Development Workflow
@@ -161,20 +161,20 @@ Both frontend and backend support hot reload:
 # Run migrations
 make db-migrate
 # OR
-docker-compose exec backend alembic upgrade head
+docker compose exec backend alembic upgrade head
 
 # Create new migration
-docker-compose exec backend alembic revision --autogenerate -m "description"
+docker compose exec backend alembic revision --autogenerate -m "description"
 ```
 
 ### Testing
 
 ```bash
 # Run backend tests
-docker-compose exec backend python -m pytest
+docker compose exec backend python -m pytest
 
 # Run frontend tests
-docker-compose exec frontend npm test
+docker compose exec frontend npm test
 
 # OR using Makefile
 make test
@@ -213,7 +213,7 @@ make test
 
 3. **Check build:**
    ```bash
-   docker-compose exec frontend npm run build
+   docker compose exec frontend npm run build
    ```
 
 ## Production Deployment
@@ -222,10 +222,10 @@ make test
 
 ```bash
 # Build production images
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml build
+docker compose -f docker compose.yml -f docker compose.prod.yml build
 
 # Start production stack
-docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+docker compose -f docker compose.yml -f docker compose.prod.yml up -d
 ```
 
 ### Production Considerations
@@ -260,7 +260,7 @@ lsof -i :8000
 lsof -i :5432
 
 # Stop conflicting services
-docker-compose down
+docker compose down
 ```
 
 #### Volume Permission Issues
@@ -289,20 +289,20 @@ make shell-db
 make prune
 
 # Rebuild from scratch
-docker-compose build --no-cache
+docker compose build --no-cache
 ```
 
 ### Log Analysis
 
 ```bash
 # All services
-docker-compose logs -f
+docker compose logs -f
 
 # Specific service
-docker-compose logs -f backend
+docker compose logs -f backend
 
 # Last 100 lines
-docker-compose logs --tail=100 backend
+docker compose logs --tail=100 backend
 
 # Follow logs for specific service
 make logs-backend
@@ -324,7 +324,7 @@ docker stats
 docker system df
 
 # Container resource limits
-docker-compose exec backend cat /sys/fs/cgroup/memory/memory.limit_in_bytes
+docker compose exec backend cat /sys/fs/cgroup/memory/memory.limit_in_bytes
 ```
 
 ## Additional Tools
@@ -333,10 +333,10 @@ docker-compose exec backend cat /sys/fs/cgroup/memory/memory.limit_in_bytes
 
 ```bash
 # Backup database
-docker-compose exec postgres pg_dump -U postgres image2model > backup.sql
+docker compose exec postgres pg_dump -U postgres image2model > backup.sql
 
 # Restore database
-docker-compose exec -T postgres psql -U postgres image2model < backup.sql
+docker compose exec -T postgres psql -U postgres image2model < backup.sql
 
 # Access PgAdmin
 open http://localhost:5050
@@ -346,10 +346,10 @@ open http://localhost:5050
 
 ```bash
 # Redis CLI
-docker-compose exec redis redis-cli
+docker compose exec redis redis-cli
 
 # Monitor Redis
-docker-compose exec redis redis-cli monitor
+docker compose exec redis redis-cli monitor
 
 # Access Redis Commander
 open http://localhost:8081
@@ -359,13 +359,13 @@ open http://localhost:8081
 
 ```bash
 # View active tasks
-docker-compose exec worker celery -A app.workers.celery_app inspect active
+docker compose exec worker celery -A app.workers.celery_app inspect active
 
 # View registered tasks
-docker-compose exec worker celery -A app.workers.celery_app inspect registered
+docker compose exec worker celery -A app.workers.celery_app inspect registered
 
 # Purge all tasks
-docker-compose exec worker celery -A app.workers.celery_app purge
+docker compose exec worker celery -A app.workers.celery_app purge
 ```
 
 ## Support

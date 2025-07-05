@@ -14,10 +14,10 @@ Successfully resolved GitHub Issue #2: "Celery worker not processing tasks - mis
 
 ### Files Modified:
 
-1. **docker-compose.yml** (Line 104)
+1. **docker compose.yml** (Line 104)
    - Added queue specification: `-Q default,batch_processing,model_generation,maintenance,priority`
 
-2. **docker-compose.prod.yml** (Multiple lines)
+2. **docker compose.prod.yml** (Multiple lines)
    - Fixed celery app path: `app.core.celery_app` (was incorrectly `app.workers.celery_app`)
    - Added queue specification to all worker services
    - Configured specialized workers for different queue types
@@ -48,5 +48,5 @@ July 2, 2025
 ## Related Files
 
 - `backend/CELERY_QUEUE_ISSUE.md` - Original issue analysis
-- `docker-compose.yml` - Development environment fix
-- `docker-compose.prod.yml` - Production environment fix
+- `docker compose.yml` - Development environment fix
+- `docker compose.prod.yml` - Production environment fix
