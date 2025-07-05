@@ -18,83 +18,100 @@ import websockets
 class TestCompleteWorkflow:
     """Test complete end-to-end user workflows."""
     
-    def test_single_image_complete_pipeline(self, http_session, test_config, sample_image_file, services_ready):
+    def test_single_image_complete_pipeline(self, auth_http_session, test_config, sample_image_file, services_ready):
         """Test complete pipeline: upload -> process -> download."""
-        # Step 1: Upload image
-        upload_url = f"{test_config['backend_url']}/api/v1/upload/image"
+        from tests.mocks.fal_mock import create_fal_mock
+        from unittest.mock import patch
         
-        with open(sample_image_file, 'rb') as f:
-            files = {'file': (sample_image_file.name, f, 'image/jpeg')}
-            upload_response = http_session.post(upload_url, files=files, timeout=test_config['timeout'])
+        # Create FAL.AI mock
+        fal_mocks = create_fal_mock(success=True, progress_updates=True)
         
-        assert upload_response.status_code == 200, f"Upload failed: {upload_response.text}"
-        upload_data = upload_response.json()
-        
-        job_id = upload_data['job_id']
-        task_id = upload_data['task_id']
-        
-        print(f"Started job {job_id} with task {task_id}")
-        
-        # Step 2: Monitor task progress
-        status_url = f"{test_config['backend_url']}/api/v1/status/tasks/{task_id}/status"
-        
-        max_wait_time = 300  # 5 minutes maximum
-        check_interval = 10  # Check every 10 seconds
-        max_attempts = max_wait_time // check_interval
-        
-        final_status = None
-        attempt = 0
-        
-        while attempt < max_attempts:
-            status_response = http_session.get(status_url, timeout=test_config['timeout'])
-            assert status_response.status_code == 200
-            
-            status_data = status_response.json()
-            current_status = status_data.get('status')
-            progress = status_data.get('progress', 0)
-            
-            print(f"Attempt {attempt + 1}: Status = {current_status}, Progress = {progress}%")
-            
-            if current_status in ['completed', 'failed']:
-                final_status = current_status
-                break
-            
-            attempt += 1
-            time.sleep(check_interval)
-        
-        # Step 3: Verify task completion
-        assert final_status is not None, f"Task did not complete within {max_wait_time} seconds"
-        
-        if final_status == 'failed':
-            # Get error details for debugging
-            status_response = http_session.get(status_url, timeout=test_config['timeout'])
-            status_data = status_response.json()
-            error_msg = status_data.get('error', 'Unknown error')
-            pytest.fail(f"Task failed with error: {error_msg}")
-        
-        assert final_status == 'completed', f"Task ended with status: {final_status}"
-        
-        # Step 4: Verify download availability
-        download_url = f"{test_config['backend_url']}/api/v1/download/{job_id}/all"
-        download_response = http_session.get(download_url, timeout=test_config['timeout'])
-        
-        # Should return file list or redirect to download
-        assert download_response.status_code in [200, 302], f"Download failed: {download_response.text}"
-        
-        if download_response.status_code == 200:
-            download_data = download_response.json()
-            assert 'files' in download_data
-            assert len(download_data['files']) > 0
-            
-            # Verify file details
-            for file_info in download_data['files']:
-                assert 'filename' in file_info
-                assert 'size' in file_info
-                assert 'download_url' in file_info
-        
-        print(f"✓ Complete pipeline test passed for job {job_id}")
+        # Patch FAL.AI client methods - patch at the module level where they're imported
+        with patch('fal_client.upload_file', side_effect=fal_mocks['upload_file']):
+            with patch('fal_client.subscribe', side_effect=fal_mocks['subscribe']):
+                # Step 1: Upload image using batch endpoint for proper task tracking
+                upload_url = f"{test_config['backend_url']}/api/v1/upload"
+                
+                with open(sample_image_file, 'rb') as f:
+                    files = [('files', (sample_image_file.name, f, 'image/jpeg'))]
+                    upload_response = auth_http_session.post(upload_url, files=files, timeout=test_config['timeout'])
+                
+                assert upload_response.status_code == 200, f"Upload failed: {upload_response.text}"
+                upload_data = upload_response.json()
+                
+                job_id = upload_data.get('job_id')  # Job ID for results
+                task_id = upload_data.get('task_id')  # Celery task ID for status tracking
+                
+                print(f"Started job {job_id} with task {task_id}")
+                
+                # Step 2: Monitor task progress
+                status_url = f"{test_config['backend_url']}/api/v1/status/tasks/{task_id}/status"
+                
+                max_wait_time = 60  # 1 minute for mocked processing
+                check_interval = 2  # Check every 2 seconds
+                max_attempts = max_wait_time // check_interval
+                
+                final_status = None
+                attempt = 0
+                chord_checked = False
+                
+                while attempt < max_attempts:
+                    status_response = auth_http_session.get(status_url, timeout=test_config['timeout'])
+                    assert status_response.status_code == 200
+                    
+                    status_data = status_response.json()
+                    current_status = status_data.get('status')
+                    progress = status_data.get('progress', 0)
+                    
+                    print(f"Attempt {attempt + 1}: Status = {current_status}, Progress = {progress}%")
+                    
+                    # Handle chord task completion
+                    if current_status == 'completed' and status_data.get('result', {}).get('chord_task_id') and not chord_checked:
+                        chord_id = status_data['result']['chord_task_id']
+                        print(f"Main task completed, checking chord {chord_id}")
+                        chord_checked = True
+                        # Continue checking for actual completion
+                    elif current_status in ['completed', 'failed']:
+                        final_status = current_status
+                        break
+                    
+                    attempt += 1
+                    time.sleep(check_interval)
+                
+                # Step 3: Verify task completion
+                assert final_status is not None, f"Task did not complete within {max_wait_time} seconds"
+                
+                if final_status == 'failed':
+                    # Get error details for debugging
+                    status_response = auth_http_session.get(status_url, timeout=test_config['timeout'])
+                    status_data = status_response.json()
+                    error_msg = status_data.get('error', 'Unknown error')
+                    pytest.fail(f"Task failed with error: {error_msg}")
+                
+                assert final_status == 'completed', f"Task ended with status: {final_status}"
+                
+                # Step 4: Verify download availability
+                download_url = f"{test_config['backend_url']}/api/v1/download/{job_id}/all"
+                download_response = auth_http_session.get(download_url, timeout=test_config['timeout'])
+                
+                # Should return file list
+                assert download_response.status_code == 200, f"Download failed: {download_response.text}"
+                
+                download_data = download_response.json()
+                assert 'files' in download_data
+                assert len(download_data['files']) > 0
+                
+                # Verify file details
+                for file_info in download_data['files']:
+                    assert 'filename' in file_info
+                    assert 'file_size' in file_info
+                    assert 'model_url' in file_info
+                    # Mock URLs should start with FAL.AI domain
+                    assert file_info['model_url'].startswith('https://v3.fal.media/')
+                
+                print(f"✓ Complete pipeline test passed for job {job_id}")
     
-    def test_batch_processing_workflow(self, http_session, test_config, multiple_image_files, services_ready):
+    def test_batch_processing_workflow(self, auth_http_session, test_config, multiple_image_files, services_ready):
         """Test batch processing workflow with multiple files."""
         # Step 1: Upload batch
         upload_url = f"{test_config['backend_url']}/api/v1/upload"
@@ -107,62 +124,56 @@ class TestCompleteWorkflow:
             files.append(('files', (img_file.name, open(img_file, 'rb'), 'image/jpeg')))
         
         try:
-            upload_response = http_session.post(upload_url, files=files, timeout=test_config['timeout'])
+            upload_response = auth_http_session.post(upload_url, files=files, timeout=test_config['timeout'])
             assert upload_response.status_code == 200, f"Batch upload failed: {upload_response.text}"
             
             upload_data = upload_response.json()
             job_id = upload_data['job_id']
-            tasks = upload_data['tasks']
+            task_id = upload_data.get('task_id')  # Main task ID for batch
             
-            print(f"Started batch job {job_id} with {len(tasks)} tasks")
+            print(f"Started batch job {job_id} with task {task_id}")
             
-            # Step 2: Monitor all tasks
-            completed_tasks = 0
-            failed_tasks = 0
+            # Step 2: Monitor batch task
             max_wait_time = 600  # 10 minutes for batch processing
             check_interval = 15
             max_attempts = max_wait_time // check_interval
             
-            for attempt in range(max_attempts):
-                all_done = True
-                current_completed = 0
-                current_failed = 0
+            final_status = None
+            
+            if task_id:
+                # Monitor the main batch task
+                status_url = f"{test_config['backend_url']}/api/v1/status/tasks/{task_id}/status"
                 
-                for task in tasks:
-                    task_id = task['task_id']
-                    status_url = f"{test_config['backend_url']}/api/v1/status/tasks/{task_id}/status"
-                    status_response = http_session.get(status_url, timeout=test_config['timeout'])
+                for attempt in range(max_attempts):
+                    status_response = auth_http_session.get(status_url, timeout=test_config['timeout'])
                     
                     if status_response.status_code == 200:
                         status_data = status_response.json()
                         current_status = status_data.get('status')
+                        progress = status_data.get('progress', 0)
                         
-                        if current_status == 'completed':
-                            current_completed += 1
-                        elif current_status == 'failed':
-                            current_failed += 1
-                        elif current_status in ['pending', 'processing']:
-                            all_done = False
-                
-                completed_tasks = current_completed
-                failed_tasks = current_failed
-                
-                print(f"Batch progress: {completed_tasks} completed, {failed_tasks} failed, {len(tasks) - completed_tasks - failed_tasks} processing")
-                
-                if all_done:
-                    break
-                
-                time.sleep(check_interval)
+                        print(f"Batch progress: Status = {current_status}, Progress = {progress}%")
+                        
+                        if current_status in ['completed', 'failed']:
+                            final_status = current_status
+                            break
+                    
+                    time.sleep(check_interval)
             
             # Step 3: Verify batch completion
-            assert completed_tasks + failed_tasks == len(tasks), "Not all tasks completed"
-            assert completed_tasks > 0, "No tasks completed successfully"
+            assert final_status is not None, f"Batch task did not complete within {max_wait_time} seconds"
+            assert final_status == 'completed', f"Batch task failed with status: {final_status}"
             
-            # Allow some failures in batch processing (network issues, etc.)
-            success_rate = completed_tasks / len(tasks)
-            assert success_rate >= 0.5, f"Success rate too low: {success_rate:.2%}"
+            # Step 4: Verify we can download the results
+            download_url = f"{test_config['backend_url']}/api/v1/download/{job_id}/all"
+            download_response = auth_http_session.get(download_url, timeout=test_config['timeout'])
             
-            print(f"✓ Batch processing completed: {completed_tasks}/{len(tasks)} successful")
+            if download_response.status_code == 200:
+                download_data = download_response.json()
+                files_processed = len(download_data.get('files', []))
+                print(f"✓ Batch processing completed: {files_processed} files processed")
+            else:
+                print(f"✓ Batch processing completed (status: {download_response.status_code})")
             
         finally:
             # Close file handles
@@ -177,11 +188,12 @@ class TestCompleteWorkflow:
         
         with open(sample_image_file, 'rb') as f:
             files = {'file': (sample_image_file.name, f, 'image/jpeg')}
+            headers = {'Authorization': f'Bearer {test_config["api_key"]}'}
             async with aiohttp.ClientSession() as session:
                 data = aiohttp.FormData()
                 data.add_field('file', f, filename=sample_image_file.name, content_type='image/jpeg')
                 
-                async with session.post(upload_url, data=data) as response:
+                async with session.post(upload_url, data=data, headers=headers) as response:
                     assert response.status == 200
                     upload_data = await response.json()
         
@@ -245,14 +257,14 @@ class TestCompleteWorkflow:
             
         print(f"✓ Real-time monitoring test passed with {len(progress_updates)} updates")
     
-    def test_error_recovery_workflow(self, http_session, test_config, invalid_file, services_ready):
+    def test_error_recovery_workflow(self, auth_http_session, http_session, test_config, invalid_file, services_ready):
         """Test system recovery from error conditions."""
         # Step 1: Trigger an error with invalid file
         upload_url = f"{test_config['backend_url']}/api/v1/upload/image"
         
         with open(invalid_file, 'rb') as f:
             files = {'file': (invalid_file.name, f, 'text/plain')}
-            error_response = http_session.post(upload_url, files=files, timeout=test_config['timeout'])
+            error_response = auth_http_session.post(upload_url, files=files, timeout=test_config['timeout'])
         
         assert error_response.status_code == 400
         error_data = error_response.json()
@@ -269,12 +281,12 @@ class TestCompleteWorkflow:
         # Step 3: Verify normal operations still work
         # This would require a valid test file
         # For now, just verify the upload endpoint still responds
-        empty_upload_response = http_session.post(upload_url, timeout=test_config['timeout'])
+        empty_upload_response = auth_http_session.post(upload_url, timeout=test_config['timeout'])
         assert empty_upload_response.status_code == 400  # Expected for missing file
         
         print("✓ Error recovery test passed")
     
-    def test_concurrent_uploads(self, http_session, test_config, multiple_image_files, services_ready):
+    def test_concurrent_uploads(self, auth_http_session, test_config, multiple_image_files, services_ready):
         """Test system handling of concurrent uploads."""
         import threading
         from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -287,7 +299,7 @@ class TestCompleteWorkflow:
             try:
                 with open(img_file, 'rb') as f:
                     files = {'file': (img_file.name, f, 'image/jpeg')}
-                    response = http_session.post(upload_url, files=files, timeout=test_config['timeout'])
+                    response = auth_http_session.post(upload_url, files=files, timeout=test_config['timeout'])
                 
                 return {
                     'file': img_file.name,

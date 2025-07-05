@@ -5,6 +5,7 @@ const ProcessingModule = (function() {
     // State management
     const state = {
         taskId: null,
+        jobId: null,  // Add jobId to state
         eventSource: null,
         streamController: null,
         files: new Map(), // Map of filename -> file status
@@ -23,9 +24,10 @@ const ProcessingModule = (function() {
     
     // Initialize on DOM ready
     function init() {
-        // Extract task_id from URL
+        // Extract task_id and job_id from URL
         const urlParams = new URLSearchParams(window.location.search);
         state.taskId = urlParams.get('taskId') || urlParams.get('task_id');
+        state.jobId = urlParams.get('jobId') || urlParams.get('job_id');
         
         if (!state.taskId) {
             showError('No task ID provided');
@@ -111,7 +113,6 @@ const ProcessingModule = (function() {
     // Establish SSE connection
     function connectSSE() {
         try {
-            console.log('Connecting to SSE for task:', state.taskId);
             
             // Use API client's streamProgress function with callbacks
             state.streamController = window.API.streamProgress(state.taskId, {
@@ -144,7 +145,6 @@ const ProcessingModule = (function() {
             !state.isComplete && !state.isCancelled) {
             
             state.reconnectAttempts++;
-            console.log(`Reconnecting... Attempt ${state.reconnectAttempts}/${state.maxReconnectAttempts}`);
             
             // Show reconnection status
             showStatus(`Connection lost. Reconnecting... (${state.reconnectAttempts}/${state.maxReconnectAttempts})`);
@@ -163,7 +163,6 @@ const ProcessingModule = (function() {
     
     // Handle overall progress updates
     function handleProgressUpdate(data) {
-        console.log('Progress update:', data);
         
         // Update file counts
         if (data.totalFiles !== undefined) {
@@ -189,7 +188,6 @@ const ProcessingModule = (function() {
     
     // Handle individual file updates
     function handleFileUpdate(data) {
-        console.log('File update:', data);
         
         if (data.fileName) {
             updateFileCard(
@@ -203,7 +201,6 @@ const ProcessingModule = (function() {
     
     // Handle completion
     function handleComplete(data) {
-        console.log('Processing complete:', data);
         state.isComplete = true;
         
         // Close SSE connection
@@ -227,15 +224,15 @@ const ProcessingModule = (function() {
         } else if (hasSuccess && hasFailures) {
             // Partial success
             showStatus(`Processing complete: ${data.successCount} succeeded, ${data.failureCount} failed`);
-            redirectToResults(data.jobId || state.taskId);
+            redirectToResults(data.jobId || state.jobId || state.taskId);
         } else if (hasSuccess) {
             // All succeeded
             showStatus('All files processed successfully!');
-            redirectToResults(data.jobId || state.taskId);
+            redirectToResults(data.jobId || state.jobId || state.taskId);
         } else {
             // No count information - still redirect
             showStatus('Processing complete');
-            redirectToResults(data.jobId || state.taskId);
+            redirectToResults(data.jobId || state.jobId || state.taskId);
         }
         
         // Disable cancel button if proceeding to results
@@ -247,9 +244,11 @@ const ProcessingModule = (function() {
     
     // Helper function to redirect to results
     function redirectToResults(jobId) {
-        setTimeout(() => {
-            window.location.href = `results.html?jobId=${jobId}`;
-        }, 1500);
+        
+        showStatus('Processing complete! Redirecting to results...', 'success');
+        
+        // Redirect immediately
+        window.location.href = `results.html?jobId=${jobId}`;
     }
     
     // Handle errors
@@ -264,7 +263,6 @@ const ProcessingModule = (function() {
     
     // Update overall progress bar
     function updateOverallProgress(progress) {
-        console.log('Updating overall progress to:', progress);
         state.overallProgress = Math.min(Math.max(progress, 0), 100);
         
         if (elements.progressFill) {

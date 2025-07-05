@@ -24,6 +24,8 @@ BACKEND_URL = os.getenv("TEST_BACKEND_URL", "http://localhost:8000")
 FRONTEND_URL = os.getenv("TEST_FRONTEND_URL", "http://localhost:3000")
 TEST_TIMEOUT = int(os.getenv("TEST_TIMEOUT", "30"))
 MAX_RETRIES = int(os.getenv("TEST_MAX_RETRIES", "3"))
+API_KEY = os.getenv("API_KEY", "test-api-key-for-development")
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "test-admin-api-key-for-development")
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -40,6 +42,8 @@ def test_config() -> Dict[str, Any]:
         "frontend_url": FRONTEND_URL,
         "timeout": TEST_TIMEOUT,
         "max_retries": MAX_RETRIES,
+        "api_key": API_KEY,
+        "admin_api_key": ADMIN_API_KEY,
         "test_files_dir": Path(__file__).parent / "fixtures" / "files",
         "temp_dir": Path(tempfile.gettempdir()) / "image2model_tests"
     }
@@ -60,6 +64,56 @@ def http_session() -> Generator[requests.Session, None, None]:
     adapter = HTTPAdapter(max_retries=retry_strategy)
     session.mount("http://", adapter)
     session.mount("https://", adapter)
+    
+    yield session
+    session.close()
+
+@pytest.fixture(scope="session")
+def auth_http_session(test_config) -> Generator[requests.Session, None, None]:
+    """Create authenticated HTTP session with API key."""
+    session = requests.Session()
+    
+    # Configure retry strategy
+    retry_strategy = Retry(
+        total=MAX_RETRIES,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "GET", "OPTIONS", "POST", "PUT", "DELETE"],
+        backoff_factor=0.3
+    )
+    
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    
+    # Add authentication header
+    session.headers.update({
+        "Authorization": f"Bearer {test_config['api_key']}"
+    })
+    
+    yield session
+    session.close()
+
+@pytest.fixture(scope="session")
+def admin_http_session(test_config) -> Generator[requests.Session, None, None]:
+    """Create authenticated HTTP session with admin API key."""
+    session = requests.Session()
+    
+    # Configure retry strategy
+    retry_strategy = Retry(
+        total=MAX_RETRIES,
+        status_forcelist=[429, 500, 502, 503, 504],
+        allowed_methods=["HEAD", "GET", "OPTIONS", "POST", "PUT", "DELETE"],
+        backoff_factor=0.3
+    )
+    
+    adapter = HTTPAdapter(max_retries=retry_strategy)
+    session.mount("http://", adapter)
+    session.mount("https://", adapter)
+    
+    # Add admin authentication header
+    session.headers.update({
+        "Authorization": f"Bearer {test_config['admin_api_key']}"
+    })
     
     yield session
     session.close()

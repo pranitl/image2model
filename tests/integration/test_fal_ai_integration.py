@@ -309,10 +309,10 @@ class TestFalAIIntegration:
         assert result['model_format'] == 'glb'
         assert 'rendered_image' in result
     
-    def test_models_endpoint_accuracy(self, http_session, test_config, services_ready):
+    def test_models_endpoint_accuracy(self, auth_http_session, test_config, services_ready):
         """Test that models endpoint reflects only Tripo3D model."""
         url = f"{test_config['backend_url']}/api/v1/models/available"
-        response = http_session.get(url, timeout=test_config['timeout'])
+        response = auth_http_session.get(url, timeout=test_config['timeout'])
         
         assert response.status_code == 200
         models = response.json()
@@ -323,10 +323,10 @@ class TestFalAIIntegration:
         tripo_model = models[0]
         assert tripo_model['name'] == 'tripo3d'
         assert tripo_model['type'] == 'image_to_3d'
-        assert tripo_model['description'].lower().contains('tripo3d')
+        assert 'tripo3d' in tripo_model['description'].lower()
         assert 'glb' in tripo_model['supported_formats']
     
-    def test_model_generation_endpoint_validation(self, http_session, test_config, services_ready):
+    def test_model_generation_endpoint_validation(self, auth_http_session, test_config, services_ready):
         """Test model generation endpoint validates Tripo3D model type."""
         url = f"{test_config['backend_url']}/api/v1/models/generate"
         
@@ -337,7 +337,7 @@ class TestFalAIIntegration:
             "quality": "medium"
         }
         
-        response = http_session.post(url, json=invalid_payload, timeout=test_config['timeout'])
+        response = auth_http_session.post(url, json=invalid_payload, timeout=test_config['timeout'])
         
         # Should reject unsupported model types
         assert response.status_code == 400

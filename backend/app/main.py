@@ -8,12 +8,18 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from app.api.api import api_router
 from app.core.config import settings
 from app.core.error_handlers import setup_error_handlers
 from app.core.logging_config import setup_logging, set_correlation_id
 from app.core.monitoring import MonitoringMiddleware, system_monitor
+
+# Create rate limiter
+limiter = Limiter(key_func=get_remote_address)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -71,17 +77,38 @@ app = FastAPI(
 # Set up CORS
 if settings.BACKEND_CORS_ORIGINS:
     origins = [origin.strip() for origin in settings.BACKEND_CORS_ORIGINS.split(",")]
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=origins,
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    
+    # In production, be more restrictive
+    if settings.ENVIRONMENT == "production":
+        # Parse JSON-style origins if provided
+        if origins[0].startswith("["):
+            import json
+            origins = json.loads(settings.BACKEND_CORS_ORIGINS)
+        
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_credentials=False,  # Disable credentials in production
+            allow_methods=["GET", "POST", "OPTIONS"],
+            allow_headers=["Authorization", "Content-Type"],
+        )
+    else:
+        # Development mode - more permissive
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
 
 # Add monitoring middleware
 monitoring_middleware = MonitoringMiddleware()
 app.middleware("http")(monitoring_middleware)
+
+# Add rate limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # Setup error handlers
 setup_error_handlers(app)

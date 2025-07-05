@@ -115,16 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadBtn.textContent = 'Download';
         downloadBtn.download = file.filename;
         
-        // Add click tracking
-        downloadBtn.addEventListener('click', function(e) {
-            console.log(`Downloading: ${file.filename} from ${isFalUrl ? 'FAL.AI' : 'local'}`);
-            
-            // For FAL.AI URLs, we might want to handle the download differently
-            if (isFalUrl) {
-                // Browser will handle the download natively
-                console.log('FAL.AI download URL:', downloadUrl);
-            }
-        });
+        // No click tracking needed
         
         actionsContainer.appendChild(downloadBtn);
         

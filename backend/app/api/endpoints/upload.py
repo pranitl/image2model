@@ -7,10 +7,14 @@ import uuid
 import logging
 from typing import List, Optional
 
-from fastapi import APIRouter, File, HTTPException, UploadFile, Form, Query
+from fastapi import APIRouter, File, HTTPException, UploadFile, Form, Query, Depends, Request
 from pydantic import BaseModel, Field
 
 from app.core.config import settings
+from app.middleware.auth import RequireAuth
+from app.middleware.rate_limit import upload_rate_limit
+from fastapi.security import HTTPAuthorizationCredentials
+from app.core.session_store import session_store
 from app.core.exceptions import (
     FileValidationException, 
     DatabaseException, 
@@ -56,8 +60,9 @@ class ValidationError(BaseModel):
     error: str
 
 
-@router.post("/image", response_model=UploadResponse)
-async def upload_image(file: UploadFile = File(...)):
+@router.post("/image", response_model=UploadResponse, dependencies=[RequireAuth])
+@upload_rate_limit
+async def upload_image(request: Request, file: UploadFile = File(...)):
     """
     Upload an image file for 3D model generation.
     
@@ -260,9 +265,12 @@ async def save_validated_file(file: UploadFile, batch_id: str) -> UploadResponse
 
 
 @router.post("/", response_model=BatchUploadResponse)
+@upload_rate_limit
 async def upload(
+    request: Request,
     files: List[UploadFile] = File(...),
-    face_limit: Optional[int] = Form(None, description="Maximum number of faces for 3D model generation")
+    face_limit: Optional[int] = Form(None, description="Maximum number of faces for 3D model generation"),
+    api_key: str = RequireAuth
 ):
     """
     Upload image files for 3D model generation.
@@ -369,6 +377,11 @@ async def upload(
         # The files are saved and can be processed manually if needed
         logger.error(f"Failed to start background task: {str(e)}")
         actual_task_id = None
+    
+    # Track job ownership for access control
+    if api_key and settings.ENVIRONMENT == "production":
+        session_store.set_job_owner(job_id, api_key)
+        session_store.set_batch_owner(batch_id, api_key)
     
     return BatchUploadResponse(
         batch_id=batch_id,

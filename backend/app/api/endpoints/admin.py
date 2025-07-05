@@ -5,10 +5,11 @@ Admin endpoints for file management and system monitoring.
 import os
 import logging
 from typing import Dict, Any, List, Optional
-from fastapi import APIRouter, HTTPException, BackgroundTasks, Query
+from fastapi import APIRouter, HTTPException, BackgroundTasks, Query, Depends
 from pydantic import BaseModel
 
 from app.core.config import settings
+from app.middleware.auth import RequireAdminAuth
 from app.workers.cleanup import (
     cleanup_old_files,
     get_disk_usage,
@@ -19,7 +20,7 @@ from app.workers.cleanup import (
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter()
+router = APIRouter(dependencies=[RequireAdminAuth])
 
 
 class CleanupRequest(BaseModel):

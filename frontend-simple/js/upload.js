@@ -270,13 +270,19 @@ const UploadModule = (function() {
             // Clean up object URLs before redirect
             cleanupObjectUrls();
             
-            // Redirect to processing page
-            window.location.href = `processing.html?taskId=${response.taskId}`;
+            // Show success message
+            generateBtn.textContent = 'Upload successful! Redirecting...';
+            
+            // Redirect immediately to processing page with both IDs
+            window.location.href = `processing.html?taskId=${response.taskId}&jobId=${response.jobId}`;
             
         } catch (error) {
             console.error('Upload error:', error);
             showError(`Upload failed: ${error.message}`);
             setUIState('ready');
+            
+            // Keep error visible for debugging
+            alert(`Upload error: ${error.message}\n\nCheck console for details.`);
         }
     }
     

@@ -5,6 +5,11 @@
     // API Configuration - dynamically set based on current origin
     const API_BASE = window.location.origin + '/api/v1';
     
+    // API Key configuration - can be set via localStorage or environment
+    // In development, use default key if none is set
+    const DEFAULT_DEV_KEY = 'dev-api-key-123456';
+    const API_KEY = localStorage.getItem('api_key') || window.API_KEY || DEFAULT_DEV_KEY;
+    
     // Helper function for handling API errors
     async function handleApiError(response) {
         if (!response.ok) {
@@ -17,6 +22,15 @@
             throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
         }
         return response;
+    }
+    
+    // Helper function to get request headers
+    function getHeaders(additionalHeaders = {}) {
+        const headers = {};
+        if (API_KEY) {
+            headers['Authorization'] = `Bearer ${API_KEY}`;
+        }
+        return { ...headers, ...additionalHeaders };
     }
     
     // Upload batch of files with face limit
@@ -32,12 +46,14 @@
         formData.append('face_limit', faceLimit.toString());
         
         try {
+            const headers = getHeaders();
+            
             const response = await fetch(`${API_BASE}/upload/`, {
                 method: 'POST',
+                headers: headers,
                 body: formData
                 // Don't set Content-Type header - browser will set it with boundary
             });
-            
             await handleApiError(response);
             const data = await response.json();
             
@@ -65,7 +81,15 @@
             onError = () => {}
         } = callbacks;
         
-        const eventSource = new EventSource(`${API_BASE}/status/tasks/${taskId}/stream`);
+        // Create EventSource with auth headers if API key is present
+        const url = `${API_BASE}/status/tasks/${taskId}/stream`;
+        const eventSourceInit = API_KEY ? {
+            headers: {
+                'Authorization': `Bearer ${API_KEY}`
+            }
+        } : undefined;
+        
+        const eventSource = new EventSource(url, eventSourceInit);
         
         // Helper function to parse and handle event data
         const handleEventData = (event, eventType) => {
@@ -124,11 +148,11 @@
                         
                     default:
                         // Handle generic message events
-                        if (data.status === 'completed' && data.job_id) {
+                        if (data.status === 'completed') {
                             onComplete({
-                                jobId: data.job_id,
-                                successCount: data.success_count || 0,
-                                failureCount: data.failure_count || 0
+                                jobId: data.job_id || data.result?.job_id || taskId,
+                                successCount: data.success_count || data.result?.successful_files || 0,
+                                failureCount: data.failure_count || data.result?.failed_files || 0
                             });
                             eventSource.close();
                         } else if (data.status === 'failed') {
@@ -193,7 +217,9 @@
     async function getJobFiles(jobId) {
         try {
             // Use the correct endpoint from OpenAPI schema
-            const response = await fetch(`${API_BASE}/download/${jobId}/all`);
+            const response = await fetch(`${API_BASE}/download/${jobId}/all`, {
+                headers: getHeaders()
+            });
             
             await handleApiError(response);
             const data = await response.json();
@@ -240,7 +266,9 @@
     // Check job status (non-streaming)
     async function getJobStatus(taskId) {
         try {
-            const response = await fetch(`${API_BASE}/status/tasks/${taskId}`);
+            const response = await fetch(`${API_BASE}/status/tasks/${taskId}`, {
+                headers: getHeaders()
+            });
             await handleApiError(response);
             const data = await response.json();
             return { success: true, ...data };
@@ -250,6 +278,20 @@
         }
     }
     
+    // Function to set API key programmatically
+    function setApiKey(key) {
+        if (key) {
+            localStorage.setItem('api_key', key);
+            // Reload page to apply new key
+            window.location.reload();
+        }
+    }
+    
+    // Function to get current API key
+    function getApiKey() {
+        return API_KEY;
+    }
+    
     // Export API module as global object and maintain compatibility
     const API = {
         uploadBatch,
@@ -257,7 +299,9 @@
         getJobFiles,
         cancelJob,
         getJobStatus,
-        API_BASE
+        API_BASE,
+        setApiKey,
+        getApiKey
     };
     
     // Export as window.API for vanilla JS usage
