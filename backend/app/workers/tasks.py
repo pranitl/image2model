@@ -465,7 +465,8 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
             state="PROGRESS",
             meta={
                 "current": 0, 
-                "total": total_files, 
+                "total": total_files,
+                "total_files": total_files,  # Add explicit total_files
                 "status": f"Starting parallel batch processing for {total_files} files...",
                 "job_id": job_id
             }
@@ -494,6 +495,7 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
             meta={
                 "current": 0,
                 "total": total_files,
+                "total_files": total_files,  # Add explicit total_files
                 "status": f"Processing {total_files} files in parallel across workers...",
                 "job_id": job_id
             }

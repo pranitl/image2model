@@ -130,6 +130,13 @@ async def stream_task_status(
                         if 'job_id' in meta:
                             data['job_id'] = meta['job_id']
                         
+                        # Add file count information for batch processing
+                        if 'total_files' in meta:
+                            data['total_files'] = meta['total_files']
+                        elif total > 0:
+                            # If we have a total, use it as total_files for compatibility
+                            data['total_files'] = total
+                        
                         # Add estimated time remaining if we have timing data
                         if current > 0 and 'start_time' in meta:
                             elapsed = time.time() - meta['start_time']
@@ -161,6 +168,9 @@ async def stream_task_status(
                                 'task_id': tracking_id,
                                 'chord_task_id': chord_id,
                                 'job_id': result.get('job_id'),  # Include job_id from main task result
+                                'total_files': result.get('total_files', 0),  # Include file count
+                                'total': result.get('total_files', 0),  # Also as 'total' for compatibility
+                                'current': 0,  # Starting at 0 files completed
                                 'timestamp': int(time.time() * 1000)
                             }
                             

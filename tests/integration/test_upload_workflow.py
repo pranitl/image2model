@@ -222,6 +222,10 @@ class TestUploadWorkflow:
                     chord_id = status_data['result']['chord_task_id']
                     print(f"Main task completed, waiting for chord {chord_id} to complete...")
                     
+                    # Verify the result includes total_files
+                    assert 'total_files' in status_data['result'], \
+                        f"Main task result missing total_files: {status_data['result']}"
+                    
                     # Check chord status
                     chord_url = f"{test_config['backend_url']}/api/v1/status/tasks/{chord_id}/status"
                     chord_response = auth_http_session.get(chord_url, timeout=test_config['timeout'])

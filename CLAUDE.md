@@ -37,3 +37,5 @@ Also see `docs/SAAS_ARCHITECTURE.md` for technical architecture details.
 
 ## Commands
 Always use docker compose not docker-compose
+
+## Test
