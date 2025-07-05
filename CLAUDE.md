@@ -1,13 +1,5 @@
 # Claude Guide
 
-## Production Roadmap
-**IMPORTANT**: See `PRODUCTION_ROADMAP.md` for the comprehensive SaaS transformation plan. This includes:
-- 7 implementation phases with detailed tasks
-- Database schemas and code examples
-- Timeline and revenue projections
-- Security and deployment instructions
-
-Also see `docs/SAAS_ARCHITECTURE.md` for technical architecture details.
 
 ### Standard Implementation Process
 
@@ -38,4 +30,5 @@ Also see `docs/SAAS_ARCHITECTURE.md` for technical architecture details.
 ## Commands
 Always use docker compose not docker-compose
 
-## Test
+## Testing
+When we are making source code changes, we need to ensure we co-develop the test suite so it stays updated!
