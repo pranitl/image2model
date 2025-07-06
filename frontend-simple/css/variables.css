@@ -118,9 +118,9 @@
     /* =================================================================
        Dark Mode Color Scheme - Aligned with Brand Guidelines
        ================================================================= */
-    --dark-bg-primary: var(--brand-dark-charcoal); /* #3A424A - Brand color */
-    --dark-bg-secondary: #2d343a; /* Slightly darker than primary */
-    --dark-bg-tertiary: #252b30; /* Even darker for depth */
+    --dark-bg-primary: #1a1f24; /* Deep Charcoal - Much darker, modern dark mode */
+    --dark-bg-secondary: #141719; /* Darker variant for depth */
+    --dark-bg-tertiary: #0f1113; /* Darkest variant for maximum contrast */
     --dark-bg-accent: rgba(93, 173, 226, 0.1); /* Bright Cyan with low opacity */
     
     --dark-text-primary: var(--gray-300); /* #ECF0F1 - High contrast */

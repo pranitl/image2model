@@ -45,6 +45,13 @@ brand/
 - Sunset Orange (#E67E22)
 - Golden Yellow (#F39C12)
 
+### Dark Mode Support
+Our brand includes a sophisticated dark mode color palette:
+- Deep Charcoal backgrounds (#1a1f24, #141719, #0f1113)
+- High-contrast text colors for accessibility
+- Optimized accent colors for dark backgrounds
+- See `guidelines/color-usage.md` for detailed dark mode guidelines
+
 ## 📋 Usage Guidelines
 
 ### For Designers
