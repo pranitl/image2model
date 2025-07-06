@@ -17,9 +17,15 @@
                 <img src="../brand/assets/logo-original.png" alt="image2model" class="nav-logo" width="48" height="48">
                 <span class="brand-text">image2model</span>
             </a>
-            <ul class="navbar-menu">
+            <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                <span class="navbar-toggle-bar"></span>
+                <span class="navbar-toggle-bar"></span>
+                <span class="navbar-toggle-bar"></span>
+            </button>
+            <ul class="navbar-menu" id="navbar-menu">
                 <li><a href="#features" class="navbar-link">Features</a></li>
                 <li><a href="#how-it-works" class="navbar-link">How It Works</a></li>
+                <li><a href="#examples" class="navbar-link">Examples</a></li>
                 <li><a href="#pricing" class="navbar-link">Pricing</a></li>
                 <li><a href="upload.html" class="btn btn-primary btn-sm">Start Creating</a></li>
             </ul>
@@ -28,11 +34,15 @@
 
     <!-- Hero Section -->
     <section class="hero gradient-cool-ocean">
+        <div class="geometric-pattern"></div>
         <div class="container">
             <div class="hero-content animate-fade-in">
-                <h1 class="display gradient-text">Transform Images Into 3D Models</h1>
+                <div class="hero-logo-animated animate-float">
+                    <img src="../brand/assets/logo-original.png" alt="image2model" width="100" height="100" class="hero-logo">
+                </div>
+                <h1 class="display gradient-text animate-gradient">Transform Images Into 3D Models</h1>
                 <p class="hero-description lead animate-fade-in-up delay-200">
-                    From image to model in minutes, not hours. Create professional-grade 3D assets with AI-powered precision.
+                    Turn your photos into professional 3D models instantly. No expertise required - just upload and let our AI work its magic.
                 </p>
                 <div class="hero-cta animate-fade-in-scale delay-400">
                     <a href="upload.html" class="btn btn-primary btn-lg hover-lift">
@@ -135,16 +145,31 @@
 
             <div class="steps">
                 <div class="step card card-lift reveal-on-scroll">
+                    <div class="step-icon gradient-warm-sunset">
+                        <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"/>
+                        </svg>
+                    </div>
                     <span class="step-number gradient-animated">1</span>
                     <h3 class="step-title">Upload Your Images</h3>
                     <p class="step-description">Drag and drop or browse to upload JPG, PNG, or HEIC images. Multiple angles improve accuracy.</p>
                 </div>
                 <div class="step card card-lift reveal-on-scroll delay-stagger">
+                    <div class="step-icon gradient-cool-ocean animate-spin-slow">
+                        <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
                     <span class="step-number gradient-animated">2</span>
                     <h3 class="step-title">AI Processing Magic</h3>
                     <p class="step-description">Our neural networks analyze depth, texture, and geometry to reconstruct your 3D model.</p>
                 </div>
                 <div class="step card card-lift reveal-on-scroll delay-stagger">
+                    <div class="step-icon gradient-tech-fusion">
+                        <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
                     <span class="step-number gradient-animated">3</span>
                     <h3 class="step-title">Download & Create</h3>
                     <p class="step-description">Preview, refine, and download your model in your preferred format. Ready for any project.</p>
@@ -154,6 +179,98 @@
             <div class="process-visual animate-fade-in-scale delay-600">
                 <div class="process-line"></div>
                 <img src="assets/process-flow.svg" alt="Visual process flow" class="process-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- Transformation Examples Section -->
+    <section id="examples" class="examples-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title animate-fade-in">See the Magic in Action</h2>
+                <p class="section-subtitle text-secondary animate-fade-in-up delay-200">
+                    Real transformations from our community of creators
+                </p>
+            </div>
+
+            <div class="examples-grid">
+                <div class="example-card reveal-on-scroll">
+                    <div class="example-content">
+                        <div class="example-slider">
+                            <div class="example-before">
+                                <img src="assets/examples/product-before.jpg" alt="Product photo" class="example-image">
+                                <span class="example-label">Original Photo</span>
+                            </div>
+                            <div class="example-after">
+                                <img src="assets/examples/product-after.jpg" alt="3D model" class="example-image">
+                                <span class="example-label">3D Model</span>
+                            </div>
+                            <div class="example-slider-handle">
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                                    <path fill-rule="evenodd" d="M7.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0 .75.75 0 010 1.06L9.06 6l2.647 2.646a.75.75 0 11-1.06 1.061l-3-3a1 1 0 01-.354-.854z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="example-info">
+                            <h3 class="example-title">Product Photography</h3>
+                            <p class="example-description">E-commerce ready 3D models from simple product photos</p>
+                            <a href="upload.html" class="btn btn-secondary btn-sm">Try with this image</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="example-card reveal-on-scroll delay-stagger">
+                    <div class="example-content">
+                        <div class="example-slider">
+                            <div class="example-before">
+                                <img src="assets/examples/architecture-before.jpg" alt="Building photo" class="example-image">
+                                <span class="example-label">Original Photo</span>
+                            </div>
+                            <div class="example-after">
+                                <img src="assets/examples/architecture-after.jpg" alt="3D model" class="example-image">
+                                <span class="example-label">3D Model</span>
+                            </div>
+                            <div class="example-slider-handle">
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                                    <path fill-rule="evenodd" d="M7.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0 .75.75 0 010 1.06L9.06 6l2.647 2.646a.75.75 0 11-1.06 1.061l-3-3a1 1 0 01-.354-.854z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="example-info">
+                            <h3 class="example-title">Architecture & Real Estate</h3>
+                            <p class="example-description">Transform building photos into explorable 3D spaces</p>
+                            <a href="upload.html" class="btn btn-secondary btn-sm">Try with this image</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="example-card reveal-on-scroll delay-stagger">
+                    <div class="example-content">
+                        <div class="example-slider">
+                            <div class="example-before">
+                                <img src="assets/examples/nature-before.jpg" alt="Nature photo" class="example-image">
+                                <span class="example-label">Original Photo</span>
+                            </div>
+                            <div class="example-after">
+                                <img src="assets/examples/nature-after.jpg" alt="3D model" class="example-image">
+                                <span class="example-label">3D Model</span>
+                            </div>
+                            <div class="example-slider-handle">
+                                <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5 10a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1z" clip-rule="evenodd"/>
+                                    <path fill-rule="evenodd" d="M7.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0 .75.75 0 010 1.06L9.06 6l2.647 2.646a.75.75 0 11-1.06 1.061l-3-3a1 1 0 01-.354-.854z" clip-rule="evenodd"/>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="example-info">
+                            <h3 class="example-title">Nature & Landscapes</h3>
+                            <p class="example-description">Create immersive 3D environments from scenic photos</p>
+                            <a href="upload.html" class="btn btn-secondary btn-sm">Try with this image</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
@@ -346,6 +463,37 @@
             z-index: -1;
         }
 
+        /* Geometric Pattern Overlay */
+        .geometric-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.03;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.1) 35px, rgba(255,255,255,.1) 70px),
+                repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255,255,255,.05) 35px, rgba(255,255,255,.05) 70px);
+            z-index: 1;
+            animation: subtle-shift 20s ease-in-out infinite;
+        }
+
+        @keyframes subtle-shift {
+            0%, 100% { transform: translate(0, 0); }
+            50% { transform: translate(10px, -10px); }
+        }
+
+        /* Animated Hero Logo */
+        .hero-logo-animated {
+            margin-bottom: var(--spacing-xl);
+            display: inline-block;
+        }
+
+        .hero-logo {
+            border-radius: var(--radius-lg);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
         .hero-content {
             text-align: center;
             max-width: 900px;
@@ -470,6 +618,69 @@
         }
 
         /* Enhanced How It Works */
+        .steps {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-xl);
+            margin-top: 3rem;
+        }
+
+        .step {
+            position: relative;
+            padding: var(--spacing-xl);
+            text-align: center;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-normal);
+        }
+
+        .step-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-lg);
+            color: var(--brand-white);
+            position: relative;
+            z-index: 2;
+        }
+
+        .step-number {
+            position: absolute;
+            top: var(--spacing-md);
+            right: var(--spacing-md);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: var(--font-bold);
+            font-size: var(--text-lg);
+            border-radius: 50%;
+        }
+
+        .step-title {
+            font-size: var(--text-xl);
+            margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+        }
+
+        .step-description {
+            color: var(--text-secondary);
+            line-height: var(--leading-relaxed);
+        }
+
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .animate-spin-slow {
+            animation: spin-slow 8s linear infinite;
+        }
+
         .process-visual {
             margin-top: 3rem;
             text-align: center;
@@ -478,8 +689,132 @@
         .process-line {
             height: 2px;
             background: var(--gradient-cool-ocean);
-            margin: 2rem 0;
+            margin: 2rem auto;
             position: relative;
+            max-width: 600px;
+        }
+
+        .process-line::before,
+        .process-line::after {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--accent-primary);
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .process-line::before {
+            left: 0;
+        }
+
+        .process-line::after {
+            right: 0;
+        }
+
+        /* Examples Section */
+        .examples-section {
+            padding: 5rem 0;
+            background-color: var(--bg-primary);
+        }
+
+        .examples-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: var(--spacing-xl);
+            margin-top: 3rem;
+        }
+
+        .example-card {
+            background-color: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-lg);
+            transition: transform var(--transition-normal);
+        }
+
+        .example-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-xl);
+        }
+
+        .example-slider {
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+            background-color: var(--bg-tertiary);
+        }
+
+        .example-before,
+        .example-after {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .example-after {
+            clip-path: inset(0 0 0 50%);
+        }
+
+        .example-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .example-label {
+            position: absolute;
+            bottom: var(--spacing-md);
+            left: var(--spacing-md);
+            background-color: rgba(26, 31, 36, 0.9);
+            color: var(--text-primary);
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-sm);
+            font-size: var(--text-sm);
+            backdrop-filter: blur(10px);
+        }
+
+        .example-after .example-label {
+            left: auto;
+            right: var(--spacing-md);
+        }
+
+        .example-slider-handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            background-color: var(--accent-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--brand-white);
+            box-shadow: var(--shadow-lg);
+            cursor: ew-resize;
+            z-index: 10;
+        }
+
+        .example-info {
+            padding: var(--spacing-xl);
+        }
+
+        .example-title {
+            font-size: var(--text-xl);
+            margin-bottom: var(--spacing-sm);
+            color: var(--text-primary);
+        }
+
+        .example-description {
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-lg);
+            line-height: var(--leading-relaxed);
         }
 
         /* Testimonials Section */
@@ -648,10 +983,68 @@
             text-align: center;
         }
 
+        /* Hamburger Menu Styles */
+        .navbar-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: var(--spacing-sm);
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .navbar-toggle-bar {
+            display: block;
+            width: 24px;
+            height: 2px;
+            background-color: var(--text-primary);
+            transition: all var(--transition-fast);
+        }
+
+        .navbar-toggle.active .navbar-toggle-bar:nth-child(1) {
+            transform: rotate(45deg) translateY(6px);
+        }
+
+        .navbar-toggle.active .navbar-toggle-bar:nth-child(2) {
+            opacity: 0;
+        }
+
+        .navbar-toggle.active .navbar-toggle-bar:nth-child(3) {
+            transform: rotate(-45deg) translateY(-6px);
+        }
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
+            .navbar-toggle {
+                display: flex;
+            }
+
             .navbar-menu {
                 display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background-color: rgba(26, 31, 36, 0.98);
+                backdrop-filter: blur(10px);
+                flex-direction: column;
+                padding: var(--spacing-lg);
+                box-shadow: var(--shadow-lg);
+            }
+
+            .navbar-menu.active {
+                display: flex;
+            }
+
+            .navbar-menu li {
+                width: 100%;
+                text-align: center;
+                margin-bottom: var(--spacing-md);
+            }
+
+            .navbar-menu .btn {
+                width: 100%;
             }
 
             .hero {
@@ -704,5 +1097,27 @@
         .delay-stagger:nth-child(3) { animation-delay: 200ms; }
         .delay-stagger:nth-child(4) { animation-delay: 300ms; }
     </style>
+
+    <script>
+        // Mobile menu toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            const navbarToggle = document.getElementById('navbar-toggle');
+            const navbarMenu = document.getElementById('navbar-menu');
+            
+            navbarToggle.addEventListener('click', function() {
+                this.classList.toggle('active');
+                navbarMenu.classList.toggle('active');
+            });
+            
+            // Close menu when clicking on a link
+            const navLinks = document.querySelectorAll('.navbar-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    navbarToggle.classList.remove('active');
+                    navbarMenu.classList.remove('active');
+                });
+            });
+        });
+    </script>
 </body>
 </html>
