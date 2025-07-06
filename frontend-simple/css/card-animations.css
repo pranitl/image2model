@@ -31,18 +31,19 @@
 
 /* 3D Tilt Effect */
 .card-tilt {
-    perspective: 1000px;
+    transform-style: preserve-3d;
+    transition: transform var(--duration-medium) var(--ease-smooth);
 }
 
 .card-tilt:hover {
     transform: 
         perspective(1000px)
-        rotateX(5deg)
-        rotateY(-5deg)
-        translateZ(20px);
+        rotateX(-10deg)
+        rotateY(10deg)
+        scale(1.02);
     box-shadow: 
-        20px 20px 40px -10px rgba(58, 66, 74, 0.3),
-        -10px -10px 30px -10px rgba(255, 255, 255, 0.1);
+        0 25px 50px -12px rgba(58, 66, 74, 0.25),
+        0 10px 30px -10px rgba(58, 66, 74, 0.15);
 }
 
 /* Scale and Glow */

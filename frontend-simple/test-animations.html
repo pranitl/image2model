@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Animation System Test - image2model</title>
+    
+    <!-- Core styles -->
+    <link rel="stylesheet" href="css/variables.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <!-- Animation system -->
+    <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/animation-utilities.css">
+    <link rel="stylesheet" href="css/button-animations.css">
+    <link rel="stylesheet" href="css/card-animations.css">
+    <link rel="stylesheet" href="css/form-animations.css">
+    <link rel="stylesheet" href="css/loading-animations.css">
+    <link rel="stylesheet" href="css/special-effects.css">
+    
+    <style>
+        /* Test page specific styles */
+        .test-section {
+            padding: var(--spacing-2xl) 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-xl);
+            margin-top: var(--spacing-xl);
+        }
+        
+        .test-item {
+            padding: var(--spacing-lg);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-lg);
+            text-align: center;
+        }
+        
+        .demo-box {
+            width: 100px;
+            height: 100px;
+            background: var(--gradient-cool-ocean);
+            margin: 0 auto var(--spacing-md);
+            border-radius: var(--radius-md);
+        }
+        
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--bg-primary);
+            padding: var(--spacing-md);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            z-index: 1000;
+        }
+        
+        .spacer {
+            height: 200px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Animation Controls -->
+    <div class="controls">
+        <h3>Animation Controls</h3>
+        <label class="toggle">
+            <input type="checkbox" class="toggle-input" id="reducedMotion">
+            <span class="toggle-slider">
+                <span class="toggle-knob"></span>
+            </span>
+            <span style="margin-left: 10px;">Simulate Reduced Motion</span>
+        </label>
+    </div>
+
+    <div class="container">
+        <header class="text-center" style="padding: var(--spacing-2xl) 0;">
+            <h1 class="gradient-text">Animation System Test</h1>
+            <p>Interactive demonstration of all animations and effects</p>
+        </header>
+
+        <!-- Entrance Animations -->
+        <section class="test-section">
+            <h2>Entrance Animations</h2>
+            <p>Reload the page to see these animations</p>
+            
+            <div class="test-grid">
+                <div class="test-item animate-fade-in">
+                    <div class="demo-box"></div>
+                    <p>Fade In</p>
+                </div>
+                
+                <div class="test-item animate-fade-in-up delay-200">
+                    <div class="demo-box"></div>
+                    <p>Fade In Up</p>
+                </div>
+                
+                <div class="test-item animate-fade-in-scale delay-400">
+                    <div class="demo-box"></div>
+                    <p>Fade In Scale</p>
+                </div>
+                
+                <div class="test-item animate-slide-in-left delay-600">
+                    <div class="demo-box"></div>
+                    <p>Slide In Left</p>
+                </div>
+                
+                <div class="test-item animate-slide-in-right delay-800">
+                    <div class="demo-box"></div>
+                    <p>Slide In Right</p>
+                </div>
+                
+                <div class="test-item animate-rotate-in delay-1000">
+                    <div class="demo-box"></div>
+                    <p>Rotate In</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Button Animations -->
+        <section class="test-section">
+            <h2>Button Animations</h2>
+            
+            <div class="test-grid">
+                <div class="test-item">
+                    <button class="btn btn-primary hover-lift">Lift Effect</button>
+                    <p>Hover to lift</p>
+                </div>
+                
+                <div class="test-item">
+                    <button class="btn btn-secondary hover-scale">Scale Effect</button>
+                    <p>Hover to scale</p>
+                </div>
+                
+                <div class="test-item">
+                    <button class="btn btn-ghost hover-glow">Glow Effect</button>
+                    <p>Hover to glow</p>
+                </div>
+                
+                <div class="test-item">
+                    <button class="btn btn-accent">Gradient Shift</button>
+                    <p>Animated gradient</p>
+                </div>
+                
+                <div class="test-item">
+                    <button class="btn btn-primary btn-3d">3D Effect</button>
+                    <p>3D perspective</p>
+                </div>
+                
+                <div class="test-item">
+                    <button class="btn btn-primary ripple" onclick="this.classList.add('ripple-active'); setTimeout(() => this.classList.remove('ripple-active'), 600)">Ripple Effect</button>
+                    <p>Click for ripple</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Card Animations -->
+        <section class="test-section">
+            <h2>Card Animations</h2>
+            
+            <div class="test-grid">
+                <div class="card card-lift">
+                    <h3>Lift Card</h3>
+                    <p>Hover to lift with shadow</p>
+                </div>
+                
+                <div class="card card-tilt">
+                    <h3>3D Tilt Card</h3>
+                    <p>Hover for 3D tilt effect</p>
+                </div>
+                
+                <div class="card card-scale">
+                    <h3>Scale Card</h3>
+                    <p>Hover to scale with glow</p>
+                </div>
+                
+                <div class="card card-gradient-border">
+                    <h3>Gradient Border</h3>
+                    <p>Hover for animated border</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading Animations -->
+        <section class="test-section">
+            <h2>Loading Animations</h2>
+            
+            <div class="test-grid">
+                <div class="test-item">
+                    <div class="spinner-triangle"></div>
+                    <p>Triangle Spinner</p>
+                </div>
+                
+                <div class="test-item">
+                    <div class="spinner-cube"></div>
+                    <p>Cube Spinner</p>
+                </div>
+                
+                <div class="test-item">
+                    <div class="spinner-hexagon"></div>
+                    <p>Hexagon Spinner</p>
+                </div>
+                
+                <div class="test-item">
+                    <div class="loading-spinner"></div>
+                    <p>Simple Spinner</p>
+                </div>
+                
+                <div class="test-item">
+                    <div class="loading-dots">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                    <p>Pulsing Dots</p>
+                </div>
+                
+                <div class="test-item">
+                    <div class="typing-indicator">
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                        <span class="dot"></span>
+                    </div>
+                    <p>Typing Indicator</p>
+                </div>
+            </div>
+            
+            <h3 style="margin-top: var(--spacing-2xl);">Progress Bars</h3>
+            
+            <div style="max-width: 600px; margin: var(--spacing-xl) auto;">
+                <div class="test-item">
+                    <div class="progress-bar">
+                        <div class="progress-bar-fill" style="width: 60%"></div>
+                    </div>
+                    <p>Animated Progress Bar</p>
+                </div>
+                
+                <div class="test-item">
+                    <div class="progress-bar progress-striped">
+                        <div class="progress-bar-fill" style="width: 75%"></div>
+                    </div>
+                    <p>Striped Progress Bar</p>
+                </div>
+                
+                <div class="test-item">
+                    <div class="progress-segmented">
+                        <div class="progress-segment active"></div>
+                        <div class="progress-segment active"></div>
+                        <div class="progress-segment active"></div>
+                        <div class="progress-segment"></div>
+                        <div class="progress-segment"></div>
+                    </div>
+                    <p>Segmented Progress</p>
+                </div>
+            </div>
+            
+            <h3 style="margin-top: var(--spacing-2xl);">Skeleton Screens</h3>
+            
+            <div class="skeleton-card" style="max-width: 400px; margin: var(--spacing-xl) auto;">
+                <div class="skeleton skeleton-image"></div>
+                <div class="skeleton skeleton-title"></div>
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text" style="width: 80%"></div>
+                <div class="skeleton skeleton-button"></div>
+            </div>
+        </section>
+
+        <!-- Form Animations -->
+        <section class="test-section">
+            <h2>Form Animations</h2>
+            
+            <div style="max-width: 600px; margin: 0 auto;">
+                <div class="test-item">
+                    <div class="form-field">
+                        <input type="text" class="form-field-input input" placeholder=" " id="floatingInput">
+                        <label class="form-field-label" for="floatingInput">Floating Label</label>
+                    </div>
+                </div>
+                
+                <div class="test-item">
+                    <div class="input-icon-wrapper">
+                        <input type="text" class="input" placeholder="Search...">
+                        <i class="input-icon">🔍</i>
+                    </div>
+                </div>
+                
+                <div class="test-item">
+                    <input type="email" class="input is-valid" value="valid@example.com">
+                    <p>Valid State</p>
+                </div>
+                
+                <div class="test-item">
+                    <input type="text" class="input is-invalid" value="Invalid input">
+                    <p class="error-message">Error message appears here</p>
+                </div>
+                
+                <div class="test-item" style="display: flex; justify-content: center; gap: var(--spacing-xl);">
+                    <label class="checkbox">
+                        <input type="checkbox" class="checkbox-input">
+                        <span class="checkbox-box">
+                            <span class="checkbox-checkmark">✓</span>
+                        </span>
+                        <span>Checkbox</span>
+                    </label>
+                    
+                    <label class="radio">
+                        <input type="radio" name="radio-demo" class="radio-input">
+                        <span class="radio-circle">
+                            <span class="radio-dot"></span>
+                        </span>
+                        <span>Radio</span>
+                    </label>
+                    
+                    <label class="toggle">
+                        <input type="checkbox" class="toggle-input">
+                        <span class="toggle-slider">
+                            <span class="toggle-knob"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Special Effects -->
+        <section class="test-section">
+            <h2>Special Effects</h2>
+            
+            <div class="test-grid">
+                <div class="test-item">
+                    <div class="demo-box gradient-animated"></div>
+                    <p>Animated Gradient</p>
+                </div>
+                
+                <div class="test-item">
+                    <div class="demo-box blob"></div>
+                    <p>Blob Morph</p>
+                </div>
+                
+                <div class="test-item">
+                    <div class="demo-box shape-morph"></div>
+                    <p>Shape Morph</p>
+                </div>
+                
+                <div class="test-item">
+                    <div class="demo-box animate-float"></div>
+                    <p>Float Animation</p>
+                </div>
+                
+                <div class="test-item">
+                    <div class="demo-box animate-glow"></div>
+                    <p>Glow Pulse</p>
+                </div>
+                
+                <div class="test-item">
+                    <h3 class="neon-glow">Neon Text</h3>
+                    <p>Neon glow effect</p>
+                </div>
+            </div>
+            
+            <div class="test-item" style="margin-top: var(--spacing-2xl);">
+                <h3 class="glitch" data-text="Glitch Effect">Glitch Effect</h3>
+                <p>Hover for glitch</p>
+            </div>
+        </section>
+
+        <!-- Scroll Animations -->
+        <section class="test-section">
+            <h2>Scroll Animations</h2>
+            <p>Scroll down to see these animations trigger</p>
+            
+            <div class="spacer"></div>
+            
+            <div class="test-grid">
+                <div class="test-item reveal-on-scroll">
+                    <div class="demo-box"></div>
+                    <p>Reveal on Scroll</p>
+                </div>
+                
+                <div class="test-item reveal-on-scroll">
+                    <div class="demo-box"></div>
+                    <p>Reveal on Scroll</p>
+                </div>
+                
+                <div class="test-item reveal-on-scroll">
+                    <div class="demo-box"></div>
+                    <p>Reveal on Scroll</p>
+                </div>
+            </div>
+            
+            <div class="spacer"></div>
+            
+            <div class="test-item" style="text-align: center;">
+                <h3>Number Counter</h3>
+                <div style="font-size: 3rem; font-weight: bold;">
+                    <span data-count-to="1000" data-count-duration="2000">0</span>
+                </div>
+                <p>Counts up when visible</p>
+            </div>
+        </section>
+
+        <!-- Micro-interactions -->
+        <section class="test-section">
+            <h2>Micro-interactions</h2>
+            
+            <div class="test-grid">
+                <div class="test-item">
+                    <a href="#" class="link-animated">Animated Underline</a>
+                </div>
+                
+                <div class="test-item">
+                    <a href="#" class="link-glow">Glow on Hover</a>
+                </div>
+                
+                <div class="test-item">
+                    <button class="btn btn-primary" onclick="simulateSuccess(this)">
+                        Success Animation
+                    </button>
+                </div>
+                
+                <div class="test-item">
+                    <button class="btn btn-primary" onclick="simulateError(this)">
+                        Error Animation
+                    </button>
+                </div>
+                
+                <div class="test-item">
+                    <button class="btn btn-primary btn-loading">
+                        Loading State
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3D Effects -->
+        <section class="test-section">
+            <h2>3D Effects</h2>
+            
+            <div class="test-grid">
+                <div class="test-item">
+                    <div class="flip-container" style="height: 150px;">
+                        <div class="flip-card">
+                            <div class="flip-front card">
+                                <h4>Front Side</h4>
+                                <p>Hover to flip</p>
+                            </div>
+                            <div class="flip-back card" style="background: var(--gradient-cool-ocean); color: white;">
+                                <h4>Back Side</h4>
+                                <p>3D flip effect</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="test-item">
+                    <div class="cube-container" style="margin: 0 auto;">
+                        <div class="cube">
+                            <div class="cube-face"></div>
+                            <div class="cube-face"></div>
+                            <div class="cube-face"></div>
+                            <div class="cube-face"></div>
+                            <div class="cube-face"></div>
+                            <div class="cube-face"></div>
+                        </div>
+                    </div>
+                    <p>3D Rotating Cube</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Parallax Section -->
+        <section class="test-section parallax" style="height: 400px; position: relative; overflow: hidden;">
+            <h2>Parallax Effects</h2>
+            <div class="parallax-layer parallax-layer-3" style="background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="50,0 0,100 100,100" fill="%235DADE2" opacity="0.3"/></svg>') center/cover;"></div>
+            <div class="parallax-layer parallax-layer-2" style="background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="50,0 0,100 100,100" fill="%23E74C3C" opacity="0.3"/></svg>') center/cover;"></div>
+            <div class="parallax-layer parallax-layer-1" style="background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><polygon points="50,0 0,100 100,100" fill="%23F39C12" opacity="0.3"/></svg>') center/cover;"></div>
+            <div style="position: relative; z-index: 10; text-align: center; padding-top: 150px;">
+                <h3 style="color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">Scroll to see parallax layers move</h3>
+            </div>
+        </section>
+    </div>
+
+    <!-- Animation JavaScript -->
+    <script src="js/animations.js"></script>
+    <script>
+        // Simulate reduced motion toggle
+        document.getElementById('reducedMotion').addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.documentElement.setAttribute('data-reduce-motion', 'true');
+            } else {
+                document.documentElement.setAttribute('data-reduce-motion', 'false');
+            }
+        });
+        
+        // Success animation simulation
+        function simulateSuccess(button) {
+            button.classList.add('btn-success');
+            setTimeout(() => {
+                button.classList.remove('btn-success');
+            }, 2000);
+        }
+        
+        // Error animation simulation
+        function simulateError(button) {
+            button.classList.add('btn-error');
+            setTimeout(() => {
+                button.classList.remove('btn-error');
+            }, 1000);
+        }
+        
+        // Add page loaded class for animations
+        window.addEventListener('load', () => {
+            document.body.classList.add('page-loaded');
+        });
+    </script>
+</body>
+</html>

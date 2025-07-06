@@ -110,14 +110,25 @@
 /* Scale Effect */
 .hover-scale {
     transition: transform var(--duration-short) var(--ease-spring);
+    transform-origin: center center;
 }
 
 .hover-scale:hover {
     transform: scale(1.05);
 }
 
+.hover-scale-sm {
+    transition: transform var(--duration-short) var(--ease-spring);
+    transform-origin: center center;
+}
+
 .hover-scale-sm:hover {
     transform: scale(1.02);
+}
+
+.hover-scale-lg {
+    transition: transform var(--duration-short) var(--ease-spring);
+    transform-origin: center center;
 }
 
 .hover-scale-lg:hover {

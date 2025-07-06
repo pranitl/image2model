@@ -263,6 +263,30 @@ class AnimationController {
        ================================================================= */
     
     bindEventListeners() {
+        // 3D Tilt Effect for cards
+        document.addEventListener('mousemove', (e) => {
+            const tiltElements = document.querySelectorAll('.card-tilt');
+            tiltElements.forEach(element => {
+                const rect = element.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = ((y - centerY) / centerY) * -10;
+                const rotateY = ((x - centerX) / centerX) * 10;
+                
+                element.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.02)`;
+            });
+        });
+        
+        // Reset tilt on mouse leave
+        document.addEventListener('mouseleave', (e) => {
+            if (e.target.matches('.card-tilt')) {
+                e.target.style.transform = '';
+            }
+        }, true);
+        
         // Hover animations
         document.addEventListener('mouseenter', (e) => {
             if (e.target.matches('[data-hover-animation]')) {

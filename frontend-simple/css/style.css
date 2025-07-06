@@ -7,6 +7,17 @@
 @import url('components.css');
 
 /* =================================================================
+   Import Animation System
+   ================================================================= */
+@import url('animations.css');
+@import url('animation-utilities.css');
+@import url('button-animations.css');
+@import url('card-animations.css');
+@import url('form-animations.css');
+@import url('loading-animations.css');
+@import url('special-effects.css');
+
+/* =================================================================
    CSS Reset and Base Styles
    ================================================================= */
 *, *::before, *::after {
