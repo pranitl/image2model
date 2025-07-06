@@ -3,44 +3,706 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 3D Model Generator</title>
+    <meta name="description" content="Transform your images into production-ready 3D models using advanced AI. Professional-grade results in minutes.">
+    <title>image2model - AI-Powered 3D Model Generation</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="css/style.css">
     <script src="js/animations.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <header class="animate-fade-in">
-            <h1 class="gradient-text">Transform Images into 3D Models</h1>
-            <p class="animate-fade-in-up delay-200">Harness the power of AI to convert your 2D images into stunning 3D models.</p>
-        </header>
-        
-        <main>
-            <button onclick="window.location.href='upload.html'" class="btn btn-primary hover-lift animate-fade-in-scale delay-400">
-                Start Creating
-            </button>
-            
-            <section class="how-it-works animate-fade-in delay-600">
-                <h2>How It Works</h2>
-                <div class="steps">
-                    <div class="step card card-lift reveal-on-scroll">
-                        <span class="step-number gradient-animated">1</span>
-                        <h3>Upload Images</h3>
-                        <p>Simply upload your images for our AI to analyze and generate 3D models.</p>
+    <!-- Navigation Bar -->
+    <nav class="navbar animate-fade-in">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <img src="../brand/assets/logo-original.png" alt="image2model" class="nav-logo" width="48" height="48">
+                <span class="brand-text">image2model</span>
+            </a>
+            <ul class="navbar-menu">
+                <li><a href="#features" class="navbar-link">Features</a></li>
+                <li><a href="#how-it-works" class="navbar-link">How It Works</a></li>
+                <li><a href="#pricing" class="navbar-link">Pricing</a></li>
+                <li><a href="upload.html" class="btn btn-primary btn-sm">Start Creating</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero gradient-cool-ocean">
+        <div class="container">
+            <div class="hero-content animate-fade-in">
+                <h1 class="display gradient-text">Transform Images Into 3D Models</h1>
+                <p class="hero-description lead animate-fade-in-up delay-200">
+                    From image to model in minutes, not hours. Create professional-grade 3D assets with AI-powered precision.
+                </p>
+                <div class="hero-cta animate-fade-in-scale delay-400">
+                    <a href="upload.html" class="btn btn-primary btn-lg hover-lift">
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L11 6.414V13a1 1 0 11-2 0V6.414L7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3z"/>
+                            <path d="M3 11a1 1 0 011 1v3a1 1 0 001 1h10a1 1 0 001-1v-3a1 1 0 112 0v3a3 3 0 01-3 3H5a3 3 0 01-3-3v-3a1 1 0 011-1z"/>
+                        </svg>
+                        Start Creating Now
+                    </a>
+                    <a href="#demo" class="btn btn-ghost btn-lg">
+                        Watch Demo
+                        <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+                        </svg>
+                    </a>
+                </div>
+                <div class="hero-stats animate-fade-in delay-600">
+                    <div class="stat-item">
+                        <span class="stat-number gradient-text">10K+</span>
+                        <span class="stat-label">Models Created</span>
                     </div>
-                    <div class="step card card-lift reveal-on-scroll">
-                        <span class="step-number gradient-animated">2</span>
-                        <h3>AI Processing</h3>
-                        <p>Our AI processes your images and generates detailed 3D models.</p>
+                    <div class="stat-item">
+                        <span class="stat-number gradient-text">98%</span>
+                        <span class="stat-label">Success Rate</span>
                     </div>
-                    <div class="step card card-lift reveal-on-scroll">
-                        <span class="step-number gradient-animated">3</span>
-                        <h3>Download Models</h3>
-                        <p>Download your 3D models and use them in your projects.</p>
+                    <div class="stat-item">
+                        <span class="stat-number gradient-text">&lt;2min</span>
+                        <span class="stat-label">Average Time</span>
                     </div>
                 </div>
-            </section>
-        </main>
-    </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title animate-fade-in">Why Choose image2model?</h2>
+                <p class="section-subtitle text-secondary animate-fade-in-up delay-200">
+                    Professional tools that make 3D content creation accessible to everyone
+                </p>
+            </div>
+            
+            <div class="features-grid">
+                <div class="feature-card card card-hover reveal-on-scroll">
+                    <div class="feature-icon gradient-warm-sunset">
+                        <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13 7H7v6h6V7z"/>
+                            <path fill-rule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">AI-Powered Precision</h3>
+                    <p class="feature-description">Advanced neural networks analyze every detail to create accurate 3D representations</p>
+                </div>
+
+                <div class="feature-card card card-hover reveal-on-scroll delay-stagger">
+                    <div class="feature-icon gradient-cool-ocean">
+                        <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Lightning Fast</h3>
+                    <p class="feature-description">Get your 3D models in minutes, not hours. Our optimized pipeline ensures rapid results</p>
+                </div>
+
+                <div class="feature-card card card-hover reveal-on-scroll delay-stagger">
+                    <div class="feature-icon gradient-tech-fusion">
+                        <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                            <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 00-2 2v6a2 2 0 002 2h2a1 1 0 100 2H6a4 4 0 01-4-4V7a4 4 0 014-4zm10 0a4 4 0 00-4 4v6a4 4 0 004 4 1 1 0 100-2 2 2 0 01-2-2V9a2 2 0 012-2 1 1 0 000-2z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Multiple Formats</h3>
+                    <p class="feature-description">Export in OBJ, FBX, GLTF and more. Compatible with all major 3D software</p>
+                </div>
+
+                <div class="feature-card card card-hover reveal-on-scroll delay-stagger">
+                    <div class="feature-icon gradient-primary">
+                        <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Secure & Private</h3>
+                    <p class="feature-description">Your images and models are encrypted and never shared. Enterprise-grade security</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works Section -->
+    <section id="how-it-works" class="how-it-works">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title animate-fade-in">Simple Three-Step Process</h2>
+                <p class="section-subtitle text-secondary animate-fade-in-up delay-200">
+                    No 3D expertise required - just upload and let AI do the work
+                </p>
+            </div>
+
+            <div class="steps">
+                <div class="step card card-lift reveal-on-scroll">
+                    <span class="step-number gradient-animated">1</span>
+                    <h3 class="step-title">Upload Your Images</h3>
+                    <p class="step-description">Drag and drop or browse to upload JPG, PNG, or HEIC images. Multiple angles improve accuracy.</p>
+                </div>
+                <div class="step card card-lift reveal-on-scroll delay-stagger">
+                    <span class="step-number gradient-animated">2</span>
+                    <h3 class="step-title">AI Processing Magic</h3>
+                    <p class="step-description">Our neural networks analyze depth, texture, and geometry to reconstruct your 3D model.</p>
+                </div>
+                <div class="step card card-lift reveal-on-scroll delay-stagger">
+                    <span class="step-number gradient-animated">3</span>
+                    <h3 class="step-title">Download & Create</h3>
+                    <p class="step-description">Preview, refine, and download your model in your preferred format. Ready for any project.</p>
+                </div>
+            </div>
+
+            <div class="process-visual animate-fade-in-scale delay-600">
+                <div class="process-line"></div>
+                <img src="assets/process-flow.svg" alt="Visual process flow" class="process-image">
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof Section -->
+    <section class="testimonials-section">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title animate-fade-in">Trusted by Creators Worldwide</h2>
+            </div>
+
+            <div class="testimonials-grid">
+                <div class="testimonial-card card reveal-on-scroll">
+                    <div class="testimonial-content">
+                        <p class="testimonial-text">"This tool has revolutionized our product photography workflow. What used to take days now takes minutes."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar gradient-warm-sunset"></div>
+                        <div class="author-info">
+                            <p class="author-name">Sarah Chen</p>
+                            <p class="author-role">E-commerce Director</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card card reveal-on-scroll delay-stagger">
+                    <div class="testimonial-content">
+                        <p class="testimonial-text">"The quality is incredible. I've tried other tools, but nothing comes close to the accuracy of image2model."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar gradient-cool-ocean"></div>
+                        <div class="author-info">
+                            <p class="author-name">Marcus Rodriguez</p>
+                            <p class="author-role">3D Artist</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="testimonial-card card reveal-on-scroll delay-stagger">
+                    <div class="testimonial-content">
+                        <p class="testimonial-text">"Perfect for prototyping. I can quickly test ideas without spending hours in modeling software."</p>
+                    </div>
+                    <div class="testimonial-author">
+                        <div class="author-avatar gradient-tech-fusion"></div>
+                        <div class="author-info">
+                            <p class="author-name">Alex Kim</p>
+                            <p class="author-role">Game Developer</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section gradient-primary">
+        <div class="container">
+            <div class="cta-content animate-fade-in">
+                <h2 class="cta-title">Ready to Transform Your First Image?</h2>
+                <p class="cta-subtitle">Join thousands of creators using AI to bring their visions to life</p>
+                <div class="cta-buttons animate-fade-in-scale delay-200">
+                    <a href="upload.html" class="btn btn-secondary btn-lg hover-lift">
+                        Start Creating Free
+                    </a>
+                    <a href="#pricing" class="btn btn-ghost btn-lg btn-light">
+                        View Pricing
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="../brand/assets/logo-original.png" alt="image2model" width="64" height="64" class="footer-logo">
+                    <p class="footer-tagline">Making 3D content creation accessible to everyone</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4 class="footer-heading">Product</h4>
+                        <ul class="footer-list">
+                            <li><a href="#features">Features</a></li>
+                            <li><a href="#pricing">Pricing</a></li>
+                            <li><a href="#api">API</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4 class="footer-heading">Company</h4>
+                        <ul class="footer-list">
+                            <li><a href="#about">About</a></li>
+                            <li><a href="#blog">Blog</a></li>
+                            <li><a href="#careers">Careers</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4 class="footer-heading">Support</h4>
+                        <ul class="footer-list">
+                            <li><a href="#docs">Documentation</a></li>
+                            <li><a href="#contact">Contact</a></li>
+                            <li><a href="#status">Status</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-text">&copy; 2024 image2model. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Additional Styles for New Sections -->
+    <style>
+        /* Navigation Styles */
+        .navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(26, 31, 36, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+        }
+
+        .navbar-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: var(--spacing-md) var(--spacing-lg);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: var(--font-bold);
+            font-size: var(--text-xl);
+        }
+
+        .nav-logo {
+            border-radius: var(--radius-md);
+        }
+
+        .navbar-menu {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .navbar-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-weight: var(--font-medium);
+            transition: color var(--transition-fast);
+        }
+
+        .navbar-link:hover {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        /* Hero Section Enhanced */
+        .hero {
+            padding: 8rem 0 4rem;
+            min-height: 90vh;
+            display: flex;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(93, 173, 226, 0.1) 0%, rgba(52, 152, 219, 0.1) 100%);
+            z-index: -1;
+        }
+
+        .hero-content {
+            text-align: center;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero-description {
+            font-size: clamp(1.25rem, 3vw, 1.5rem);
+            margin-bottom: 2.5rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-cta {
+            display: flex;
+            gap: var(--spacing-lg);
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .hero-cta .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+
+        .btn-light {
+            color: var(--brand-white) !important;
+            border-color: var(--brand-white);
+        }
+
+        .btn-light:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: var(--brand-white);
+        }
+
+        /* Hero Stats */
+        .hero-stats {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-2xl);
+            margin-top: 3rem;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            display: block;
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .stat-label {
+            font-size: var(--text-sm);
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-wide);
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 5rem 0;
+            background-color: var(--bg-primary);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-subtitle {
+            font-size: var(--text-lg);
+            margin-top: var(--spacing-md);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-xl);
+            margin-top: 3rem;
+        }
+
+        .feature-card {
+            padding: var(--spacing-xl);
+            text-align: center;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            transition: all var(--transition-normal);
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: var(--radius-lg);
+            color: var(--brand-white);
+        }
+
+        .feature-title {
+            font-size: var(--text-xl);
+            margin-bottom: var(--spacing-md);
+            color: var(--text-primary);
+        }
+
+        .feature-description {
+            color: var(--text-secondary);
+            line-height: var(--leading-relaxed);
+        }
+
+        /* Enhanced How It Works */
+        .process-visual {
+            margin-top: 3rem;
+            text-align: center;
+        }
+
+        .process-line {
+            height: 2px;
+            background: var(--gradient-cool-ocean);
+            margin: 2rem 0;
+            position: relative;
+        }
+
+        /* Testimonials Section */
+        .testimonials-section {
+            padding: 5rem 0;
+            background-color: var(--bg-secondary);
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-xl);
+            margin-top: 3rem;
+        }
+
+        .testimonial-card {
+            padding: var(--spacing-xl);
+            background-color: var(--bg-primary);
+        }
+
+        .testimonial-content {
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .testimonial-text {
+            font-size: var(--text-lg);
+            line-height: var(--leading-relaxed);
+            font-style: italic;
+            color: var(--text-primary);
+        }
+
+        .testimonial-author {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+
+        .author-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .author-name {
+            font-weight: var(--font-semibold);
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .author-role {
+            font-size: var(--text-sm);
+            color: var(--text-muted);
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 5rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.3) 100%);
+            z-index: 1;
+        }
+
+        .cta-content {
+            position: relative;
+            z-index: 2;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .cta-title {
+            font-size: var(--text-4xl);
+            color: var(--brand-white);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .cta-subtitle {
+            font-size: var(--text-xl);
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: var(--spacing-lg);
+            justify-content: center;
+        }
+
+        /* Footer Styles */
+        .footer-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: var(--spacing-xl) var(--spacing-lg);
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 3fr;
+            gap: var(--spacing-2xl);
+            margin-bottom: var(--spacing-xl);
+        }
+
+        .footer-brand {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+
+        .footer-logo {
+            border-radius: var(--radius-md);
+        }
+
+        .footer-tagline {
+            color: var(--text-secondary);
+            max-width: 300px;
+        }
+
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--spacing-xl);
+        }
+
+        .footer-heading {
+            font-size: var(--text-sm);
+            text-transform: uppercase;
+            letter-spacing: var(--tracking-wide);
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .footer-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-list li {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .footer-list a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color var(--transition-fast);
+        }
+
+        .footer-list a:hover {
+            color: var(--accent-primary);
+        }
+
+        .footer-bottom {
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .navbar-menu {
+                display: none;
+            }
+
+            .hero {
+                padding: 6rem 0 3rem;
+                min-height: auto;
+            }
+
+            .hero-cta {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .hero-cta .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .hero-stats {
+                flex-direction: column;
+                gap: var(--spacing-lg);
+            }
+
+            .features-grid,
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .cta-buttons .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-links {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+        }
+
+        /* Stagger animations */
+        .delay-stagger:nth-child(2) { animation-delay: 100ms; }
+        .delay-stagger:nth-child(3) { animation-delay: 200ms; }
+        .delay-stagger:nth-child(4) { animation-delay: 300ms; }
+    </style>
 </body>
 </html>
