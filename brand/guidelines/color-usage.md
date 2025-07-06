@@ -23,14 +23,16 @@
 - **Avoid**: Primary text, low contrast situations
 
 ### Sunset Orange (#E67E22)
-- **Usage**: Warnings, special promotions, creative elements
+- **Usage**: Icons, borders, small accent elements only
 - **Context**: Warmth, creativity, innovation
-- **Avoid**: Error messages, critical alerts
+- **Avoid**: NEVER use as background color, error messages, critical alerts
+- **Note**: Too harsh for large areas - use only for small accents
 
 ### Golden Yellow (#F39C12)
-- **Usage**: Success indicators, achievements, highlights
+- **Usage**: Icons, small highlights, accent borders only
 - **Context**: Optimism, energy, accomplishment
-- **Avoid**: On white backgrounds without borders
+- **Avoid**: NEVER use as background color, on white backgrounds without borders
+- **Note**: Too harsh for large areas - use only for small accents
 
 ## Color Combinations
 

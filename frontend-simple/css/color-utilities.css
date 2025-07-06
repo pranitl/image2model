@@ -11,8 +11,8 @@
 .bg-vibrant-red { background-color: var(--brand-vibrant-red); }
 .bg-sky-blue { background-color: var(--brand-sky-blue); }
 .bg-bright-cyan { background-color: var(--brand-bright-cyan); }
-.bg-sunset-orange { background-color: var(--brand-sunset-orange); }
-.bg-golden-yellow { background-color: var(--brand-golden-yellow); }
+/* .bg-sunset-orange - REMOVED: Orange too harsh for backgrounds */
+/* .bg-golden-yellow - REMOVED: Yellow too harsh for backgrounds */
 
 /* Semantic Colors */
 .bg-primary { background-color: var(--color-primary); }

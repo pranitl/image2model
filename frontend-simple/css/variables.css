@@ -140,11 +140,16 @@
     /* =================================================================
        Gradient Presets
        ================================================================= */
-    --gradient-warm-sunset: linear-gradient(135deg, var(--brand-golden-yellow) 0%, var(--brand-vibrant-red) 100%);
-    --gradient-cool-ocean: linear-gradient(180deg, var(--brand-bright-cyan) 0%, var(--brand-sky-blue) 100%);
+    /* Primary gradients - NO ORANGE/YELLOW BACKGROUNDS */
+    --gradient-primary: linear-gradient(135deg, var(--brand-vibrant-red) 0%, var(--red-700) 100%);
+    --gradient-cool-ocean: linear-gradient(135deg, var(--brand-bright-cyan) 0%, var(--brand-sky-blue) 100%);
     --gradient-mountain-mist: linear-gradient(45deg, var(--brand-light-gray) 0%, var(--brand-silver-gray) 100%);
     --gradient-tech-fusion: linear-gradient(90deg, var(--brand-sky-blue) 0%, var(--brand-bright-cyan) 50%, var(--brand-dark-charcoal) 100%);
-    --gradient-creative-burst: linear-gradient(135deg, var(--brand-golden-yellow) 0%, var(--brand-sunset-orange) 33%, var(--brand-vibrant-red) 66%, var(--brand-sky-blue) 100%);
+    --gradient-subtle: linear-gradient(135deg, var(--brand-sky-blue) 0%, var(--blue-600) 100%);
+    
+    /* DEPRECATED - These now point to non-orange alternatives */
+    --gradient-warm-sunset: var(--gradient-primary); /* Now uses red gradient instead of yellow-red */
+    --gradient-creative-burst: var(--gradient-cool-ocean); /* Now uses blue gradient instead of multi-color */
     
     /* Text Gradients */
     --gradient-text-primary: linear-gradient(135deg, var(--brand-golden-yellow) 0%, var(--brand-vibrant-red) 100%);

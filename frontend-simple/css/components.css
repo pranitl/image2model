@@ -47,7 +47,7 @@
 
 /* Button Variants */
 .btn-primary {
-    background: var(--gradient-warm-sunset);
+    background: var(--gradient-primary);
     color: var(--color-white);
     box-shadow: var(--shadow-sm);
 }
