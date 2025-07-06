@@ -284,22 +284,46 @@
    Forced Light Mode Class
    ================================================================= */
 .light-mode {
-    --bg-primary: var(--brand-white);
-    --bg-secondary: var(--gray-400);
-    --bg-tertiary: var(--gray-300);
-    --bg-accent: var(--blue-100);
+    --bg-primary: var(--brand-white) !important;
+    --bg-secondary: var(--gray-400) !important;
+    --bg-tertiary: var(--gray-300) !important;
+    --bg-accent: var(--blue-100) !important;
     
-    --text-primary: var(--gray-900);
-    --text-secondary: var(--gray-700);
-    --text-muted: var(--gray-600);
-    --text-inverse: var(--brand-white);
+    --text-primary: var(--gray-900) !important;
+    --text-secondary: var(--gray-700) !important;
+    --text-muted: var(--gray-600) !important;
+    --text-inverse: var(--brand-white) !important;
     
-    --border-color: var(--gray-500);
+    --border-color: var(--gray-500) !important;
     --border-color-light: var(--gray-400);
     --border-color-dark: var(--gray-600);
     
-    --accent-primary: var(--brand-vibrant-red);
-    --accent-secondary: var(--brand-sky-blue);
-    --accent-hover: var(--red-600);
-    --accent-active: var(--red-700);
+    --accent-primary: var(--brand-vibrant-red) !important;
+    --accent-secondary: var(--brand-sky-blue) !important;
+    --accent-hover: var(--red-600) !important;
+    --accent-active: var(--red-700) !important;
+}
+
+/* =================================================================
+   Forced Dark Mode Class
+   ================================================================= */
+.dark-mode {
+    --bg-primary: var(--dark-bg-primary) !important;
+    --bg-secondary: var(--dark-bg-secondary) !important;
+    --bg-tertiary: var(--dark-bg-tertiary) !important;
+    --bg-accent: var(--dark-bg-accent) !important;
+    
+    --text-primary: var(--dark-text-primary) !important;
+    --text-secondary: var(--dark-text-secondary) !important;
+    --text-muted: var(--dark-text-muted) !important;
+    --text-inverse: var(--dark-text-inverse) !important;
+    
+    --border-color: var(--dark-border-color) !important;
+    --border-color-light: var(--dark-border-color-light) !important;
+    --border-color-dark: var(--dark-border-color-dark) !important;
+    
+    --accent-primary: var(--dark-accent-primary) !important;
+    --accent-secondary: var(--dark-accent-secondary) !important;
+    --accent-hover: var(--dark-accent-hover) !important;
+    --accent-active: var(--dark-accent-active) !important;
 }

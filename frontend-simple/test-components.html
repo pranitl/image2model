@@ -7,41 +7,13 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/components.css">
     <style>
-        /* Force clean backgrounds - override any inherited styles */
-        html {
-            background: #ffffff !important;
-        }
-        
+        /* Clean base styles */
         body {
-            background: #ffffff !important;
-            background-color: #ffffff !important;
-            background-image: none !important;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            background-image: none;
             min-height: 100vh;
-        }
-        
-        /* Ensure main content area has clean background */
-        main, section, .container {
-            background: transparent !important;
-            background-image: none !important;
-        }
-        
-        /* Dark mode overrides */
-        @media (prefers-color-scheme: dark) {
-            html {
-                background: var(--brand-dark-charcoal) !important;
-            }
-            body {
-                background: var(--brand-dark-charcoal) !important;
-                background-color: var(--brand-dark-charcoal) !important;
-            }
-        }
-        
-        .dark-mode {
-            background: var(--brand-dark-charcoal) !important;
-        }
-        
-        .light-mode {
-            background: #ffffff !important;
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         
         /* Demo-specific styles */
