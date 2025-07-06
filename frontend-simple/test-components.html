@@ -8,12 +8,18 @@
     <link rel="stylesheet" href="css/components.css">
     <style>
         /* Clean base styles */
+        html {
+            background-color: var(--bg-primary);
+        }
+        
         body {
             background-color: var(--bg-primary);
             color: var(--text-primary);
             background-image: none;
             min-height: 100vh;
             transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0;
+            padding: 0;
         }
         
         /* Demo-specific styles */
@@ -47,6 +53,22 @@
         /* Allow only specific gradient backgrounds on buttons */
         .btn-primary {
             background-image: var(--gradient-primary) !important;
+        }
+        
+        /* Specifically target the first section to ensure no background */
+        #buttons, .demo-section:first-of-type {
+            background: transparent !important;
+            background-color: transparent !important;
+            background-image: none !important;
+        }
+        
+        /* Fix any pseudo-elements that might have backgrounds */
+        .demo-section::before,
+        .demo-section::after,
+        #buttons::before,
+        #buttons::after {
+            background: none !important;
+            background-image: none !important;
         }
         .demo-section:last-child {
             border-bottom: none;
@@ -150,9 +172,9 @@
         </div>
     </nav>
 
-    <div class="container" style="padding-top: 2rem;">
-        <h1 class="text-4xl font-bold mb-lg">Component Design System</h1>
-        <p class="text-lg text-secondary mb-xl">A comprehensive component library implementing the Image2Model brand design system.</p>
+    <div class="container" style="padding-top: 2rem; background: transparent !important;">
+        <h1 class="text-4xl font-bold mb-lg" style="background: transparent !important;">Component Design System</h1>
+        <p class="text-lg text-secondary mb-xl" style="background: transparent !important;">A comprehensive component library implementing the Image2Model brand design system.</p>
 
         <!-- Buttons Section -->
         <section id="buttons" class="demo-section">
