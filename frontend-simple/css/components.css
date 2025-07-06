@@ -69,14 +69,14 @@
 }
 
 .btn-secondary {
-    background-color: var(--brand-bright-cyan);
+    background-color: var(--brand-sky-blue);
     color: var(--color-white);
-    border: 1px solid var(--brand-bright-cyan);
+    border: 1px solid var(--brand-sky-blue);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background-color: var(--brand-sky-blue);
-    border-color: var(--brand-sky-blue);
+    background-color: var(--blue-600);
+    border-color: var(--blue-600);
     transform: translateY(-1px);
     box-shadow: var(--shadow-blue);
 }
