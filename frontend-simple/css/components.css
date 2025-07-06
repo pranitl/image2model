@@ -69,12 +69,14 @@
 }
 
 .btn-secondary {
-    background-color: var(--color-teal-500);
+    background-color: var(--brand-bright-cyan);
     color: var(--color-white);
+    border: 1px solid var(--brand-bright-cyan);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background-color: var(--color-teal-600);
+    background-color: var(--brand-sky-blue);
+    border-color: var(--brand-sky-blue);
     transform: translateY(-1px);
     box-shadow: var(--shadow-blue);
 }
@@ -149,11 +151,16 @@
 /* Button Group */
 .btn-group {
     display: inline-flex;
-    gap: var(--spacing-xs);
+    gap: 0;
 }
 
 .btn-group .btn {
     border-radius: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-group .btn:last-child {
+    border-right: none;
 }
 
 .btn-group .btn:first-child {

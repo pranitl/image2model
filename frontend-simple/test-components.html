@@ -27,49 +27,8 @@
             margin-bottom: 4rem;
             padding: 2rem 0;
             border-bottom: 1px solid var(--border-color);
-            background: none !important;
-            background-color: transparent !important;
-            background-image: none !important;
         }
         
-        /* Ensure sections don't inherit any backgrounds */
-        section {
-            background: none !important;
-            background-color: transparent !important;
-        }
-        
-        /* Force container to have no background */
-        .container {
-            background: none !important;
-            background-color: transparent !important;
-            background-image: none !important;
-        }
-        
-        /* Remove any potential red/orange backgrounds */
-        * {
-            background-image: none !important;
-        }
-        
-        /* Allow only specific gradient backgrounds on buttons */
-        .btn-primary {
-            background-image: var(--gradient-primary) !important;
-        }
-        
-        /* Specifically target the first section to ensure no background */
-        #buttons, .demo-section:first-of-type {
-            background: transparent !important;
-            background-color: transparent !important;
-            background-image: none !important;
-        }
-        
-        /* Fix any pseudo-elements that might have backgrounds */
-        .demo-section::before,
-        .demo-section::after,
-        #buttons::before,
-        #buttons::after {
-            background: none !important;
-            background-image: none !important;
-        }
         .demo-section:last-child {
             border-bottom: none;
         }
@@ -172,9 +131,9 @@
         </div>
     </nav>
 
-    <div class="container" style="padding-top: 2rem; background: transparent !important;">
-        <h1 class="text-4xl font-bold mb-lg" style="background: transparent !important;">Component Design System</h1>
-        <p class="text-lg text-secondary mb-xl" style="background: transparent !important;">A comprehensive component library implementing the Image2Model brand design system.</p>
+    <div class="container" style="padding-top: 2rem;">
+        <h1 class="text-4xl font-bold mb-lg">Component Design System</h1>
+        <p class="text-lg text-secondary mb-xl">A comprehensive component library implementing the Image2Model brand design system.</p>
 
         <!-- Buttons Section -->
         <section id="buttons" class="demo-section">
