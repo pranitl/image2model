@@ -1,54 +1,16 @@
 /* =================================================================
+   Import Brand Variables and Utilities
+   ================================================================= */
+@import url('variables.css');
+@import url('color-utilities.css');
+
+/* =================================================================
    CSS Reset and Base Styles
    ================================================================= */
 *, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-}
-
-/* =================================================================
-   CSS Custom Properties (Variables)
-   ================================================================= */
-:root {
-    /* Dark Theme Color Palette */
-    --bg-primary: #0a0a0a;
-    --bg-secondary: #1a1a1a;
-    --bg-tertiary: #2a2a2a;
-    --text-primary: #ffffff;
-    --text-secondary: #b0b0b0;
-    --text-muted: #666666;
-    --accent-primary: #5865F2;
-    --accent-secondary: #7983FF;
-    --success: #10b981;
-    --error: #ef4444;
-    --warning: #f59e0b;
-    --border-color: #333333;
-    
-    /* Spacing System */
-    --spacing-xs: 0.25rem;
-    --spacing-sm: 0.5rem;
-    --spacing-md: 1rem;
-    --spacing-lg: 1.5rem;
-    --spacing-xl: 2rem;
-    --spacing-2xl: 3rem;
-    
-    /* Border Radius */
-    --radius-sm: 0.25rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 1rem;
-    --radius-xl: 1.5rem;
-    
-    /* Transitions */
-    --transition-fast: 150ms ease-in-out;
-    --transition-normal: 300ms ease-in-out;
-    --transition-slow: 500ms ease-in-out;
-    
-    /* Shadows */
-    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.2);
-    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.3);
-    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.4);
 }
 
 /* =================================================================
@@ -151,14 +113,14 @@ small {
 }
 
 .btn-primary {
-    background-color: var(--accent-primary);
-    color: white;
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text);
 }
 
 .btn-primary:hover {
-    background-color: var(--accent-secondary);
+    background-color: var(--btn-primary-hover);
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(88, 101, 242, 0.3);
+    box-shadow: var(--shadow-red);
 }
 
 .btn-primary:active {
@@ -200,7 +162,7 @@ small {
    Landing Page Specific Styles
    ================================================================= */
 .hero {
-    background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-tertiary) 100%);
+    background: var(--gradient-tech-fusion);
     padding: 6rem 0;
     text-align: center;
 }
@@ -214,7 +176,7 @@ small {
     font-size: clamp(2.5rem, 6vw, 3.5rem);
     font-weight: 700;
     margin-bottom: 1.5rem;
-    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    background: var(--gradient-text-primary);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -230,7 +192,7 @@ small {
 /* How It Works Section */
 .how-it-works {
     padding: 5rem 0;
-    background-color: #0f0f0f;
+    background-color: var(--bg-secondary);
     margin-top: 4rem;
 }
 
@@ -258,7 +220,7 @@ small {
 
 .step:hover {
     transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(88, 101, 242, 0.2);
+    box-shadow: var(--shadow-blue);
     border-color: var(--accent-primary);
 }
 
@@ -267,12 +229,12 @@ small {
     width: 60px;
     height: 60px;
     line-height: 60px;
-    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    background: var(--gradient-warm-sunset);
     color: white;
     border-radius: 50%;
     font-size: 1.75rem;
     font-weight: bold;
-    box-shadow: 0 4px 15px rgba(88, 101, 242, 0.3);
+    box-shadow: var(--shadow-yellow);
     margin-bottom: 1.5rem;
 }
 
@@ -304,7 +266,7 @@ small {
 .drop-zone:hover,
 .drop-zone.drag-over {
     border-color: var(--accent-primary);
-    background-color: rgba(88, 101, 242, 0.1);
+    background-color: var(--bg-accent);
     transform: scale(1.02);
 }
 
@@ -373,7 +335,7 @@ small {
 }
 
 .file-card button:hover {
-    background-color: #dc3545;
+    background-color: var(--red-600);
 }
 
 .config-section {
@@ -470,7 +432,7 @@ small {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-secondary) 100%);
+    background: var(--gradient-cool-ocean);
     transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     display: flex;
     align-items: center;
@@ -539,7 +501,7 @@ small {
 
 .file-status-processing {
     border-color: var(--accent-primary);
-    background-color: rgba(88, 101, 242, 0.1);
+    background-color: var(--status-info-bg);
 }
 
 .file-status-processing .status-icon {
@@ -547,21 +509,21 @@ small {
 }
 
 .file-status-completed {
-    border-color: var(--success);
-    background-color: rgba(16, 185, 129, 0.1);
+    border-color: var(--status-success-border);
+    background-color: var(--status-success-bg);
 }
 
 .file-status-completed .status-icon {
-    color: var(--success);
+    color: var(--status-success-text);
 }
 
 .file-status-failed {
-    border-color: var(--error);
-    background-color: rgba(239, 68, 68, 0.1);
+    border-color: var(--status-error-border);
+    background-color: var(--status-error-bg);
 }
 
 .file-status-failed .status-icon {
-    color: var(--error);
+    color: var(--status-error-text);
 }
 
 .file-card-content {
@@ -685,10 +647,10 @@ small {
 }
 
 .model-item:hover {
-    background-color: #333;
+    background-color: var(--bg-tertiary);
     border-color: var(--accent-primary);
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(88, 101, 242, 0.2);
+    box-shadow: var(--shadow-red);
 }
 
 
@@ -761,12 +723,12 @@ small {
     padding: 14px 32px;
     font-size: 1.1rem;
     font-weight: 500;
-    box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
+    box-shadow: var(--shadow-red);
 }
 
 #downloadAllBtn:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(88, 101, 242, 0.4);
+    box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
 }
 
 /* =================================================================
@@ -832,18 +794,18 @@ small {
 }
 
 .status-success {
-    background-color: rgba(16, 185, 129, 0.2);
-    color: var(--success);
+    background-color: var(--status-success-bg);
+    color: var(--status-success-text);
 }
 
 .status-error {
-    background-color: rgba(239, 68, 68, 0.2);
-    color: var(--error);
+    background-color: var(--status-error-bg);
+    color: var(--status-error-text);
 }
 
 .status-processing {
-    background-color: rgba(99, 102, 241, 0.2);
-    color: var(--accent-primary);
+    background-color: var(--status-info-bg);
+    color: var(--status-info-text);
 }
 
 /* Loading Spinner */
@@ -881,12 +843,12 @@ small {
 
 /* Error Message */
 .error-message {
-    background-color: rgba(239, 68, 68, 0.1);
-    border: 1px solid var(--error);
+    background-color: var(--status-error-bg);
+    border: 1px solid var(--status-error-border);
     border-radius: var(--radius-md);
     padding: var(--spacing-md);
     margin: var(--spacing-md) 0;
-    color: var(--error);
+    color: var(--status-error-text);
 }
 
 /* Error Overlay */
@@ -1187,11 +1149,11 @@ small {
     position: fixed;
     bottom: 2rem;
     right: 2rem;
-    background-color: rgba(239, 68, 68, 0.95);
+    background-color: var(--brand-vibrant-red);
     color: white;
     padding: var(--spacing-md) var(--spacing-lg);
     border-radius: var(--radius-md);
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--shadow-red);
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
