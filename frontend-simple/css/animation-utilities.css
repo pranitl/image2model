@@ -1,0 +1,479 @@
+/* =================================================================
+   image2model Animation Utilities - Ready-to-use Classes
+   Composable animation utilities for rapid development
+   ================================================================= */
+
+/* =================================================================
+   Base Animation Classes
+   ================================================================= */
+
+/* Fade Animations */
+.animate-fade-in {
+    animation: fadeIn var(--duration-medium) var(--ease-out-cubic) both;
+}
+
+.animate-fade-out {
+    animation: fadeOut var(--duration-medium) var(--ease-out-cubic) both;
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp var(--duration-medium) var(--ease-out-cubic) both;
+}
+
+.animate-fade-in-down {
+    animation: fadeInDown var(--duration-medium) var(--ease-out-cubic) both;
+}
+
+.animate-fade-in-scale {
+    animation: fadeInScale var(--duration-medium) var(--ease-smooth) both;
+}
+
+/* Slide Animations */
+.animate-slide-in-left {
+    animation: slideInLeft var(--duration-medium) var(--ease-out-cubic) both;
+}
+
+.animate-slide-in-right {
+    animation: slideInRight var(--duration-medium) var(--ease-out-cubic) both;
+}
+
+.animate-slide-in-up {
+    animation: slideInUp var(--duration-medium) var(--ease-out-cubic) both;
+}
+
+.animate-slide-in-down {
+    animation: slideInDown var(--duration-medium) var(--ease-out-cubic) both;
+}
+
+/* Scale Animations */
+.animate-scale-in {
+    animation: scaleIn var(--duration-short) var(--ease-spring) both;
+}
+
+.animate-scale-out {
+    animation: scaleOut var(--duration-short) var(--ease-smooth) both;
+}
+
+.animate-scale-pulse {
+    animation: scalePulse var(--duration-xl) var(--ease-in-out-cubic) infinite;
+}
+
+/* Rotation Animations */
+.animate-rotate {
+    animation: rotate var(--duration-xl) linear infinite;
+}
+
+.animate-rotate-in {
+    animation: rotateIn var(--duration-medium) var(--ease-spring) both;
+}
+
+.animate-swing {
+    animation: swing var(--duration-long) var(--ease-bounce) both;
+}
+
+/* Special Effects */
+.animate-float {
+    animation: float 3s var(--ease-in-out-cubic) infinite;
+}
+
+.animate-bounce {
+    animation: bounce var(--duration-xl) var(--ease-bounce) infinite;
+}
+
+.animate-shake {
+    animation: shake var(--duration-long) var(--ease-smooth) both;
+}
+
+.animate-glow {
+    animation: glow 2s var(--ease-in-out-cubic) infinite;
+}
+
+.animate-shadow-pulse {
+    animation: shadowPulse 2s var(--ease-in-out-cubic) infinite;
+}
+
+/* =================================================================
+   Hover State Utilities
+   ================================================================= */
+
+/* Lift Effect */
+.hover-lift {
+    transition: transform var(--duration-short) var(--ease-out-cubic),
+                box-shadow var(--duration-short) var(--ease-out-cubic);
+}
+
+.hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 20px -5px rgba(58, 66, 74, 0.2);
+}
+
+/* Scale Effect */
+.hover-scale {
+    transition: transform var(--duration-short) var(--ease-spring);
+}
+
+.hover-scale:hover {
+    transform: scale(1.05);
+}
+
+.hover-scale-sm:hover {
+    transform: scale(1.02);
+}
+
+.hover-scale-lg:hover {
+    transform: scale(1.1);
+}
+
+/* Glow Effect */
+.hover-glow {
+    transition: box-shadow var(--duration-short) var(--ease-smooth);
+}
+
+.hover-glow:hover {
+    box-shadow: 0 0 20px rgba(93, 173, 226, 0.4);
+}
+
+.hover-glow-red:hover {
+    box-shadow: 0 0 20px rgba(231, 76, 60, 0.4);
+}
+
+.hover-glow-yellow:hover {
+    box-shadow: 0 0 20px rgba(243, 156, 18, 0.4);
+}
+
+/* Rotate Effect */
+.hover-rotate {
+    transition: transform var(--duration-short) var(--ease-smooth);
+}
+
+.hover-rotate:hover {
+    transform: rotate(5deg);
+}
+
+.hover-rotate-3d:hover {
+    transform: perspective(400px) rotateY(10deg);
+}
+
+/* Color Transitions */
+.hover-brightness {
+    transition: filter var(--duration-short) var(--ease-smooth);
+}
+
+.hover-brightness:hover {
+    filter: brightness(1.1);
+}
+
+.hover-darken:hover {
+    filter: brightness(0.9);
+}
+
+/* Underline Effects */
+.hover-underline {
+    position: relative;
+    overflow: hidden;
+}
+
+.hover-underline::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--accent-primary);
+    transform: translateX(-100%);
+    transition: transform var(--duration-medium) var(--ease-out-cubic);
+}
+
+.hover-underline:hover::after {
+    transform: translateX(0);
+}
+
+/* =================================================================
+   Loading Animation Utilities
+   ================================================================= */
+
+/* Spinner */
+.loading-spinner {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    border: 2px solid transparent;
+    border-top-color: var(--accent-primary);
+    border-radius: 50%;
+    animation: rotate var(--duration-xl) linear infinite;
+}
+
+/* Low-poly spinner */
+.loading-low-poly {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    position: relative;
+}
+
+.loading-low-poly::before,
+.loading-low-poly::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-cool-ocean);
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+    animation: lowPolySpinner 1.5s var(--ease-in-out-cubic) infinite;
+}
+
+.loading-low-poly::after {
+    animation-delay: -0.75s;
+    opacity: 0.6;
+}
+
+/* Progress Bar */
+.loading-progress {
+    position: relative;
+    width: 100%;
+    height: 4px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+    overflow: hidden;
+}
+
+.loading-progress::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: var(--gradient-primary);
+    background-size: 200% 100%;
+    animation: progressSweep 2s linear infinite;
+}
+
+/* Skeleton Loading */
+.loading-skeleton {
+    position: relative;
+    background: var(--bg-secondary);
+    overflow: hidden;
+}
+
+.loading-skeleton::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.1) 20%,
+        rgba(255, 255, 255, 0.2) 50%,
+        rgba(255, 255, 255, 0.1) 80%,
+        transparent 100%
+    );
+    animation: shimmer 2s linear infinite;
+}
+
+/* Pulsing Dots */
+.loading-dots {
+    display: inline-flex;
+    gap: 0.25em;
+}
+
+.loading-dots span {
+    display: inline-block;
+    width: 0.5em;
+    height: 0.5em;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    animation: pulsingDots 1.4s linear infinite both;
+}
+
+.loading-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* =================================================================
+   Transition Utilities
+   ================================================================= */
+
+/* Page Transitions */
+.transition-fade {
+    opacity: 0;
+    transition: opacity var(--duration-medium) var(--ease-smooth);
+}
+
+.transition-fade.active {
+    opacity: 1;
+}
+
+.transition-slide-up {
+    transform: translateY(20px);
+    opacity: 0;
+    transition: transform var(--duration-medium) var(--ease-out-cubic),
+                opacity var(--duration-medium) var(--ease-smooth);
+}
+
+.transition-slide-up.active {
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* Content Reveals */
+.reveal-on-scroll {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity var(--duration-long) var(--ease-smooth),
+                transform var(--duration-long) var(--ease-out-cubic);
+}
+
+.reveal-on-scroll.revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* =================================================================
+   Micro-interaction Utilities
+   ================================================================= */
+
+/* Button Ripple Effect */
+.ripple {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple-effect {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.5);
+    transform: scale(0);
+    animation: ripple var(--duration-medium) var(--ease-out-cubic);
+    pointer-events: none;
+}
+
+/* Form Feedback */
+.form-shake {
+    animation: shake var(--duration-medium) var(--ease-smooth);
+}
+
+.form-success {
+    position: relative;
+}
+
+.form-success::after {
+    content: '✓';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%) scale(0);
+    color: var(--color-success);
+    animation: scaleIn var(--duration-short) var(--ease-spring) forwards;
+}
+
+/* =================================================================
+   Special Effect Utilities
+   ================================================================= */
+
+/* Gradient Animation */
+.gradient-animate {
+    background-size: 200% 200%;
+    animation: gradientShift 4s var(--ease-in-out-cubic) infinite;
+}
+
+.gradient-rotate {
+    animation: gradientRotate 5s linear infinite;
+}
+
+/* Text Effects */
+.text-reveal {
+    overflow: hidden;
+}
+
+.text-reveal span {
+    display: inline-block;
+    animation: fadeInUp var(--duration-medium) var(--ease-out-cubic) both;
+    animation-delay: calc(var(--delay-stagger) * var(--i));
+}
+
+.text-glitch {
+    position: relative;
+    animation: glitchText 2s steps(20, end) infinite;
+}
+
+/* Shape Morphing */
+.morph-triangle {
+    animation: morphTriangle 3s var(--ease-in-out-cubic) infinite;
+}
+
+.morph-square {
+    animation: morphSquare 4s var(--ease-in-out-cubic) infinite;
+}
+
+/* =================================================================
+   Animation Delay Utilities
+   ================================================================= */
+
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+.delay-600 { animation-delay: 600ms; }
+.delay-700 { animation-delay: 700ms; }
+.delay-800 { animation-delay: 800ms; }
+
+/* =================================================================
+   Animation Duration Modifiers
+   ================================================================= */
+
+.duration-fast { animation-duration: var(--duration-short) !important; }
+.duration-normal { animation-duration: var(--duration-medium) !important; }
+.duration-slow { animation-duration: var(--duration-long) !important; }
+.duration-xl { animation-duration: var(--duration-xl) !important; }
+
+/* =================================================================
+   Animation Control Classes
+   ================================================================= */
+
+.animation-play-once {
+    animation-iteration-count: 1 !important;
+}
+
+.animation-play-twice {
+    animation-iteration-count: 2 !important;
+}
+
+.animation-play-infinite {
+    animation-iteration-count: infinite !important;
+}
+
+.animation-reverse {
+    animation-direction: reverse !important;
+}
+
+.animation-alternate {
+    animation-direction: alternate !important;
+}
+
+/* =================================================================
+   Responsive Animation Utilities
+   ================================================================= */
+
+/* Disable complex animations on small devices */
+@media (max-width: 768px) {
+    .mobile-no-animation {
+        animation: none !important;
+        transition: none !important;
+    }
+    
+    .mobile-simple-fade {
+        animation: fadeIn var(--duration-short) var(--ease-smooth) both !important;
+    }
+}
