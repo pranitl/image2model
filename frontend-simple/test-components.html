@@ -21,7 +21,32 @@
             margin-bottom: 4rem;
             padding: 2rem 0;
             border-bottom: 1px solid var(--border-color);
-            background: transparent !important;
+            background: none !important;
+            background-color: transparent !important;
+            background-image: none !important;
+        }
+        
+        /* Ensure sections don't inherit any backgrounds */
+        section {
+            background: none !important;
+            background-color: transparent !important;
+        }
+        
+        /* Force container to have no background */
+        .container {
+            background: none !important;
+            background-color: transparent !important;
+            background-image: none !important;
+        }
+        
+        /* Remove any potential red/orange backgrounds */
+        * {
+            background-image: none !important;
+        }
+        
+        /* Allow only specific gradient backgrounds on buttons */
+        .btn-primary {
+            background-image: var(--gradient-primary) !important;
         }
         .demo-section:last-child {
             border-bottom: none;
