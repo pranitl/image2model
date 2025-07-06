@@ -109,14 +109,19 @@
 }
 
 .btn-loading {
-    color: transparent;
+    position: relative;
+    pointer-events: none;
+    padding-left: calc(var(--spacing-lg) + 20px);
 }
 
-.btn-loading::after {
+.btn-loading::before {
     content: '';
     position: absolute;
-    width: 20px;
-    height: 20px;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
     border: 2px solid currentColor;
     border-right-color: transparent;
     border-radius: 50%;

@@ -8,17 +8,28 @@
     <link rel="stylesheet" href="css/components.css">
     <style>
         /* Override any inherited hero/gradient backgrounds */
+        :root {
+            --bg-primary: #ffffff !important;
+            --bg-secondary: #f8f9fa !important;
+            --bg-tertiary: #e9ecef !important;
+        }
+        
         body {
-            background: var(--bg-primary) !important;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            background-image: none !important;
         }
         
         /* Ensure no gradient backgrounds leak through */
+        * {
+            background-image: none !important;
+        }
+        
         .container,
         section,
-        .demo-section,
-        .navbar {
+        .demo-section {
             background: transparent !important;
-            background-image: none !important;
+            background-color: transparent !important;
         }
         
         /* Fix navbar specifically */
