@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>image2model Brand Style Guide</title>
+    <link rel="stylesheet" href="guidelines/gradients.css">
+    <style>
+        :root {
+            /* Brand Colors */
+            --dark-charcoal: #3A424A;
+            --vibrant-red: #E74C3C;
+            --sky-blue: #3498DB;
+            --bright-cyan: #5DADE2;
+            --sunset-orange: #E67E22;
+            --golden-yellow: #F39C12;
+            
+            /* Neutral Colors */
+            --silver-gray: #BDC3C7;
+            --light-gray: #ECF0F1;
+            --medium-gray: #95A5A6;
+            --dark-gray: #7F8C8D;
+            --white: #FFFFFF;
+            --black: #000000;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--dark-charcoal);
+            background: var(--white);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            background: var(--dark-charcoal);
+            color: var(--white);
+            padding: 3rem 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(243, 156, 18, 0.1) 0%, rgba(231, 76, 60, 0.1) 100%);
+        }
+
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        nav {
+            background: var(--light-gray);
+            padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        nav ul {
+            list-style: none;
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--dark-charcoal);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--sky-blue);
+        }
+
+        section {
+            margin: 4rem 0;
+        }
+
+        h2 {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            color: var(--dark-charcoal);
+            border-bottom: 2px solid var(--light-gray);
+            padding-bottom: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin: 2rem 0 1rem;
+            color: var(--dark-gray);
+        }
+
+        .logo-showcase {
+            background: var(--light-gray);
+            padding: 3rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-showcase img {
+            max-width: 200px;
+            height: auto;
+        }
+
+        .color-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .color-card {
+            background: var(--white);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .color-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .color-swatch {
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .color-info {
+            padding: 1rem;
+        }
+
+        .color-name {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .color-hex {
+            color: var(--medium-gray);
+            font-family: monospace;
+        }
+
+        .gradient-showcase {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .gradient-card {
+            height: 150px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--white);
+            font-weight: bold;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .usage-example {
+            background: var(--light-gray);
+            padding: 2rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+        }
+
+        .button-examples {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin: 1rem 0;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--vibrant-red);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            background: #C0392B;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(231, 76, 60, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--sky-blue);
+            color: var(--white);
+        }
+
+        .btn-secondary:hover {
+            background: #2980B9;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--golden-yellow) 0%, var(--vibrant-red) 100%);
+            color: var(--white);
+        }
+
+        .typography-example {
+            margin: 2rem 0;
+        }
+
+        .typography-example h1,
+        .typography-example h2,
+        .typography-example h3,
+        .typography-example h4 {
+            margin: 1rem 0;
+        }
+
+        .icon-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .icon-example {
+            aspect-ratio: 1;
+            background: var(--light-gray);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .icon-placeholder {
+            width: 48px;
+            height: 48px;
+            background: var(--dark-charcoal);
+            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+        }
+
+        code {
+            background: var(--light-gray);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: var(--dark-charcoal);
+            color: var(--light-gray);
+            padding: 1.5rem;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+
+        .download-section {
+            background: var(--light-gray);
+            padding: 3rem;
+            border-radius: 8px;
+            text-align: center;
+            margin-top: 4rem;
+        }
+
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            h2 { font-size: 1.5rem; }
+            .container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>image2model</h1>
+            <p class="subtitle">Brand Style Guide</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#logo">Logo</a></li>
+                <li><a href="#colors">Colors</a></li>
+                <li><a href="#gradients">Gradients</a></li>
+                <li><a href="#typography">Typography</a></li>
+                <li><a href="#components">Components</a></li>
+                <li><a href="#voice">Voice & Tone</a></li>
+                <li><a href="#downloads">Downloads</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section id="logo">
+            <h2>Logo</h2>
+            <div class="logo-showcase">
+                <img src="assets/logo-original.png" alt="image2model logo">
+                <p style="margin-top: 1rem;">Primary logo with geometric, faceted design</p>
+            </div>
+            
+            <h3>Clear Space</h3>
+            <p>Maintain minimum clear space equal to 1/4 of the logo height on all sides.</p>
+            
+            <h3>Minimum Sizes</h3>
+            <ul>
+                <li>Digital: 48px × 48px</li>
+                <li>Print: 0.5" × 0.5"</li>
+                <li>Favicon: 16px × 16px</li>
+            </ul>
+        </section>
+
+        <section id="colors">
+            <h2>Brand Colors</h2>
+            
+            <h3>Primary Palette</h3>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--dark-charcoal);">#3A424A</div>
+                    <div class="color-info">
+                        <div class="color-name">Dark Charcoal</div>
+                        <div class="color-hex">#3A424A</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--vibrant-red);">#E74C3C</div>
+                    <div class="color-info">
+                        <div class="color-name">Vibrant Red</div>
+                        <div class="color-hex">#E74C3C</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--sky-blue);">#3498DB</div>
+                    <div class="color-info">
+                        <div class="color-name">Sky Blue</div>
+                        <div class="color-hex">#3498DB</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--bright-cyan);">#5DADE2</div>
+                    <div class="color-info">
+                        <div class="color-name">Bright Cyan</div>
+                        <div class="color-hex">#5DADE2</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--sunset-orange);">#E67E22</div>
+                    <div class="color-info">
+                        <div class="color-name">Sunset Orange</div>
+                        <div class="color-hex">#E67E22</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--golden-yellow); color: var(--dark-charcoal);">#F39C12</div>
+                    <div class="color-info">
+                        <div class="color-name">Golden Yellow</div>
+                        <div class="color-hex">#F39C12</div>
+                    </div>
+                </div>
+            </div>
+
+            <h3>Neutral Palette</h3>
+            <div class="color-grid">
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--white); color: var(--dark-charcoal); border: 1px solid var(--light-gray);">#FFFFFF</div>
+                    <div class="color-info">
+                        <div class="color-name">White</div>
+                        <div class="color-hex">#FFFFFF</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--light-gray); color: var(--dark-charcoal);">#ECF0F1</div>
+                    <div class="color-info">
+                        <div class="color-name">Light Gray</div>
+                        <div class="color-hex">#ECF0F1</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--silver-gray);">#BDC3C7</div>
+                    <div class="color-info">
+                        <div class="color-name">Silver Gray</div>
+                        <div class="color-hex">#BDC3C7</div>
+                    </div>
+                </div>
+                <div class="color-card">
+                    <div class="color-swatch" style="background: var(--medium-gray);">#95A5A6</div>
+                    <div class="color-info">
+                        <div class="color-name">Medium Gray</div>
+                        <div class="color-hex">#95A5A6</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="gradients">
+            <h2>Gradients</h2>
+            <div class="gradient-showcase">
+                <div class="gradient-card gradient-warm-sunset">
+                    <span>Warm Sunset</span>
+                </div>
+                <div class="gradient-card gradient-cool-ocean">
+                    <span>Cool Ocean</span>
+                </div>
+                <div class="gradient-card gradient-mountain-mist" style="color: var(--dark-charcoal);">
+                    <span>Mountain Mist</span>
+                </div>
+                <div class="gradient-card gradient-tech-fusion">
+                    <span>Tech Fusion</span>
+                </div>
+                <div class="gradient-card gradient-creative-burst">
+                    <span>Creative Burst</span>
+                </div>
+                <div class="gradient-card gradient-animated">
+                    <span>Animated Flow</span>
+                </div>
+            </div>
+        </section>
+
+        <section id="typography">
+            <h2>Typography</h2>
+            <div class="typography-example">
+                <h1>Heading 1 - Transform Images Into Models</h1>
+                <h2>Heading 2 - Powered by Advanced AI</h2>
+                <h3>Heading 3 - Simple, Fast, Reliable</h3>
+                <h4>Heading 4 - Get Started Today</h4>
+                <p>Body text: image2model makes 3D content creation accessible to everyone. Our advanced AI technology transforms your images into production-ready models in minutes, not hours.</p>
+            </div>
+        </section>
+
+        <section id="components">
+            <h2>UI Components</h2>
+            
+            <h3>Buttons</h3>
+            <div class="button-examples">
+                <button class="btn btn-primary">Primary Action</button>
+                <button class="btn btn-secondary">Secondary Action</button>
+                <button class="btn btn-gradient">Special Action</button>
+            </div>
+
+            <h3>Code Example</h3>
+            <pre><code>/* Brand color variables */
+:root {
+  --dark-charcoal: #3A424A;
+  --vibrant-red: #E74C3C;
+  --sky-blue: #3498DB;
+  --bright-cyan: #5DADE2;
+  --sunset-orange: #E67E22;
+  --golden-yellow: #F39C12;
+}</code></pre>
+
+            <h3>Icon Style</h3>
+            <div class="icon-grid">
+                <div class="icon-example">
+                    <div class="icon-placeholder"></div>
+                </div>
+                <div class="icon-example">
+                    <div class="icon-placeholder" style="transform: rotate(45deg);"></div>
+                </div>
+                <div class="icon-example">
+                    <div class="icon-placeholder" style="clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);"></div>
+                </div>
+                <div class="icon-example">
+                    <div class="icon-placeholder" style="clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);"></div>
+                </div>
+            </div>
+            <p>Icons follow the geometric, faceted style of the logo with consistent 2px strokes at 24x24px base size.</p>
+        </section>
+
+        <section id="voice">
+            <h2>Brand Voice & Tone</h2>
+            <div class="usage-example">
+                <h3>Our Personality</h3>
+                <ul>
+                    <li><strong>Innovative:</strong> Pushing boundaries in AI and image processing</li>
+                    <li><strong>Accessible:</strong> Making complex technology simple</li>
+                    <li><strong>Reliable:</strong> Consistent, professional service</li>
+                    <li><strong>Empowering:</strong> Enabling creators and developers</li>
+                </ul>
+
+                <h3>Writing Examples</h3>
+                <p><strong>Do:</strong> "Transform your images into production-ready models"</p>
+                <p><strong>Don't:</strong> "Utilize our platform to facilitate transformation"</p>
+            </div>
+        </section>
+
+        <section id="downloads">
+            <h2>Downloads</h2>
+            <div class="download-section">
+                <h3>Brand Assets</h3>
+                <p>Download our brand guidelines and assets for your projects.</p>
+                <div class="download-grid">
+                    <a href="guidelines/colors.json" class="btn btn-primary">Color Palette (JSON)</a>
+                    <a href="guidelines/gradients.css" class="btn btn-primary">Gradients (CSS)</a>
+                    <a href="assets/logo-original.png" class="btn btn-primary">Logo (PNG)</a>
+                    <a href="#" class="btn btn-secondary">Full Guidelines (PDF)</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer style="background: var(--dark-charcoal); color: var(--white); padding: 2rem 0; text-align: center; margin-top: 4rem;">
+        <p>&copy; 2024 image2model. All rights reserved.</p>
+    </footer>
+</body>
+</html>
