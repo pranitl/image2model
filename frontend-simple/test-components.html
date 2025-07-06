@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Component Design System Showcase - Image2Model</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/components.css">
+    <style>
+        /* Override any inherited hero/gradient backgrounds */
+        body {
+            background: var(--bg-primary) !important;
+        }
+        
+        /* Ensure no gradient backgrounds leak through */
+        .container,
+        section,
+        .demo-section,
+        .navbar {
+            background: transparent !important;
+            background-image: none !important;
+        }
+        
+        /* Fix navbar specifically */
+        .navbar {
+            background-color: var(--bg-primary) !important;
+        }
+        
+        /* Demo-specific styles */
+        .demo-section {
+            margin-bottom: 4rem;
+            padding: 2rem 0;
+            border-bottom: 1px solid var(--border-color);
+            background: transparent !important;
+        }
+        .demo-section:last-child {
+            border-bottom: none;
+        }
+        .demo-title {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+        .demo-subtitle {
+            font-size: var(--text-lg);
+            font-weight: var(--font-semibold);
+            margin: 2rem 0 1rem;
+            color: var(--text-secondary);
+        }
+        .demo-description {
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .demo-flex {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .demo-code {
+            background-color: var(--bg-tertiary);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        .demo-code code {
+            font-family: var(--font-mono);
+            font-size: var(--text-sm);
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-container">
+            <a href="#" class="navbar-brand">Component Showcase</a>
+            <button class="btn btn-ghost btn-icon" data-nav-toggle aria-label="Toggle navigation">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <ul class="navbar-menu">
+                <li><a href="#buttons" class="navbar-link">Buttons</a></li>
+                <li><a href="#forms" class="navbar-link">Forms</a></li>
+                <li><a href="#cards" class="navbar-link">Cards</a></li>
+                <li><a href="#feedback" class="navbar-link">Feedback</a></li>
+                <li><a href="#navigation" class="navbar-link">Navigation</a></li>
+                <li><a href="#modals" class="navbar-link">Modals</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container" style="padding-top: 2rem; background: transparent;">
+        <h1 class="text-4xl font-bold mb-lg" style="color: var(--text-primary);">Component Design System</h1>
+        <p class="text-lg text-secondary mb-xl" style="color: var(--text-secondary);">A comprehensive component library implementing the Image2Model brand design system.</p>
+
+        <!-- Buttons Section -->
+        <section id="buttons" class="demo-section">
+            <h2 class="demo-title">1. Button Components</h2>
+            <p class="demo-description">Various button styles, sizes, and states following the brand guidelines.</p>
+
+            <h3 class="demo-subtitle">Button Variants</h3>
+            <div class="demo-flex">
+                <button class="btn btn-primary">Primary Button</button>
+                <button class="btn btn-secondary">Secondary Button</button>
+                <button class="btn btn-ghost">Ghost Button</button>
+                <button class="btn btn-primary" disabled>Disabled Button</button>
+            </div>
+
+            <h3 class="demo-subtitle">Button Sizes</h3>
+            <div class="demo-flex">
+                <button class="btn btn-primary btn-sm">Small</button>
+                <button class="btn btn-primary">Default</button>
+                <button class="btn btn-primary btn-lg">Large</button>
+            </div>
+
+            <h3 class="demo-subtitle">Icon Buttons</h3>
+            <div class="demo-flex">
+                <button class="btn btn-primary btn-icon" aria-label="Settings">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+                <button class="btn btn-secondary btn-icon" aria-label="Add">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+                <button class="btn btn-ghost btn-icon" aria-label="Delete">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </div>
+
+            <h3 class="demo-subtitle">Button with Icon</h3>
+            <div class="demo-flex">
+                <button class="btn btn-primary">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3zM16 16.5a1.5 1.5 0 11-3 0 1.5 1.5 0 013 0zM6.5 18a1.5 1.5 0 100-3 1.5 1.5 0 000 3z"/>
+                    </svg>
+                    Add to Cart
+                </button>
+                <button class="btn btn-secondary">
+                    Download
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                    </svg>
+                </button>
+            </div>
+
+            <h3 class="demo-subtitle">Loading State</h3>
+            <div class="demo-flex">
+                <button class="btn btn-primary btn-loading">Loading...</button>
+            </div>
+
+            <h3 class="demo-subtitle">Button Group</h3>
+            <div class="btn-group">
+                <button class="btn btn-secondary">Left</button>
+                <button class="btn btn-secondary">Center</button>
+                <button class="btn btn-secondary">Right</button>
+            </div>
+        </section>
+
+        <!-- Forms Section -->
+        <section id="forms" class="demo-section">
+            <h2 class="demo-title">2. Form Elements</h2>
+            <p class="demo-description">Form inputs, selects, checkboxes, and file uploads with validation states.</p>
+
+            <div class="demo-grid">
+                <div>
+                    <h3 class="demo-subtitle">Text Inputs</h3>
+                    <div class="form-group">
+                        <label class="form-label">Default Input</label>
+                        <input type="text" class="form-input" placeholder="Enter text...">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label form-label-required">Required Input</label>
+                        <input type="text" class="form-input" placeholder="This field is required">
+                        <span class="form-help">This is a help text</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Error State</label>
+                        <input type="text" class="form-input form-input-error" value="Invalid input">
+                        <span class="form-help form-error">Please enter a valid value</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Success State</label>
+                        <input type="text" class="form-input form-input-success" value="Valid input">
+                        <span class="form-help form-success">Looks good!</span>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="demo-subtitle">Textarea</h3>
+                    <div class="form-group">
+                        <label class="form-label">Message</label>
+                        <textarea class="form-input form-textarea" placeholder="Enter your message..."></textarea>
+                    </div>
+
+                    <h3 class="demo-subtitle">Select</h3>
+                    <div class="form-group">
+                        <label class="form-label">Choose Option</label>
+                        <select class="form-input form-select">
+                            <option>Select an option</option>
+                            <option>Option 1</option>
+                            <option>Option 2</option>
+                            <option>Option 3</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="demo-subtitle">Checkboxes and Radio Buttons</h3>
+            <div class="demo-flex" style="flex-direction: column; align-items: flex-start;">
+                <label class="form-checkbox">
+                    <input type="checkbox" checked>
+                    <span class="form-checkbox-label">I agree to the terms</span>
+                </label>
+                <label class="form-checkbox">
+                    <input type="checkbox">
+                    <span class="form-checkbox-label">Send me updates</span>
+                </label>
+            </div>
+
+            <div class="demo-flex" style="flex-direction: column; align-items: flex-start; margin-top: 1rem;">
+                <label class="form-radio">
+                    <input type="radio" name="option" checked>
+                    <span class="form-radio-label">Option A</span>
+                </label>
+                <label class="form-radio">
+                    <input type="radio" name="option">
+                    <span class="form-radio-label">Option B</span>
+                </label>
+            </div>
+
+            <h3 class="demo-subtitle">File Upload</h3>
+            <div class="form-file-upload">
+                <input type="file" multiple accept="image/*">
+                <svg class="form-file-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <p class="form-file-upload-text">Drop files here or click to upload</p>
+                <p class="form-file-upload-hint">PNG, JPG up to 10MB</p>
+                <div class="file-list"></div>
+            </div>
+        </section>
+
+        <!-- Cards Section -->
+        <section id="cards" class="demo-section">
+            <h2 class="demo-title">3. Card Components</h2>
+            <p class="demo-description">Various card layouts for displaying content and images.</p>
+
+            <div class="demo-grid">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="font-semibold">Basic Card</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>This is a basic card with header, body, and footer sections.</p>
+                    </div>
+                    <div class="card-footer">
+                        <button class="btn btn-primary btn-sm">Action</button>
+                    </div>
+                </div>
+
+                <div class="card card-image">
+                    <img src="https://via.placeholder.com/400x200/3498DB/FFFFFF?text=Image+Card" alt="Demo image">
+                    <div class="card-image-overlay">
+                        <h3 class="font-semibold">Image Card</h3>
+                        <p class="text-sm">With overlay text</p>
+                    </div>
+                    <div class="card-body">
+                        <p>Card with image and overlay</p>
+                    </div>
+                </div>
+
+                <div class="card card-result">
+                    <div class="card-body">
+                        <h3 class="font-semibold mb-sm">Result Card</h3>
+                        <p>Special card with gradient border for highlighting results</p>
+                    </div>
+                </div>
+            </div>
+
+            <h3 class="demo-subtitle">File Cards</h3>
+            <div class="card card-file">
+                <div class="card-file-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </div>
+                <div class="card-file-info">
+                    <div class="card-file-name">example-image.png</div>
+                    <div class="card-file-meta">2.4 MB • image/png</div>
+                </div>
+                <div class="card-file-actions">
+                    <button class="btn btn-ghost btn-sm btn-icon" aria-label="View">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 3C4.5 3 1.5 8 1.5 8s3 5 6.5 5 6.5-5 6.5-5-3-5-6.5-5zm0 8a3 3 0 110-6 3 3 0 010 6z"/>
+                            <circle cx="8" cy="8" r="1.5"/>
+                        </svg>
+                    </button>
+                    <button class="btn btn-ghost btn-sm btn-icon" aria-label="Delete">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M5.5 5.5A.5.5 0 016 6v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm2.5 0a.5.5 0 01.5.5v6a.5.5 0 01-1 0V6a.5.5 0 01.5-.5zm3 .5a.5.5 0 00-1 0v6a.5.5 0 001 0V6z"/>
+                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 01-1 1H13v9a2 2 0 01-2 2H5a2 2 0 01-2-2V4h-.5a1 1 0 01-1-1V2a1 1 0 011-1H6a1 1 0 011-1h2a1 1 0 011 1h3.5a1 1 0 011 1v1z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Feedback Section -->
+        <section id="feedback" class="demo-section">
+            <h2 class="demo-title">4. Feedback Components</h2>
+            <p class="demo-description">Alerts, toasts, spinners, and progress indicators.</p>
+
+            <h3 class="demo-subtitle">Alert Messages</h3>
+            <div class="alert alert-success">
+                <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                </svg>
+                <div class="alert-content">
+                    <div class="alert-title">Success!</div>
+                    <div class="alert-message">Your operation completed successfully.</div>
+                </div>
+            </div>
+
+            <div class="alert alert-error">
+                <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                </svg>
+                <div class="alert-content">
+                    <div class="alert-title">Error</div>
+                    <div class="alert-message">Something went wrong. Please try again.</div>
+                </div>
+            </div>
+
+            <div class="alert alert-warning">
+                <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+                </svg>
+                <div class="alert-content">
+                    <div class="alert-title">Warning</div>
+                    <div class="alert-message">Please review your input before proceeding.</div>
+                </div>
+            </div>
+
+            <div class="alert alert-info">
+                <svg class="alert-icon" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+                </svg>
+                <div class="alert-content">
+                    <div class="alert-title">Information</div>
+                    <div class="alert-message">This is an informational message.</div>
+                </div>
+            </div>
+
+            <h3 class="demo-subtitle">Toast Notification</h3>
+            <button class="btn btn-primary" onclick="Components.showToast('This is a toast notification!', 'success')">
+                Show Toast
+            </button>
+
+            <h3 class="demo-subtitle">Loading Spinners</h3>
+            <div class="demo-flex">
+                <div class="spinner spinner-sm"></div>
+                <div class="spinner"></div>
+                <div class="spinner spinner-lg"></div>
+            </div>
+
+            <h3 class="demo-subtitle">Progress Bars</h3>
+            <div style="max-width: 400px;">
+                <div class="progress-label">
+                    <span>Upload Progress</span>
+                    <span>75%</span>
+                </div>
+                <div class="progress">
+                    <div class="progress-bar" style="width: 75%"></div>
+                </div>
+            </div>
+
+            <h3 class="demo-subtitle">Skeleton Loaders</h3>
+            <div class="card" style="max-width: 300px;">
+                <div class="card-body">
+                    <div class="skeleton skeleton-title"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text"></div>
+                    <div class="skeleton skeleton-text" style="width: 60%;"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Navigation Section -->
+        <section id="navigation" class="demo-section">
+            <h2 class="demo-title">5. Navigation Components</h2>
+            <p class="demo-description">Navigation elements including breadcrumbs and tabs.</p>
+
+            <h3 class="demo-subtitle">Breadcrumbs</h3>
+            <nav class="breadcrumb">
+                <span class="breadcrumb-item"><a href="#">Home</a></span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item"><a href="#">Components</a></span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item active">Buttons</span>
+            </nav>
+
+            <h3 class="demo-subtitle">Tabs</h3>
+            <div class="tabs">
+                <ul class="tab-list" role="tablist">
+                    <li role="presentation">
+                        <button class="tab-button active" role="tab" aria-selected="true" aria-controls="tab-panel-1">
+                            Overview
+                        </button>
+                    </li>
+                    <li role="presentation">
+                        <button class="tab-button" role="tab" aria-selected="false" aria-controls="tab-panel-2">
+                            Features
+                        </button>
+                    </li>
+                    <li role="presentation">
+                        <button class="tab-button" role="tab" aria-selected="false" aria-controls="tab-panel-3">
+                            Documentation
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            <div class="tab-content">
+                <div class="tab-panel active" id="tab-panel-1" role="tabpanel">
+                    <p>This is the overview tab content. It provides general information about the component.</p>
+                </div>
+                <div class="tab-panel" id="tab-panel-2" role="tabpanel" aria-hidden="true">
+                    <p>This is the features tab content. It lists all the features of the component.</p>
+                </div>
+                <div class="tab-panel" id="tab-panel-3" role="tabpanel" aria-hidden="true">
+                    <p>This is the documentation tab content. It contains detailed usage instructions.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modals Section -->
+        <section id="modals" class="demo-section">
+            <h2 class="demo-title">6. Modal & Overlay Components</h2>
+            <p class="demo-description">Modal dialogs, lightboxes, and tooltips.</p>
+
+            <h3 class="demo-subtitle">Modal Dialog</h3>
+            <button class="btn btn-primary" data-modal-open="demo-modal">Open Modal</button>
+            
+            <h3 class="demo-subtitle">Confirmation Dialog</h3>
+            <button class="btn btn-secondary" data-modal-open="confirm-modal">Open Confirmation</button>
+
+            <h3 class="demo-subtitle">Tooltips</h3>
+            <div class="demo-flex">
+                <button class="btn btn-ghost" title="This is a tooltip on hover">Hover for tooltip</button>
+                <span class="text-secondary" title="Tooltips work on any element">Text with tooltip</span>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container">
+            <p class="footer-text">&copy; 2024 Image2Model. Component Design System.</p>
+        </div>
+    </footer>
+
+    <!-- Modal Examples -->
+    <div class="modal-overlay" id="demo-modal" aria-hidden="true">
+        <div class="modal" role="dialog" aria-labelledby="modal-title">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modal-title">Example Modal</h3>
+                <button class="modal-close" data-modal-close aria-label="Close modal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>This is a modal dialog example. It can contain any content including forms, images, or other components.</p>
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label class="form-label">Example Input</label>
+                    <input type="text" class="form-input" placeholder="Type something...">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" data-modal-close>Cancel</button>
+                <button class="btn btn-primary">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="confirm-modal" aria-hidden="true">
+        <div class="modal" role="alertdialog" aria-labelledby="confirm-title">
+            <div class="modal-body dialog-confirm">
+                <svg class="dialog-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                </svg>
+                <h3 class="dialog-message" id="confirm-title">Are you sure?</h3>
+                <p class="dialog-description">This action cannot be undone. This will permanently delete your data.</p>
+                <div class="modal-footer" style="justify-content: center; border-top: none; padding-top: 0;">
+                    <button class="btn btn-ghost" data-modal-close>Cancel</button>
+                    <button class="btn btn-primary">Yes, Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include component JavaScript -->
+    <script src="js/components.js"></script>
+    <script>
+        // Additional demo functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            // Smooth scroll for navigation links
+            document.querySelectorAll('.navbar-link').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = document.querySelector(link.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+
+            // Demo tab functionality (since we don't have full implementation)
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+            
+            tabButtons.forEach((button, index) => {
+                button.addEventListener('click', () => {
+                    // Update buttons
+                    tabButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.setAttribute('aria-selected', 'false');
+                    });
+                    button.classList.add('active');
+                    button.setAttribute('aria-selected', 'true');
+                    
+                    // Update panels
+                    tabPanels.forEach(panel => {
+                        panel.classList.remove('active');
+                        panel.setAttribute('aria-hidden', 'true');
+                    });
+                    if (tabPanels[index]) {
+                        tabPanels[index].classList.add('active');
+                        tabPanels[index].setAttribute('aria-hidden', 'false');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -9,6 +9,15 @@
 - Understand context
 
 ### 2️⃣ Create Detailed Todos (10-15 items)
+**📋 Use templates from `todo-template.md`** based on issue type:
+- 🎨 Design System → CSS/styling template
+- 🏗️ Feature → Feature implementation template
+- 🐛 Bug → Bug fix template
+- 📚 Docs → Documentation template
+- 🔧 Config → Configuration template
+- 🎯 Performance → Optimization template
+
+Example (Design System):
 ```
 1. Create feature branch
 2. Research existing code
@@ -58,20 +67,23 @@ git push origin main
 - **Commit often**: After each subtask
 - **Communicate clearly**: Detailed issue summaries
 
-## 📝 Todo Template
+## 📋 Todo Templates
+See **`todo-template.md`** for detailed templates:
+- Each issue type has a specific template
+- Templates include 10-15 tasks
+- Tasks are ordered by logical progression
+- Includes priority guidelines
+
+Quick format:
 ```
-1. Create feature branch ⬜
-2. Analyze existing [system] ⬜
-3. Create [main file] with [feature] ⬜
-4. Define [variables/config] ⬜
-5. Implement [core functionality] ⬜
-6. Create [utility classes] ⬜
-7. Test [accessibility/compliance] ⬜
-8. Update [existing files] ⬜
-9. Write [documentation] ⬜
-10. Build test page ⬜
-11. Test responsive behavior ⬜
-12. Final review and cleanup ⬜
+1. Setup ⬜
+2. Research ⬜
+3. Core implementation ⬜
+4. Supporting features ⬜
+5. Testing ⬜
+6. Documentation ⬜
+7. Integration ⬜
+8. Review ⬜
 ```
 
 ## ✅ Success Criteria

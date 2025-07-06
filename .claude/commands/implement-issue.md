@@ -79,20 +79,30 @@ WebFetch: https://github.com/[owner]/[repo]/issues/[number]
 ```
 
 ### Step 2: Create Todo List
-Use TodoWrite to create comprehensive task list:
+Use TodoWrite to create comprehensive task list based on issue type.
+
+**📋 See `todo-template.md` for specific templates:**
+- Design System Implementation (CSS/Styling)
+- Feature Implementation
+- Bug Fix
+- Documentation Update
+- Configuration/Setup
+- Optimization Task
+
+Example for Design System:
 ```
-- Create feature branch
-- Research/analyze existing code
-- Create main implementation file
-- Define variables/configuration
-- Implement core functionality
-- Create utility classes/helpers
-- Test accessibility compliance
-- Update existing files
-- Create documentation
-- Build test/demo page
-- Test responsive behavior
-- Final cleanup and optimization
+1. Create new feature branch for [system name]
+2. Research and analyze requirements
+3. Review existing implementation
+4. Create main CSS file with core definitions
+5. Define CSS variables
+6. Create utility classes
+7. Implement responsive behavior
+8. Test accessibility compliance
+9. Update existing files
+10. Create documentation
+11. Build interactive test page
+12. Test across viewports
 ```
 
 ### Step 3: Implementation Pattern
@@ -156,6 +166,18 @@ All acceptance criteria have been met:
 - ✅ Criteria 1
 - ✅ Criteria 2
 ```
+
+## Todo List Templates
+
+For detailed todo templates for different types of issues, see **`todo-template.md`**:
+- 🎨 Design System Implementation
+- 🏗️ Feature Implementation  
+- 🐛 Bug Fix
+- 📚 Documentation Update
+- 🔧 Configuration/Setup
+- 🎯 Optimization Task
+
+Each template provides 10-15 specific tasks tailored to that type of work.
 
 ## Best Practices
 
