@@ -322,7 +322,7 @@ const ProcessingModule = (function() {
         if (!elements.fileGrid) return;
         
         const card = document.createElement('div');
-        card.className = `file-card file-status-${fileData.status || 'pending'}`;
+        card.className = `file-card file-status-${fileData.status || 'pending'} card-lift animate-fade-in-scale`;
         card.dataset.filename = filename;
         
         const statusIcon = getStatusIcon(fileData.status);
@@ -384,8 +384,15 @@ const ProcessingModule = (function() {
         if (progress !== null) fileData.progress = progress;
         state.files.set(filename, fileData);
         
-        // Update card appearance
-        card.className = `file-card file-status-${status}`;
+        // Update card appearance with animation
+        card.className = `file-card file-status-${status} card-lift`;
+        
+        // Add status-specific animations
+        if (status === 'completed') {
+            card.classList.add('animate-scale-pulse');
+        } else if (status === 'failed') {
+            card.classList.add('animate-shake');
+        }
         
         // Update status text
         const statusText = card.querySelector('.status-text');

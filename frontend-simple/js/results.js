@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function createModelItem(file, jobId) {
         const modelItem = document.createElement('div');
-        modelItem.className = 'model-item';
+        modelItem.className = 'model-item card card-lift animate-fade-in-scale';
         
         // Create preview section if rendered_image exists
         if (file.rendered_image && file.rendered_image.url) {
@@ -111,7 +111,7 @@ document.addEventListener('DOMContentLoaded', function() {
             downloadBtn.href = `/api/v1/download/${jobId}/${encodeURIComponent(file.filename)}`;
         }
         
-        downloadBtn.className = 'btn-secondary';
+        downloadBtn.className = 'btn btn-secondary hover-lift';
         downloadBtn.textContent = 'Download';
         downloadBtn.download = file.filename;
         

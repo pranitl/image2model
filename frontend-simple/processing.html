@@ -6,16 +6,17 @@
     <title>Processing - AI 3D Model Generator</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="css/style.css">
+    <script src="js/animations.js" defer></script>
 </head>
 <body>
     <div class="container">
-        <header class="processing-header">
+        <header class="processing-header animate-fade-in">
             <h1>Processing Your Images</h1>
-            <p class="processing-subtitle">Your 3D models are being generated</p>
+            <p class="processing-subtitle animate-fade-in-up delay-200">Your 3D models are being generated</p>
         </header>
 
         <!-- Batch Information Section -->
-        <section class="batch-info-section">
+        <section class="batch-info-section animate-fade-in delay-400">
             <div class="batch-details">
                 <div class="batch-item">
                     <span class="batch-label">Task ID:</span>
@@ -23,7 +24,7 @@
                 </div>
                 <div class="batch-item">
                     <span class="batch-label">Files:</span>
-                    <span id="fileCount" class="batch-value">0</span>
+                    <span id="fileCount" class="batch-value" data-count-to="0">0</span>
                 </div>
                 <div class="batch-item">
                     <span class="batch-label">Started:</span>
@@ -37,11 +38,11 @@
         </section>
 
         <!-- Overall Progress Section -->
-        <section class="overall-progress-section">
+        <section class="overall-progress-section animate-fade-in delay-600">
             <h2>Overall Progress</h2>
             <div class="progress-container">
                 <div class="progress-bar">
-                    <div id="progressFill" class="progress-fill" style="width: 0%">
+                    <div id="progressFill" class="progress-bar-fill" style="width: 0%">
                         <span class="progress-text">0%</span>
                     </div>
                 </div>

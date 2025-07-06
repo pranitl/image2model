@@ -204,17 +204,17 @@ const UploadModule = (function() {
         
         if (!card) {
             card = document.createElement('div');
-            card.className = 'file-card';
+            card.className = 'file-card card-lift animate-fade-in-scale';
             card.dataset.fileId = fileObj.id;
             fileList.appendChild(card);
         }
         
         // Update card content
         card.innerHTML = `
-            <img src="${fileObj.preview}" alt="${fileObj.file.name}">
+            <img src="${fileObj.preview}" alt="${fileObj.file.name}" class="card-image-zoom">
             <p title="${fileObj.file.name}">${truncateFileName(fileObj.file.name)}</p>
             <small>${formatFileSize(fileObj.file.size)}</small>
-            <button class="remove-btn" onclick="UploadModule.removeFile('${fileObj.id}')">Remove</button>
+            <button class="remove-btn hover-scale" onclick="UploadModule.removeFile('${fileObj.id}')">Remove</button>
         `;
     }
     
