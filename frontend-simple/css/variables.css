@@ -116,26 +116,26 @@
     --accent-active: var(--red-700);
     
     /* =================================================================
-       Dark Mode Color Scheme
+       Dark Mode Color Scheme - Aligned with Brand Guidelines
        ================================================================= */
-    --dark-bg-primary: #0a0a0a;
-    --dark-bg-secondary: #1a1a1a;
-    --dark-bg-tertiary: #2a2a2a;
-    --dark-bg-accent: rgba(52, 152, 219, 0.1);
+    --dark-bg-primary: var(--brand-dark-charcoal); /* #3A424A - Brand color */
+    --dark-bg-secondary: #2d343a; /* Slightly darker than primary */
+    --dark-bg-tertiary: #252b30; /* Even darker for depth */
+    --dark-bg-accent: rgba(93, 173, 226, 0.1); /* Bright Cyan with low opacity */
     
-    --dark-text-primary: var(--brand-white);
-    --dark-text-secondary: #b0b0b0;
-    --dark-text-muted: #666666;
-    --dark-text-inverse: var(--gray-900);
+    --dark-text-primary: var(--gray-300); /* #ECF0F1 - High contrast */
+    --dark-text-secondary: var(--gray-400); /* Slightly dimmer */
+    --dark-text-muted: var(--gray-500); /* For less important text */
+    --dark-text-inverse: var(--brand-dark-charcoal);
     
-    --dark-border-color: #333333;
-    --dark-border-color-light: #444444;
-    --dark-border-color-dark: #222222;
+    --dark-border-color: rgba(255, 255, 255, 0.1);
+    --dark-border-color-light: rgba(255, 255, 255, 0.15);
+    --dark-border-color-dark: rgba(255, 255, 255, 0.05);
     
-    --dark-accent-primary: var(--brand-vibrant-red);
-    --dark-accent-secondary: var(--brand-bright-cyan);
-    --dark-accent-hover: var(--red-400);
-    --dark-accent-active: var(--red-600);
+    --dark-accent-primary: var(--brand-bright-cyan); /* #5DADE2 - Better contrast in dark */
+    --dark-accent-secondary: var(--brand-sky-blue); /* #3498DB */
+    --dark-accent-hover: var(--cyan-400);
+    --dark-accent-active: var(--cyan-600);
     
     /* =================================================================
        Gradient Presets

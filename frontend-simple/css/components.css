@@ -52,6 +52,13 @@
     box-shadow: var(--shadow-sm);
 }
 
+/* Dark mode button adjustments */
+@media (prefers-color-scheme: dark) {
+    .btn-primary {
+        background: var(--gradient-cool-ocean);
+    }
+}
+
 .btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: var(--shadow-red);

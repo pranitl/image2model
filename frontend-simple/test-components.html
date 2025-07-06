@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="light-mode">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -56,6 +56,39 @@
         .demo-code code {
             font-family: var(--font-mono);
             font-size: var(--text-sm);
+            color: var(--text-primary);
+        }
+        
+        /* Theme toggle styles */
+        .theme-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            z-index: 100;
+        }
+        
+        .theme-toggle-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-normal);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .theme-toggle-btn:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .theme-toggle-btn svg {
+            width: 24px;
+            height: 24px;
             color: var(--text-primary);
         }
     </style>
@@ -502,11 +535,74 @@
         </div>
     </div>
 
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle">
+        <button class="theme-toggle-btn" aria-label="Toggle theme" title="Toggle light/dark mode">
+            <svg class="sun-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg class="moon-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </button>
+    </div>
+
     <!-- Include component JavaScript -->
     <script src="js/components.js"></script>
     <script>
         // Additional demo functionality
         document.addEventListener('DOMContentLoaded', () => {
+            // Theme toggle functionality
+            const themeToggle = document.querySelector('.theme-toggle-btn');
+            const sunIcon = document.querySelector('.sun-icon');
+            const moonIcon = document.querySelector('.moon-icon');
+            const html = document.documentElement;
+            
+            // Check for saved theme preference or default to system preference
+            const savedTheme = localStorage.getItem('theme');
+            const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            
+            if (savedTheme) {
+                html.classList.toggle('dark-mode', savedTheme === 'dark');
+                html.classList.toggle('light-mode', savedTheme === 'light');
+            }
+            
+            // Update icon visibility
+            function updateThemeIcon() {
+                const isDark = html.classList.contains('dark-mode') || 
+                              (!html.classList.contains('light-mode') && systemPrefersDark);
+                sunIcon.style.display = isDark ? 'block' : 'none';
+                moonIcon.style.display = isDark ? 'none' : 'block';
+            }
+            
+            updateThemeIcon();
+            
+            // Toggle theme
+            themeToggle.addEventListener('click', () => {
+                const isDark = html.classList.contains('dark-mode') || 
+                              (!html.classList.contains('light-mode') && systemPrefersDark);
+                
+                if (isDark) {
+                    html.classList.remove('dark-mode');
+                    html.classList.add('light-mode');
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    html.classList.remove('light-mode');
+                    html.classList.add('dark-mode');
+                    localStorage.setItem('theme', 'dark');
+                }
+                
+                updateThemeIcon();
+            });
+            
             // Smooth scroll for navigation links
             document.querySelectorAll('.navbar-link').forEach(link => {
                 link.addEventListener('click', (e) => {
