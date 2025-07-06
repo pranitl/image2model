@@ -4,6 +4,7 @@
 @import url('variables.css');
 @import url('color-utilities.css');
 @import url('typography.css');
+@import url('components.css');
 
 /* =================================================================
    CSS Reset and Base Styles
