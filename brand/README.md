@@ -106,7 +106,7 @@ For brand-related questions or special use cases not covered in these guidelines
 
 ## 🔄 Version History
 
-- **v1.0** (2024) - Initial brand guidelines release
+- **v1.0** (2025) - Initial brand guidelines release
   - Complete color system
   - Logo usage guidelines
   - Voice and tone documentation
