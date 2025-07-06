@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="light-mode">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,36 +7,6 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/components.css">
     <style>
-        /* Override any inherited hero/gradient backgrounds */
-        :root {
-            --bg-primary: #ffffff !important;
-            --bg-secondary: #f8f9fa !important;
-            --bg-tertiary: #e9ecef !important;
-        }
-        
-        body {
-            background: #ffffff !important;
-            background-color: #ffffff !important;
-            background-image: none !important;
-        }
-        
-        /* Ensure no gradient backgrounds leak through */
-        * {
-            background-image: none !important;
-        }
-        
-        .container,
-        section,
-        .demo-section {
-            background: transparent !important;
-            background-color: transparent !important;
-        }
-        
-        /* Fix navbar specifically */
-        .navbar {
-            background-color: var(--bg-primary) !important;
-        }
-        
         /* Demo-specific styles */
         .demo-section {
             margin-bottom: 4rem;
@@ -113,9 +83,9 @@
         </div>
     </nav>
 
-    <div class="container" style="padding-top: 2rem; background: transparent;">
-        <h1 class="text-4xl font-bold mb-lg" style="color: var(--text-primary);">Component Design System</h1>
-        <p class="text-lg text-secondary mb-xl" style="color: var(--text-secondary);">A comprehensive component library implementing the Image2Model brand design system.</p>
+    <div class="container" style="padding-top: 2rem;">
+        <h1 class="text-4xl font-bold mb-lg">Component Design System</h1>
+        <p class="text-lg text-secondary mb-xl">A comprehensive component library implementing the Image2Model brand design system.</p>
 
         <!-- Buttons Section -->
         <section id="buttons" class="demo-section">
