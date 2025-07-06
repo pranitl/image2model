@@ -1,0 +1,43 @@
+{
+  "brandColors": {
+    "primary": {
+      "darkCharcoal": "#3A424A",
+      "vibrantRed": "#E74C3C",
+      "skyBlue": "#3498DB",
+      "brightCyan": "#5DADE2",
+      "sunsetOrange": "#E67E22",
+      "goldenYellow": "#F39C12"
+    },
+    "neutral": {
+      "silverGray": "#BDC3C7",
+      "lightGray": "#ECF0F1",
+      "mediumGray": "#95A5A6",
+      "darkGray": "#7F8C8D",
+      "white": "#FFFFFF",
+      "black": "#000000"
+    },
+    "gradients": {
+      "warmSunset": {
+        "start": "#F39C12",
+        "end": "#E74C3C",
+        "angle": "135deg"
+      },
+      "coolOcean": {
+        "start": "#5DADE2",
+        "end": "#3498DB",
+        "angle": "180deg"
+      },
+      "mountainMist": {
+        "start": "#ECF0F1",
+        "end": "#BDC3C7",
+        "angle": "45deg"
+      }
+    },
+    "semantic": {
+      "success": "#27AE60",
+      "warning": "#F39C12",
+      "error": "#E74C3C",
+      "info": "#3498DB"
+    }
+  }
+}
