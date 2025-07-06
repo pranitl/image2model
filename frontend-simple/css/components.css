@@ -47,16 +47,10 @@
 
 /* Button Variants */
 .btn-primary {
-    background: var(--gradient-primary);
+    background: linear-gradient(135deg, var(--brand-vibrant-red) 0%, var(--red-700) 100%);
+    background-color: var(--brand-vibrant-red);
     color: var(--color-white);
     box-shadow: var(--shadow-sm);
-}
-
-/* Dark mode button adjustments */
-@media (prefers-color-scheme: dark) {
-    .btn-primary {
-        background: var(--gradient-cool-ocean);
-    }
 }
 
 .btn-primary:hover:not(:disabled) {
