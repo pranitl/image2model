@@ -3,13 +3,13 @@
 ## Color Values
 
 ```css
-/* Primary Colors */
---dark-charcoal: #3A424A;
---vibrant-red: #E74C3C;
---sky-blue: #3498DB;
---bright-cyan: #5DADE2;
---sunset-orange: #E67E22;
---golden-yellow: #F39C12;
+/* Primary Colors - Blue Theme */
+--primary: #5DADE2;          /* Bright Cyan - Main brand color */
+--secondary: #3498DB;        /* Sky Blue - Secondary color */
+--dark-charcoal: #3A424A;    /* Text and UI elements */
+--vibrant-red: #E74C3C;      /* Errors and alerts only */
+--sunset-orange: #E67E22;    /* Small accents only */
+--golden-yellow: #F39C12;    /* Small accents only */
 
 /* Neutral Colors */
 --white: #FFFFFF;
@@ -38,13 +38,16 @@
 ## Gradients
 
 ```css
-/* Warm Sunset */
-background: linear-gradient(135deg, #F39C12 0%, #E74C3C 100%);
+/* Blue Hero - Primary gradient */
+background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
 
-/* Cool Ocean */
+/* Blue Medium - Icon/feature gradient */
+background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
+
+/* Cool Ocean - Secondary */
 background: linear-gradient(180deg, #5DADE2 0%, #3498DB 100%);
 
-/* Mountain Mist */
+/* Mountain Mist - Neutral */
 background: linear-gradient(45deg, #ECF0F1 0%, #BDC3C7 100%);
 ```
 
@@ -148,12 +151,12 @@ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica N
 }
 
 .btn-primary {
-  background: #E74C3C;
-  color: #FFFFFF;
+  background: #5DADE2;  /* Bright Cyan */
+  color: #1a2332;      /* Dark text for contrast */
 }
 
 .btn-secondary {
-  background: #3498DB;
+  background: #34495e;  /* Dark secondary */
   color: #FFFFFF;
 }
 
@@ -248,8 +251,8 @@ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica N
 
 ### Gradient Text
 ```css
-.gradient-text {
-  background: linear-gradient(135deg, #F39C12 0%, #E74C3C 100%);
+.gradient-text-blue {
+  background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

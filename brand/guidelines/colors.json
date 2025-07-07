@@ -39,27 +39,32 @@
       "error": "#E74C3C",
       "info": "#3498DB"
     },
-    "darkMode": {
-      "backgrounds": {
-        "primary": "#1a1f24",
-        "secondary": "#141719",
-        "tertiary": "#0f1113"
+    "themeColors": {
+      "hero": {
+        "backgroundStart": "#1a2332",
+        "backgroundEnd": "#2c3e50",
+        "text": "#FFFFFF"
       },
-      "text": {
-        "primary": "#ECF0F1",
-        "secondary": "#BDC3C7",
-        "muted": "#95A5A6"
+      "buttons": {
+        "primaryBg": "#5DADE2",
+        "primaryText": "#1a2332",
+        "primaryHover": "#3498DB",
+        "secondaryBg": "#34495e",
+        "secondaryText": "#FFFFFF",
+        "secondaryHover": "#2c3e50"
       },
-      "accents": {
-        "primary": "#5DADE2",
-        "secondary": "#3498DB",
-        "hover": "#85C1E9",
-        "active": "#2E86C1"
+      "features": {
+        "cardBg": "#FFFFFF",
+        "cardBorder": "#e1e8ed",
+        "cardHoverBorder": "#5DADE2",
+        "iconGradientStart": "#5DADE2",
+        "iconGradientEnd": "#3498DB"
       },
-      "borders": {
-        "default": "rgba(255, 255, 255, 0.1)",
-        "light": "rgba(255, 255, 255, 0.15)",
-        "dark": "rgba(255, 255, 255, 0.05)"
+      "sections": {
+        "lightBg": "#f8f9fa",
+        "darkBg": "#1a2332",
+        "text": "#2c3e50",
+        "textLight": "#FFFFFF"
       }
     }
   }

@@ -6,11 +6,28 @@
 }
 
 .gradient-cool-ocean {
-  background: linear-gradient(180deg, #5DADE2 0%, #3498DB 100%);
+  background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
 }
 
 .gradient-mountain-mist {
   background: linear-gradient(45deg, #ECF0F1 0%, #BDC3C7 100%);
+}
+
+/* Blue Theme Gradients - Primary Design System */
+.gradient-blue-hero {
+  background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
+}
+
+.gradient-blue-medium {
+  background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
+}
+
+.gradient-blue-light {
+  background: linear-gradient(135deg, #85C1E9 0%, #5DADE2 100%);
+}
+
+.gradient-blue-dark {
+  background: linear-gradient(135deg, #2874A6 0%, #1B4F72 100%);
 }
 
 /* Extended Gradient Patterns */

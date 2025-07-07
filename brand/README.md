@@ -33,17 +33,17 @@ brand/
 
 ### Core Elements
 - **Logo**: Geometric, faceted design representing transformation
-- **Colors**: Vibrant palette inspired by the creative process
+- **Colors**: Blue-focused palette emphasizing trust and technology
 - **Typography**: Clean, modern, and accessible
 - **Voice**: Professional yet approachable, clear and empowering
 
-### Primary Colors
-- Dark Charcoal (#3A424A)
-- Vibrant Red (#E74C3C)
-- Sky Blue (#3498DB)
-- Bright Cyan (#5DADE2)
-- Sunset Orange (#E67E22)
-- Golden Yellow (#F39C12)
+### Primary Colors - Blue Theme
+- Bright Cyan (#5DADE2) - Primary brand color
+- Sky Blue (#3498DB) - Secondary color
+- Dark Blue Gradient (#1a2332 to #2c3e50) - Hero backgrounds
+- Dark Charcoal (#3A424A) - Text and UI elements
+- Vibrant Red (#E74C3C) - Errors and alerts only
+- Golden Yellow (#F39C12) - Small accents only
 
 ### Dark Mode Support
 Our brand includes a sophisticated dark mode color palette:

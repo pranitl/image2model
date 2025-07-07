@@ -82,11 +82,11 @@
     --gray-900: #3A424A; /* Dark Charcoal */
     
     /* =================================================================
-       Semantic Color Variables
+       Semantic Color Variables - Blue Theme Primary
        ================================================================= */
-    --color-primary: var(--brand-vibrant-red);
+    --color-primary: var(--brand-bright-cyan);
     --color-secondary: var(--brand-sky-blue);
-    --color-accent: var(--brand-golden-yellow);
+    --color-accent: var(--brand-bright-cyan);
     --color-success: #27AE60;
     --color-warning: var(--brand-golden-yellow);
     --color-error: var(--brand-vibrant-red);
@@ -110,10 +110,10 @@
     --border-color-dark: var(--gray-600);
     
     /* Interactive Elements */
-    --accent-primary: var(--brand-vibrant-red);
+    --accent-primary: var(--brand-bright-cyan);
     --accent-secondary: var(--brand-sky-blue);
-    --accent-hover: var(--red-600);
-    --accent-active: var(--red-700);
+    --accent-hover: var(--blue-600);
+    --accent-active: var(--blue-700);
     
     /* =================================================================
        Dark Mode Color Scheme - Aligned with Brand Guidelines
@@ -158,15 +158,15 @@
     /* =================================================================
        Component-Specific Colors
        ================================================================= */
-    /* Buttons */
-    --btn-primary-bg: var(--brand-vibrant-red);
-    --btn-primary-hover: var(--red-600);
-    --btn-primary-active: var(--red-700);
-    --btn-primary-text: var(--brand-white);
+    /* Buttons - Blue Theme Primary */
+    --btn-primary-bg: var(--brand-bright-cyan);
+    --btn-primary-hover: var(--brand-sky-blue);
+    --btn-primary-active: var(--blue-700);
+    --btn-primary-text: #1a2332;
     
-    --btn-secondary-bg: var(--brand-sky-blue);
-    --btn-secondary-hover: var(--blue-600);
-    --btn-secondary-active: var(--blue-700);
+    --btn-secondary-bg: #34495e;
+    --btn-secondary-hover: #2c3e50;
+    --btn-secondary-active: #1a2332;
     --btn-secondary-text: var(--brand-white);
     
     --btn-accent-bg: var(--brand-golden-yellow);

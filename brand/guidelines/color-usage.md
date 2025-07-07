@@ -1,26 +1,26 @@
 # Color Usage Guidelines
 
-## Primary Colors
+## Primary Colors - Blue Theme
+
+### Bright Cyan (#5DADE2) - PRIMARY
+- **Usage**: Primary buttons, call-to-action elements, main brand accents
+- **Context**: Main brand color for all primary interactions
+- **Avoid**: On light blue backgrounds, small text sizes
+
+### Sky Blue (#3498DB) - SECONDARY
+- **Usage**: Secondary buttons, hover states, gradient combinations
+- **Context**: Support color for depth and variation
+- **Avoid**: On cyan backgrounds without sufficient contrast
 
 ### Dark Charcoal (#3A424A)
-- **Usage**: Primary text, headers, navigation backgrounds
+- **Usage**: Primary text, headers, dark UI elements
 - **Context**: Professional, stable elements that need high contrast
 - **Avoid**: On dark backgrounds, small text sizes
 
 ### Vibrant Red (#E74C3C)
-- **Usage**: Call-to-action buttons, important alerts, accent elements
-- **Context**: High-energy actions, warnings, emphasis
-- **Avoid**: Large background areas, body text
-
-### Sky Blue (#3498DB)
-- **Usage**: Links, informational elements, secondary buttons
-- **Context**: Trust, reliability, interactive elements
-- **Avoid**: On light blue backgrounds
-
-### Bright Cyan (#5DADE2)
-- **Usage**: Highlights, hover states, decorative elements
-- **Context**: Modern, fresh, technological feel
-- **Avoid**: Primary text, low contrast situations
+- **Usage**: Error states, critical alerts only
+- **Context**: Warnings, errors, destructive actions
+- **Avoid**: Primary actions, large areas, main CTAs
 
 ### Sunset Orange (#E67E22)
 - **Usage**: Icons, borders, small accent elements only
@@ -36,11 +36,11 @@
 
 ## Color Combinations
 
-### Recommended Pairings
-1. **High Contrast**: Dark Charcoal (#3A424A) + White (#FFFFFF)
-2. **Energetic**: Vibrant Red (#E74C3C) + Golden Yellow (#F39C12)
+### Recommended Pairings - Blue Theme Primary
+1. **Primary CTA**: Bright Cyan (#5DADE2) + Dark Text (#1a2332)
+2. **Hero Sections**: Dark Blue Gradient (#1a2332 to #2c3e50) + White Text
 3. **Professional**: Sky Blue (#3498DB) + Light Gray (#ECF0F1)
-4. **Modern**: Bright Cyan (#5DADE2) + Dark Charcoal (#3A424A)
+4. **Modern**: Bright Cyan (#5DADE2) + Sky Blue (#3498DB) gradients
 
 ### Avoid These Combinations
 - Red + Orange (too similar, low contrast)
