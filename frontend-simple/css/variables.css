@@ -110,9 +110,9 @@
     --border-color-dark: var(--gray-600);
     
     /* Interactive Elements */
-    --accent-primary: var(--brand-bright-cyan);
-    --accent-secondary: var(--brand-sky-blue);
-    --accent-hover: var(--blue-600);
+    --accent-primary: #3498db;
+    --accent-secondary: #5dade2;
+    --accent-hover: #2874a6;
     --accent-active: var(--blue-700);
     
     /* =================================================================
@@ -140,9 +140,9 @@
     /* =================================================================
        Gradient Presets
        ================================================================= */
-    /* Primary gradients - NO ORANGE/YELLOW BACKGROUNDS */
-    --gradient-primary: linear-gradient(135deg, var(--brand-vibrant-red) 0%, var(--red-700) 100%);
-    --gradient-cool-ocean: linear-gradient(135deg, var(--brand-bright-cyan) 0%, var(--brand-sky-blue) 100%);
+    /* Primary gradients - Blue Theme */
+    --gradient-primary: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    --gradient-cool-ocean: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
     --gradient-mountain-mist: linear-gradient(45deg, var(--brand-light-gray) 0%, var(--brand-silver-gray) 100%);
     --gradient-tech-fusion: linear-gradient(90deg, var(--brand-sky-blue) 0%, var(--brand-bright-cyan) 50%, var(--brand-dark-charcoal) 100%);
     --gradient-subtle: linear-gradient(135deg, var(--brand-sky-blue) 0%, var(--blue-600) 100%);

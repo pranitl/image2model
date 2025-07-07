@@ -44,7 +44,7 @@
    Upload Hero Section
    ================================================================= */
 .upload-hero {
-    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
+    background: var(--gradient-cool-ocean);
     padding: 3rem 0;
     margin-bottom: 3rem;
     position: relative;
@@ -120,7 +120,7 @@
 }
 
 .progress-step.active .progress-step-number {
-    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
     box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
 }
 
