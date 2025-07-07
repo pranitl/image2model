@@ -44,7 +44,7 @@
    Upload Hero Section
    ================================================================= */
 .upload-hero {
-    background: var(--gradient-cool-ocean);
+    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
     padding: 3rem 0;
     margin-bottom: 3rem;
     position: relative;
@@ -120,8 +120,8 @@
 }
 
 .progress-step.active .progress-step-number {
-    background: var(--gradient-warm-sunset);
-    box-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+    background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+    box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
 }
 
 .progress-step.active .progress-step-text {
@@ -178,7 +178,7 @@
 }
 
 .upload-zone.drag-over {
-    border-color: var(--cyan-500);
+    border-color: var(--accent-primary);
     background: var(--bg-accent);
     animation: pulse-glow 1.5s ease-in-out infinite;
 }
@@ -188,7 +188,7 @@
         box-shadow: 0 0 0 0 rgba(66, 153, 225, 0.4);
     }
     50% {
-        box-shadow: 0 0 0 20px rgba(66, 153, 225, 0);
+        box-shadow: 0 0 0 15px rgba(66, 153, 225, 0);
     }
 }
 
@@ -203,6 +203,17 @@
     color: var(--text-muted);
     margin-bottom: var(--spacing-lg);
     transition: all var(--transition-normal);
+    animation: floatSubtle 3s ease-in-out infinite;
+}
+
+/* Custom subtle float animation for upload icon */
+@keyframes floatSubtle {
+    0%, 100% {
+        transform: translateY(0px);
+    }
+    50% {
+        transform: translateY(-8px);
+    }
 }
 
 .upload-instructions {
