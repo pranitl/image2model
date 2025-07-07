@@ -203,17 +203,6 @@
     color: var(--text-muted);
     margin-bottom: var(--spacing-lg);
     transition: all var(--transition-normal);
-    animation: floatSubtle 3s ease-in-out infinite;
-}
-
-/* Custom subtle float animation for upload icon */
-@keyframes floatSubtle {
-    0%, 100% {
-        transform: translateY(0px);
-    }
-    50% {
-        transform: translateY(-8px);
-    }
 }
 
 .upload-instructions {
@@ -237,6 +226,8 @@
     gap: var(--spacing-lg);
     font-size: var(--text-sm);
     color: var(--text-muted);
+    margin-top: var(--spacing-xl);
+    padding: var(--spacing-md) var(--spacing-xl);
 }
 
 .file-info-item {
@@ -616,7 +607,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-bottom: var(--spacing-md);
+    margin: 0 auto var(--spacing-md) auto;
 }
 
 .help-card-icon svg {

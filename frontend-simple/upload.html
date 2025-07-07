@@ -7,6 +7,7 @@
     <title>Upload Images - image2model</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/shared-components.css">
     <link rel="stylesheet" href="css/upload-page.css">
     <script src="js/animations.js" defer></script>
 </head>
@@ -164,15 +165,15 @@
                             <label for="faceLimit" class="face-limit-label">
                                 Face Limit Control
                             </label>
-                            <div class="face-limit-value" id="faceLimitValue">Auto</div>
+                            <div class="face-limit-value" id="faceLimitValue">10,000</div>
                             <input type="range" id="faceLimitRange" class="face-limit-slider" 
                                    min="1000" max="50000" step="1000" value="10000">
-                            <input type="hidden" id="faceLimit" name="faceLimit">
+                            <input type="hidden" id="faceLimit" name="faceLimit" value="10000">
                             <div class="face-limit-presets">
                                 <button type="button" class="preset-btn" data-value="5000">Low</button>
-                                <button type="button" class="preset-btn" data-value="10000">Medium</button>
+                                <button type="button" class="preset-btn active" data-value="10000">Medium</button>
                                 <button type="button" class="preset-btn" data-value="20000">High</button>
-                                <button type="button" class="preset-btn active" data-value="auto">Auto</button>
+                                <button type="button" class="preset-btn" data-value="auto">Auto</button>
                             </div>
                             <p class="face-limit-description">
                                 Controls the level of detail in your 3D model. Higher values create more detailed models but take longer to process.

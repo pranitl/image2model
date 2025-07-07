@@ -108,12 +108,12 @@
     function updatePresetButtons(value) {
         presetBtns.forEach(btn => {
             const btnValue = btn.dataset.value;
+            btn.classList.remove('active');
+            
             if (btnValue === 'auto' && (!value || value === 'auto')) {
                 btn.classList.add('active');
-            } else if (btnValue === value) {
+            } else if (btnValue === String(value)) {
                 btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
             }
         });
     }

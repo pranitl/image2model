@@ -889,13 +889,7 @@ main {
 /* =================================================================
    Footer Styles
    ================================================================= */
-.site-footer {
-    background-color: var(--bg-primary);
-    border-top: 1px solid var(--border-color);
-    padding: 2rem 0;
-    text-align: center;
-    color: var(--text-muted);
-}
+/* Footer styles have been moved to shared-components.css for reusability */
 
 /* =================================================================
    Accessibility and Focus States
