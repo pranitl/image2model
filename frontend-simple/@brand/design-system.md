@@ -9,33 +9,40 @@
 ## Color Palette
 
 ### Theme Overview
-image2model uses a **Blue Theme with Mixed Light/Dark Sections** for optimal contrast and readability.
+image2model uses a **Unified Light Theme with Blue Accents** for consistency and modern aesthetics.
 
-### Primary Brand Colors
-- **gradient-cool-ocean**: `linear-gradient(135deg, #1a2332 0%, #2c3e50 100%)` - Dark hero backgrounds
-- **gradient-primary**: `linear-gradient(135deg, #2c3e50 0%, #34495e 100%)` - CTA sections
+### Primary Colors
+- **Background Primary**: White (#ffffff)
+- **Background Secondary**: Light gray (#f8f9fa)
+- **Background Tertiary**: Lighter gray (#ecf0f1)
+- **Text Primary**: Dark charcoal (#2c3e50)
+- **Text Secondary**: Medium gray (#34495e)
+- **Text Muted**: Light gray (#95a5a6)
+- **Accent Primary**: Sky blue (#3498db)
+- **Accent Secondary**: Light blue (#5dade2)
+
+### Gradient Presets
+- **gradient-cool-ocean**: `linear-gradient(135deg, #1a2332 0%, #2c3e50 100%)` - Hero/CTA backgrounds
+- **gradient-primary**: `linear-gradient(135deg, #2c3e50 0%, #34495e 100%)` - Dark sections
 - **gradient-blue-medium**: `linear-gradient(135deg, #5DADE2 0%, #3498DB 100%)` - Feature icons
-- **gradient-text-blue**: `linear-gradient(135deg, #3498db 0%, #5dade2 100%)` - Accent text on light backgrounds
+- **gradient-blue-light**: `linear-gradient(135deg, #85C1E9 0%, #5DADE2 100%)` - Light accents
 
-### Section Backgrounds
-- **Hero/CTA Sections**: Dark blue gradients (#1a2332 to #2c3e50)
-- **Features Section**: Light gray (#f8f9fa)
-- **How It Works**: Light gray (#ecf0f1)
-- **Examples Section**: Light gray (#f8f9fa)
-- **Cards/Content**: White (#ffffff)
+### Component Colors
+- **Navigation**: Dark blue background (rgba(26, 35, 50, 0.98)) with white text
 - **Body Background**: Light gray (#f8f9fa)
+- **Cards**: White (#ffffff)
+- **Borders**: Light gray (#dee2e6)
 
-### Text Colors
-- **On Dark Backgrounds**: White (#ffffff) for headings, Light gray (#bdc3c7) for secondary
-- **On Light Backgrounds**: Dark charcoal (#2c3e50) for headings, Medium gray (#34495e) for body
-- **Navigation**: White (#ffffff) on dark navbar
-- **Muted Text**: #95a5a6
+### Button Styling
+- **Primary**: Light blue gradient (#5dade2 to #3498db) with white text
+- **Primary Hover**: Darker blue gradient (#3498db to #2874a6)
+- **Secondary**: Light gray (#ecf0f1) with dark text (#2c3e50)
+- **Ghost**: Transparent with gray border
 
-### Button Colors
-- **Primary Button**: Light blue gradient `linear-gradient(135deg, #5dade2 0%, #3498db 100%)`
-- **Primary Hover**: Darker blue gradient `linear-gradient(135deg, #3498db 0%, #2874a6 100%)`
-- **Secondary Button**: Light gray (#ecf0f1) background, dark text (#2c3e50)
-- **Ghost Button**: Transparent with white border (on dark) or gray border (on light)
+### Special Sections
+- **Hero Sections**: Dark gradient background with white text
+- **Feature Cards**: White background with blue gradient icons
+- **Upload Zone**: White background with blue accent elements
 
 ## Typography
 
