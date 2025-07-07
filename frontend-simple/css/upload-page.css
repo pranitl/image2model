@@ -140,7 +140,7 @@
 .upload-zone {
     border: 3px dashed var(--border-color);
     border-radius: var(--radius-xl);
-    padding: var(--spacing-3xl);
+    padding: calc(var(--spacing-3xl) * 1.5);
     text-align: center;
     background: var(--bg-secondary);
     position: relative;
@@ -198,8 +198,8 @@
 }
 
 .upload-icon {
-    width: 80px;
-    height: 80px;
+    width: 64px;
+    height: 64px;
     color: var(--text-muted);
     margin-bottom: var(--spacing-lg);
     transition: all var(--transition-normal);
