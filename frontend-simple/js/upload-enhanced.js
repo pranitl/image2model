@@ -33,6 +33,7 @@
         enhanceUploadZone();
         setupClipboardPaste();
         setupKeyboardShortcuts();
+        setupUploadModuleIntegration();
     }
     
     // Navigation setup
@@ -165,20 +166,6 @@
     
     // Enhanced upload zone
     function enhanceUploadZone() {
-        // Override the original module's file card rendering
-        if (window.UploadModule) {
-            const originalRenderFileCard = window.UploadModule.constructor.prototype.renderFileCard;
-            
-            // Hook into the upload module to use our enhanced gallery
-            const originalAddFiles = window.UploadModule.constructor.prototype.addFiles;
-            if (originalAddFiles) {
-                window.UploadModule.constructor.prototype.addFiles = function(files) {
-                    originalAddFiles.call(this, files);
-                    updateFileGallery();
-                };
-            }
-        }
-        
         // Make entire drop zone clickable
         dropZone.addEventListener('click', (e) => {
             if (e.target === dropZone || e.target.closest('.upload-zone-content')) {
@@ -187,6 +174,32 @@
                 }
             }
         });
+    }
+    
+    // Setup integration with existing upload module
+    function setupUploadModuleIntegration() {
+        // Wait for upload module to be ready
+        const checkInterval = setInterval(() => {
+            if (window.UploadModule) {
+                clearInterval(checkInterval);
+                integrateWithUploadModule();
+            }
+        }, 100);
+    }
+    
+    function integrateWithUploadModule() {
+        // Hide the original file list
+        const originalFileList = document.getElementById('fileList');
+        if (originalFileList) {
+            originalFileList.style.display = 'none';
+        }
+        
+        // Monitor for changes in the upload module's state
+        setInterval(() => {
+            if (window.UploadModule) {
+                updateFileGallery();
+            }
+        }, 500);
     }
     
     // Update file gallery display
@@ -203,6 +216,19 @@
         
         filePreviewSection.style.display = 'block';
         updateFileCount(files.length);
+        
+        // Check if gallery needs updating
+        const currentCards = fileGallery.querySelectorAll('.file-preview-card');
+        if (currentCards.length === files.length) {
+            // Check if all file IDs match
+            let needsUpdate = false;
+            files.forEach((file, index) => {
+                if (!fileGallery.querySelector(`[data-file-id="${file.id}"]`)) {
+                    needsUpdate = true;
+                }
+            });
+            if (!needsUpdate) return;
+        }
         
         // Clear and rebuild gallery
         fileGallery.innerHTML = '';
@@ -452,7 +478,6 @@
     window.removeFileEnhanced = function(fileId) {
         if (window.UploadModule) {
             window.UploadModule.removeFile(fileId);
-            updateFileGallery();
             
             // Show animation
             const card = document.querySelector(`[data-file-id="${fileId}"]`);
@@ -464,17 +489,6 @@
             }
         }
     };
-    
-    // Override original updateUI to use our gallery
-    if (window.UploadModule) {
-        const originalUpdateUI = window.UploadModule.constructor.prototype.updateUI;
-        window.UploadModule.constructor.prototype.updateUI = function() {
-            if (originalUpdateUI) {
-                originalUpdateUI.call(this);
-            }
-            updateFileGallery();
-        };
-    }
     
     // Initialize when DOM is ready
     if (document.readyState === 'loading') {

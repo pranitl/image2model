@@ -735,6 +735,27 @@
 }
 
 /* =================================================================
+   Selection States
+   ================================================================= */
+.file-preview-card.selected {
+    border-color: var(--accent-primary);
+    background: var(--bg-accent);
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+}
+
+.file-preview-card.selected .file-remove-btn {
+    opacity: 1;
+    transform: scale(1);
+}
+
+/* Placeholder for drag and drop */
+.file-preview-card.placeholder {
+    background: transparent;
+    border: 2px dashed var(--accent-primary);
+    opacity: 0.5;
+}
+
+/* =================================================================
    Animations
    ================================================================= */
 @keyframes float {
@@ -749,6 +770,22 @@
     }
     75% {
         transform: translateY(-10px) translateX(20px);
+    }
+}
+
+/* Fade out animation for removed files */
+.animate-fade-out-scale {
+    animation: fadeOutScale 0.3s ease-out forwards;
+}
+
+@keyframes fadeOutScale {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: scale(0.8);
     }
 }
 
