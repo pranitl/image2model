@@ -93,21 +93,21 @@
     --color-info: var(--brand-sky-blue);
     
     /* =================================================================
-       Light Mode Color Scheme
+       Default Color Scheme - Dark Theme with Light Sections
        ================================================================= */
-    --bg-primary: var(--brand-white);
-    --bg-secondary: var(--gray-400);
-    --bg-tertiary: var(--gray-300);
-    --bg-accent: var(--blue-100);
+    --bg-primary: var(--dark-bg-primary);
+    --bg-secondary: var(--dark-bg-secondary);
+    --bg-tertiary: var(--dark-bg-tertiary);
+    --bg-accent: var(--dark-bg-accent);
     
-    --text-primary: var(--gray-900);
-    --text-secondary: var(--gray-700);
-    --text-muted: var(--gray-600);
-    --text-inverse: var(--brand-white);
+    --text-primary: var(--dark-text-primary);
+    --text-secondary: var(--dark-text-secondary);
+    --text-muted: var(--dark-text-muted);
+    --text-inverse: var(--dark-text-inverse);
     
-    --border-color: var(--gray-500);
-    --border-color-light: var(--gray-400);
-    --border-color-dark: var(--gray-600);
+    --border-color: var(--dark-border-color);
+    --border-color-light: var(--dark-border-color-light);
+    --border-color-dark: var(--dark-border-color-dark);
     
     /* Interactive Elements */
     --accent-primary: #3498db;

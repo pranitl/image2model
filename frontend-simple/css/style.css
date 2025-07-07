@@ -96,14 +96,14 @@ small {
 }
 
 .btn-primary {
-    background-color: var(--btn-primary-bg);
-    color: var(--btn-primary-text);
+    background: linear-gradient(135deg, #3498db 0%, #2874a6 100%);
+    color: var(--brand-white);
 }
 
 .btn-primary:hover {
-    background-color: var(--btn-primary-hover);
+    background: linear-gradient(135deg, #5dade2 0%, #3498db 100%);
     transform: translateY(-2px);
-    box-shadow: var(--shadow-red);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.3);
 }
 
 .btn-primary:active {

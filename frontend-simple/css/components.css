@@ -48,7 +48,6 @@
 /* Button Variants */
 .btn-primary {
     background: linear-gradient(135deg, #3498db 0%, #2874a6 100%);
-    background-color: var(--brand-vibrant-red);
     color: var(--brand-white);
     box-shadow: var(--shadow-sm);
 }
