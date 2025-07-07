@@ -49,6 +49,7 @@
     margin-bottom: 3rem;
     position: relative;
     overflow: hidden;
+    color: white;
 }
 
 .upload-hero .geometric-pattern {
@@ -81,7 +82,7 @@
 
 .upload-hero-subtitle {
     font-size: var(--text-lg);
-    color: var(--text-secondary);
+    color: #ecf0f1;
     margin-bottom: var(--spacing-lg);
 }
 
@@ -142,7 +143,7 @@
     border-radius: var(--radius-xl);
     padding: calc(var(--spacing-3xl) * 1.5);
     text-align: center;
-    background: var(--bg-secondary);
+    background: white;
     position: relative;
     overflow: hidden;
     transition: all var(--transition-normal);
@@ -200,7 +201,7 @@
 .upload-icon {
     width: 64px;
     height: 64px;
-    color: var(--text-muted);
+    color: var(--accent-primary);
     margin-bottom: var(--spacing-lg);
     transition: all var(--transition-normal);
 }

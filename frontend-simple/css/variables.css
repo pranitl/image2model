@@ -93,21 +93,21 @@
     --color-info: var(--brand-sky-blue);
     
     /* =================================================================
-       Default Color Scheme - Dark Theme with Light Sections
+       Default Color Scheme - Light Theme
        ================================================================= */
-    --bg-primary: var(--dark-bg-primary);
-    --bg-secondary: var(--dark-bg-secondary);
-    --bg-tertiary: var(--dark-bg-tertiary);
-    --bg-accent: var(--dark-bg-accent);
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #ecf0f1;
+    --bg-accent: #e3f2fd;
     
-    --text-primary: var(--dark-text-primary);
-    --text-secondary: var(--dark-text-secondary);
-    --text-muted: var(--dark-text-muted);
-    --text-inverse: var(--dark-text-inverse);
+    --text-primary: #2c3e50;
+    --text-secondary: #34495e;
+    --text-muted: #95a5a6;
+    --text-inverse: #ffffff;
     
-    --border-color: var(--dark-border-color);
-    --border-color-light: var(--dark-border-color-light);
-    --border-color-dark: var(--dark-border-color-dark);
+    --border-color: #dee2e6;
+    --border-color-light: #e9ecef;
+    --border-color-dark: #ced4da;
     
     /* Interactive Elements */
     --accent-primary: #3498db;
@@ -115,27 +115,6 @@
     --accent-hover: #2874a6;
     --accent-active: var(--blue-700);
     
-    /* =================================================================
-       Dark Mode Color Scheme - Aligned with Brand Guidelines
-       ================================================================= */
-    --dark-bg-primary: #1a1f24; /* Deep Charcoal - Much darker, modern dark mode */
-    --dark-bg-secondary: #141719; /* Darker variant for depth */
-    --dark-bg-tertiary: #0f1113; /* Darkest variant for maximum contrast */
-    --dark-bg-accent: rgba(93, 173, 226, 0.1); /* Bright Cyan with low opacity */
-    
-    --dark-text-primary: var(--gray-300); /* #ECF0F1 - High contrast */
-    --dark-text-secondary: var(--gray-400); /* Slightly dimmer */
-    --dark-text-muted: var(--gray-500); /* For less important text */
-    --dark-text-inverse: var(--brand-dark-charcoal);
-    
-    --dark-border-color: rgba(255, 255, 255, 0.1);
-    --dark-border-color-light: rgba(255, 255, 255, 0.15);
-    --dark-border-color-dark: rgba(255, 255, 255, 0.05);
-    
-    --dark-accent-primary: var(--brand-bright-cyan); /* #5DADE2 - Better contrast in dark */
-    --dark-accent-secondary: var(--brand-sky-blue); /* #3498DB */
-    --dark-accent-hover: var(--cyan-400);
-    --dark-accent-active: var(--cyan-600);
     
     /* =================================================================
        Gradient Presets
@@ -143,9 +122,9 @@
     /* Primary gradients - Blue Theme */
     --gradient-primary: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
     --gradient-cool-ocean: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
-    --gradient-mountain-mist: linear-gradient(45deg, var(--brand-light-gray) 0%, var(--brand-silver-gray) 100%);
-    --gradient-tech-fusion: linear-gradient(90deg, var(--brand-sky-blue) 0%, var(--brand-bright-cyan) 50%, var(--brand-dark-charcoal) 100%);
-    --gradient-subtle: linear-gradient(135deg, var(--brand-sky-blue) 0%, var(--blue-600) 100%);
+    --gradient-blue-medium: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
+    --gradient-blue-light: linear-gradient(135deg, #85C1E9 0%, #5DADE2 100%);
+    --gradient-subtle: linear-gradient(135deg, #3498db 0%, #2874a6 100%);
     
     /* DEPRECATED - These now point to non-orange alternatives */
     --gradient-warm-sunset: var(--gradient-primary); /* Now uses red gradient instead of yellow-red */

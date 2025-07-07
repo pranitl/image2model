@@ -8,24 +8,34 @@
 
 ## Color Palette
 
-### Primary Colors
-- **Blue Gradient (gradient-cool-ocean)**: Primary brand gradient
-- **Blue Medium (gradient-blue-medium)**: Icon backgrounds
-- **Blue Text (gradient-text-blue)**: Gradient text effects
+### Theme Overview
+image2model uses a **Blue Theme with Mixed Light/Dark Sections** for optimal contrast and readability.
 
-### Semantic Colors
-- **Background Primary**: Dark background (#0a0a0a or similar)
-- **Background Secondary**: Slightly lighter dark
-- **Background Tertiary**: Card backgrounds
-- **Text Primary**: White or light gray
-- **Text Secondary**: #5a6c7d (muted gray-blue)
-- **Text Muted**: Even lighter gray
+### Primary Brand Colors
+- **gradient-cool-ocean**: `linear-gradient(135deg, #1a2332 0%, #2c3e50 100%)` - Dark hero backgrounds
+- **gradient-primary**: `linear-gradient(135deg, #2c3e50 0%, #34495e 100%)` - CTA sections
+- **gradient-blue-medium**: `linear-gradient(135deg, #5DADE2 0%, #3498DB 100%)` - Feature icons
+- **gradient-text-blue**: `linear-gradient(135deg, #3498db 0%, #5dade2 100%)` - Accent text on light backgrounds
 
-### Accent Colors
-- **Primary Button**: Blue gradient with hover effects
-- **Secondary Button**: Ghost/outline style
-- **Success**: Green tones
-- **Error**: Red tones
+### Section Backgrounds
+- **Hero/CTA Sections**: Dark blue gradients (#1a2332 to #2c3e50)
+- **Features Section**: Light gray (#f8f9fa)
+- **How It Works**: Light gray (#ecf0f1)
+- **Examples Section**: Light gray (#f8f9fa)
+- **Cards/Content**: White (#ffffff)
+- **Body Background**: Light gray (#f8f9fa)
+
+### Text Colors
+- **On Dark Backgrounds**: White (#ffffff) for headings, Light gray (#bdc3c7) for secondary
+- **On Light Backgrounds**: Dark charcoal (#2c3e50) for headings, Medium gray (#34495e) for body
+- **Navigation**: White (#ffffff) on dark navbar
+- **Muted Text**: #95a5a6
+
+### Button Colors
+- **Primary Button**: Light blue gradient `linear-gradient(135deg, #5dade2 0%, #3498db 100%)`
+- **Primary Hover**: Darker blue gradient `linear-gradient(135deg, #3498db 0%, #2874a6 100%)`
+- **Secondary Button**: Light gray (#ecf0f1) background, dark text (#2c3e50)
+- **Ghost Button**: Transparent with white border (on dark) or gray border (on light)
 
 ## Typography
 
@@ -85,23 +95,27 @@
 ## Component Patterns
 
 ### Buttons
-- **Primary**: Blue gradient background, white text, hover lift effect
-- **Secondary**: Ghost style with border
+- **Primary**: Light blue gradient (#5dade2 to #3498db), white text, hover lift effect
+- **Secondary**: Light gray (#ecf0f1) background, dark text (#2c3e50)
+- **Ghost**: Transparent with border (white on dark, gray on light)
 - **Size variants**: btn-sm, btn (default), btn-lg
-- Icon support with proper spacing
+- **Hover effects**: Darker gradient + translateY(-2px) + shadow
+- **Icon support**: Gap spacing for icons in buttons
 
 ### Cards
-- Background: var(--bg-tertiary)
+- Background: White (#ffffff) on light sections
 - Border radius: var(--radius-lg or --radius-md)
-- Hover effects: lift animation, border highlight
-- Consistent padding
+- Hover effects: translateY(-5px) + enhanced shadow
+- Consistent padding: var(--spacing-lg)
+- Feature cards: White background with colored gradient icons
 
 ### Navigation
-- Fixed navbar with blur backdrop
-- Logo + text branding
-- Horizontal menu items
+- Sticky navbar with dark blue background (rgba(26, 35, 50, 0.98))
+- Backdrop blur effect (10px)
+- Logo (48x48) + white text branding
+- White navigation links (#ecf0f1) with light blue hover (#5dade2)
 - Mobile hamburger menu
-- Primary CTA button in nav
+- Primary CTA button in nav (blue gradient)
 
 ## Animation System
 
