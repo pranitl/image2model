@@ -3,24 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Results - AI 3D Model Generator</title>
+    <meta name="description" content="Download your AI-generated 3D models.">
+    <title>Results - image2model</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/results-page.css">
     <script src="js/animations.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <h1 class="animate-fade-in">Task Complete</h1>
-        <p class="animate-fade-in-up delay-200">The 3D models have been generated and are ready for download.</p>
-        
-        <button id="downloadAllBtn" class="btn btn-primary hover-lift animate-fade-in-scale delay-400">Download All</button>
-        
-        <div id="modelList" class="model-list animate-fade-in delay-600">
-            <!-- Model download cards will be inserted here -->
+    <!-- Navigation Bar -->
+    <nav class="navbar animate-fade-in">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <img src="assets/logo-cropped.png" alt="image2model" class="nav-logo" width="48" height="48" loading="eager">
+                <span class="brand-text">image2model</span>
+            </a>
+            <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                <span class="navbar-toggle-bar"></span>
+                <span class="navbar-toggle-bar"></span>
+                <span class="navbar-toggle-bar"></span>
+            </button>
+            <ul class="navbar-menu" id="navbar-menu">
+                <li><a href="index.html#features" class="navbar-link">Features</a></li>
+                <li><a href="index.html#how-it-works" class="navbar-link">How It Works</a></li>
+                <li><a href="index.html#examples" class="navbar-link">Examples</a></li>
+                <li><a href="index.html#pricing" class="navbar-link">Pricing</a></li>
+            </ul>
         </div>
+    </nav>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="container">
+        <nav class="breadcrumb animate-fade-in" aria-label="Breadcrumb">
+            <div class="breadcrumb-item">
+                <a href="index.html">Home</a>
+                <span class="breadcrumb-separator">→</span>
+            </div>
+            <div class="breadcrumb-item">
+                <a href="upload.html">Upload</a>
+                <span class="breadcrumb-separator">→</span>
+            </div>
+            <div class="breadcrumb-item">
+                <a href="processing.html">Processing</a>
+                <span class="breadcrumb-separator">→</span>
+            </div>
+            <div class="breadcrumb-item">
+                <span class="breadcrumb-current">Results</span>
+            </div>
+        </nav>
     </div>
+
+    <!-- Hero Section -->
+    <section class="results-hero animate-fade-in">
+        <div class="geometric-pattern"></div>
+        <div class="container">
+            <div class="results-hero-content">
+                <div class="success-icon animate-bounce-in">
+                    <svg width="80" height="80" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                    </svg>
+                </div>
+                <h1 class="animate-fade-in-up">Success!</h1>
+                <p class="results-hero-subtitle animate-fade-in-up delay-200">
+                    Your 3D models are ready for download
+                </p>
+                <div class="progress-indicator animate-fade-in-scale delay-400">
+                    <div class="progress-step complete">
+                        <span class="progress-step-number">✓</span>
+                        <span class="progress-step-text">Upload</span>
+                    </div>
+                    <div class="progress-step complete">
+                        <span class="progress-step-number">✓</span>
+                        <span class="progress-step-text">Process</span>
+                    </div>
+                    <div class="progress-step active">
+                        <span class="progress-step-number">3</span>
+                        <span class="progress-step-text">Download</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <!-- Summary Section -->
+            <section class="summary-section animate-fade-in delay-600">
+                <div class="summary-card card">
+                    <div class="summary-item">
+                        <div class="summary-icon">
+                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-1a1 1 0 100-2h1a4 4 0 014 4v6a4 4 0 01-4 4H6a4 4 0 01-4-4V7a4 4 0 014-4z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="summary-label">Models Generated</span>
+                            <span id="modelCount" class="summary-value">0</span>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-icon">
+                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="summary-label">Processing Time</span>
+                            <span id="processingTime" class="summary-value">-</span>
+                        </div>
+                    </div>
+                    <div class="summary-item">
+                        <div class="summary-icon">
+                            <svg width="24" height="24" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10.707 2.293a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 5.414V13a1 1 0 102 0V5.414l1.293 1.293a1 1 0 001.414-1.414l-3-3z"/>
+                                <path d="M3 11a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <span class="summary-label">Total Size</span>
+                            <span id="totalSize" class="summary-value">-</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Download Actions -->
+            <section class="download-actions animate-fade-in delay-800">
+                <button id="downloadAllBtn" class="btn btn-primary btn-lg hover-lift">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M2 9.5A3.5 3.5 0 005.5 13H9v2.586l-1.293-1.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 15.586V13h2.5a4.5 4.5 0 10-.616-8.958 4.002 4.002 0 10-7.753 1.977A3.5 3.5 0 002 9.5zm9 3.5H9V8a1 1 0 012 0v5z" clip-rule="evenodd"/>
+                    </svg>
+                    <span>Download All Models</span>
+                    <span class="badge" id="downloadAllSize">-</span>
+                </button>
+                <div class="download-formats">
+                    <span class="format-label">Available formats:</span>
+                    <span class="format-badge">GLB</span>
+                    <span class="format-badge">OBJ</span>
+                    <span class="format-badge">STL</span>
+                </div>
+            </section>
+
+            <!-- Models Grid -->
+            <section class="models-grid-section animate-fade-in delay-1000">
+                <h2>Your 3D Models</h2>
+                <div id="modelList" class="model-grid">
+                    <!-- Model download cards will be inserted here -->
+                </div>
+            </section>
+
+            <!-- What's Next Section -->
+            <section class="whats-next-section animate-fade-in delay-1200">
+                <h2>What's Next?</h2>
+                <div class="next-steps-grid">
+                    <div class="next-step-card card hover-lift">
+                        <div class="step-icon">
+                            <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <h3>View in 3D</h3>
+                        <p>Preview your models using our online 3D viewer or download for use in your favorite 3D software.</p>
+                        <a href="#" class="btn btn-ghost btn-sm">Open 3D Viewer</a>
+                    </div>
+                    <div class="next-step-card card hover-lift">
+                        <div class="step-icon">
+                            <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V7.414A2 2 0 0015.414 6L12 2.586A2 2 0 0010.586 2H6zm5 6a1 1 0 10-2 0v3.586l-1.293-1.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V8z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <h3>Import Guide</h3>
+                        <p>Learn how to import your 3D models into popular software like Blender, Unity, or Unreal Engine.</p>
+                        <a href="#" class="btn btn-ghost btn-sm">View Guide</a>
+                    </div>
+                    <div class="next-step-card card hover-lift">
+                        <div class="step-icon">
+                            <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z"/>
+                                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z"/>
+                            </svg>
+                        </div>
+                        <h3>Process More</h3>
+                        <p>Ready to create more 3D models? Upload new images and continue your creative journey.</p>
+                        <a href="upload.html" class="btn btn-ghost btn-sm">Upload More Images</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="assets/logo-cropped.png" alt="image2model" width="64" height="64" class="footer-logo">
+                    <p class="footer-tagline">Making 3D content creation accessible to everyone!</p>
+                </div>
+                <div class="footer-links">
+                    <ul class="footer-list">
+                        <li><a href="index.html#features">Features</a></li>
+                        <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="index.html#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-text">&copy; 2025 image2model. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
     
     <script src="js/api.js?v=2"></script>
     <script src="js/results.js?v=2"></script>
+    <script src="js/results-enhanced.js"></script>
 </body>
 </html>

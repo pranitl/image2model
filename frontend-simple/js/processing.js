@@ -47,6 +47,15 @@ const ProcessingModule = (function() {
         // Start elapsed timer
         startElapsedTimer();
         
+        // Setup mobile navigation
+        setupMobileNavigation();
+        
+        // Setup tips carousel
+        setupTipsCarousel();
+        
+        // Setup view toggle
+        setupViewToggle();
+        
         // Establish SSE connection
         connectSSE();
     }
@@ -568,6 +577,67 @@ const ProcessingModule = (function() {
         if (state.elapsedInterval) {
             clearInterval(state.elapsedInterval);
         }
+    }
+    
+    // Setup mobile navigation
+    function setupMobileNavigation() {
+        const navbarToggle = document.getElementById('navbar-toggle');
+        const navbarMenu = document.getElementById('navbar-menu');
+        
+        if (navbarToggle && navbarMenu) {
+            navbarToggle.addEventListener('click', () => {
+                navbarMenu.classList.toggle('active');
+                navbarToggle.classList.toggle('active');
+            });
+            
+            // Close menu when clicking a link
+            const navLinks = navbarMenu.querySelectorAll('.navbar-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    navbarMenu.classList.remove('active');
+                    navbarToggle.classList.remove('active');
+                });
+            });
+        }
+    }
+    
+    // Setup tips carousel
+    function setupTipsCarousel() {
+        const tips = document.querySelectorAll('.tip-card');
+        if (tips.length === 0) return;
+        
+        let currentTip = 0;
+        
+        setInterval(() => {
+            tips[currentTip].classList.remove('active');
+            currentTip = (currentTip + 1) % tips.length;
+            tips[currentTip].classList.add('active');
+        }, 5000); // Change tip every 5 seconds
+    }
+    
+    // Setup view toggle for file grid
+    function setupViewToggle() {
+        const viewBtns = document.querySelectorAll('.view-btn');
+        const fileGrid = document.getElementById('fileGrid');
+        
+        viewBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const view = btn.dataset.view;
+                
+                // Update button states
+                viewBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // Update grid class
+                if (fileGrid) {
+                    if (view === 'list') {
+                        fileGrid.classList.add('list-view');
+                    } else {
+                        fileGrid.classList.remove('list-view');
+                    }
+                }
+            });
+        });
     }
     
     // Public API

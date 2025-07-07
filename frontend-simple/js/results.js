@@ -1,16 +1,73 @@
-// Results page functionality
-document.addEventListener('DOMContentLoaded', function() {
-    // Get job ID from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const jobId = urlParams.get('jobId');
+// Enhanced Results Module
+const ResultsModule = (function() {
+    'use strict';
     
-    if (!jobId) {
-        showError('No job ID provided. Please return to the upload page.');
-        return;
+    // State
+    const state = {
+        jobId: null,
+        files: [],
+        totalSize: 0,
+        downloadProgress: 0,
+        startTime: null,
+        processingTime: null
+    };
+    
+    // DOM elements
+    let elements = {};
+    
+    // Initialize
+    function init() {
+        // Get job ID from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        state.jobId = urlParams.get('jobId');
+        
+        if (!state.jobId) {
+            showError('No job ID provided. Please return to the upload page.');
+            return;
+        }
+        
+        // Cache DOM elements
+        cacheElements();
+        
+        // Setup event listeners
+        setupEventListeners();
+        
+        // Setup mobile navigation
+        setupMobileNavigation();
+        
+        // Load results
+        loadResults();
     }
     
-    // Initialize the page
-    loadResults();
+    function cacheElements() {
+        elements = {
+            modelList: document.getElementById('modelList'),
+            downloadAllBtn: document.getElementById('downloadAllBtn'),
+            modelCount: document.getElementById('modelCount'),
+            processingTime: document.getElementById('processingTime'),
+            totalSize: document.getElementById('totalSize'),
+            downloadAllSize: document.getElementById('downloadAllSize')
+        };
+    }
+    
+    function setupEventListeners() {
+        // Download all button
+        if (elements.downloadAllBtn) {
+            elements.downloadAllBtn.addEventListener('click', handleDownloadAll);
+        }
+    }
+    
+    function setupMobileNavigation() {
+        const navbarToggle = document.getElementById('navbar-toggle');
+        const navbarMenu = document.getElementById('navbar-menu');
+        
+        if (navbarToggle && navbarMenu) {
+            navbarToggle.addEventListener('click', () => {
+                navbarMenu.classList.toggle('active');
+                navbarToggle.classList.toggle('active');
+            });
+        }
+    }
     
     async function loadResults() {
         const modelList = document.getElementById('modelList');
