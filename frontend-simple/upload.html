@@ -3,43 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Images - AI 3D Model Generator</title>
+    <meta name="description" content="Upload your images to transform them into professional 3D models using AI technology.">
+    <title>Upload Images - image2model</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/upload-page.css">
     <script src="js/animations.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <h1 class="animate-fade-in">Upload Images</h1>
-        <p class="animate-fade-in-up delay-200">Choose your images to generate a 3D model</p>
-        
-        <form id="uploadForm" enctype="multipart/form-data" class="animate-fade-in delay-400">
-            <div id="dropZone" class="drop-zone hover-scale">
-                <svg class="upload-icon animate-float" viewBox="0 0 24 24" width="48" height="48">
-                    <path d="M12 2L12 16M12 2L8 6M12 2L16 6M4 17H20" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-                </svg>
-                <p>Drag & drop files here,</p>
-                <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png" hidden>
-                <button type="button" id="browseBtn" class="btn btn-secondary hover-lift">
-                    Browse Files
-                </button>
-            </div>
-            
-            <div id="fileList" class="file-list"></div>
-            
-            <div class="config-section animate-fade-in delay-600">
-                <label for="faceLimit">Face Limit (optional):</label>
-                <input type="number" id="faceLimit" name="faceLimit" placeholder="Auto" class="input">
-                <small>Controls the level of detail. Leave blank for auto.</small>
-            </div>
-            
-            <button type="submit" id="generateBtn" class="btn btn-primary hover-lift animate-fade-in delay-800" disabled>
-                Generate 3D Model
+    <!-- Navigation Bar -->
+    <nav class="navbar animate-fade-in">
+        <div class="navbar-container">
+            <a href="/" class="navbar-brand">
+                <img src="assets/logo-cropped.png" alt="image2model" class="nav-logo" width="48" height="48" loading="eager">
+                <span class="brand-text">image2model</span>
+            </a>
+            <button class="navbar-toggle" id="navbar-toggle" aria-label="Toggle navigation">
+                <span class="navbar-toggle-bar"></span>
+                <span class="navbar-toggle-bar"></span>
+                <span class="navbar-toggle-bar"></span>
             </button>
-        </form>
+            <ul class="navbar-menu" id="navbar-menu">
+                <li><a href="index.html#features" class="navbar-link">Features</a></li>
+                <li><a href="index.html#how-it-works" class="navbar-link">How It Works</a></li>
+                <li><a href="index.html#examples" class="navbar-link">Examples</a></li>
+                <li><a href="index.html#pricing" class="navbar-link">Pricing</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb Navigation -->
+    <div class="container">
+        <nav class="breadcrumb animate-fade-in" aria-label="Breadcrumb">
+            <div class="breadcrumb-item">
+                <a href="index.html">Home</a>
+                <span class="breadcrumb-separator">→</span>
+            </div>
+            <div class="breadcrumb-item">
+                <span class="breadcrumb-current">Upload</span>
+                <span class="breadcrumb-separator">→</span>
+            </div>
+            <div class="breadcrumb-item">
+                <span>Processing</span>
+                <span class="breadcrumb-separator">→</span>
+            </div>
+            <div class="breadcrumb-item">
+                <span>Results</span>
+            </div>
+        </nav>
     </div>
+
+    <!-- Hero Section -->
+    <section class="upload-hero animate-fade-in">
+        <div class="geometric-pattern"></div>
+        <div class="container">
+            <div class="upload-hero-content">
+                <h1 class="animate-fade-in-up">Upload Your Images</h1>
+                <p class="upload-hero-subtitle animate-fade-in-up delay-200">
+                    Transform photos into professional 3D models in minutes
+                </p>
+                <div class="progress-indicator animate-fade-in-scale delay-400">
+                    <div class="progress-step active">
+                        <span class="progress-step-number">1</span>
+                        <span class="progress-step-text">Upload</span>
+                    </div>
+                    <div class="progress-step">
+                        <span class="progress-step-number">2</span>
+                        <span class="progress-step-text">Process</span>
+                    </div>
+                    <div class="progress-step">
+                        <span class="progress-step-number">3</span>
+                        <span class="progress-step-text">Download</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            <form id="uploadForm" enctype="multipart/form-data">
+                <!-- Enhanced Upload Zone -->
+                <div class="upload-zone-wrapper animate-fade-in-up delay-400">
+                    <div id="dropZone" class="upload-zone hover-lift">
+                        <div class="upload-zone-content">
+                            <svg class="upload-icon animate-float" viewBox="0 0 24 24" fill="none">
+                                <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3-3m0 0l3 3m-3-3v6" 
+                                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            </svg>
+                            <div class="upload-instructions">
+                                <h3>Drag & drop your images here</h3>
+                                <p>or click to browse</p>
+                            </div>
+                            <input type="file" id="fileInput" multiple accept=".jpg,.jpeg,.png" hidden>
+                            <button type="button" id="browseBtn" class="btn btn-secondary hover-lift">
+                                Browse Files
+                            </button>
+                            <div class="file-info">
+                                <div class="file-info-item">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Supports JPG, PNG</span>
+                                </div>
+                                <div class="file-info-item">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Max 10MB per file</span>
+                                </div>
+                                <div class="file-info-item">
+                                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                                        <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
+                                        <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-1a1 1 0 100-2h1a4 4 0 014 4v6a4 4 0 01-4 4H6a4 4 0 01-4-4V7a4 4 0 014-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                    <span>Up to 25 images</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- File Preview Gallery -->
+                <div id="filePreviewSection" class="file-preview-section" style="display: none;">
+                    <div class="file-preview-header animate-fade-in">
+                        <div class="file-count">
+                            <span id="fileCount">0</span> images selected
+                        </div>
+                        <div class="file-actions">
+                            <button type="button" id="clearAllBtn" class="btn btn-ghost btn-sm">
+                                Clear All
+                            </button>
+                            <button type="button" id="addMoreBtn" class="btn btn-secondary btn-sm">
+                                Add More Images
+                            </button>
+                        </div>
+                    </div>
+                    <div id="fileGallery" class="file-gallery animate-fade-in-up">
+                        <!-- File preview cards will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Advanced Options Panel -->
+                <div class="advanced-options animate-fade-in delay-600">
+                    <button type="button" class="options-toggle" id="optionsToggle">
+                        <div class="options-toggle-text">
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+                            </svg>
+                            <span>Advanced Settings</span>
+                        </div>
+                        <svg class="options-toggle-icon" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/>
+                        </svg>
+                    </button>
+                    
+                    <div class="options-content" id="optionsContent">
+                        <div class="face-limit-control">
+                            <label for="faceLimit" class="face-limit-label">
+                                Face Limit Control
+                            </label>
+                            <div class="face-limit-value" id="faceLimitValue">Auto</div>
+                            <input type="range" id="faceLimitRange" class="face-limit-slider" 
+                                   min="1000" max="50000" step="1000" value="10000">
+                            <input type="hidden" id="faceLimit" name="faceLimit">
+                            <div class="face-limit-presets">
+                                <button type="button" class="preset-btn" data-value="5000">Low</button>
+                                <button type="button" class="preset-btn" data-value="10000">Medium</button>
+                                <button type="button" class="preset-btn" data-value="20000">High</button>
+                                <button type="button" class="preset-btn active" data-value="auto">Auto</button>
+                            </div>
+                            <p class="face-limit-description">
+                                Controls the level of detail in your 3D model. Higher values create more detailed models but take longer to process.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Section -->
+                <div class="upload-actions animate-fade-in delay-800">
+                    <div class="upload-actions-primary">
+                        <button type="submit" id="generateBtn" class="btn btn-primary btn-lg hover-lift" disabled>
+                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 6h12v10H4V6z" clip-rule="evenodd"/>
+                            </svg>
+                            Generate 3D Models
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Help Section -->
+            <section class="help-section animate-fade-in delay-1000">
+                <div class="help-header">
+                    <h2 class="help-title">Tips for Best Results</h2>
+                </div>
+                <div class="help-grid">
+                    <div class="help-card hover-lift">
+                        <div class="help-card-icon">
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <h3 class="help-card-title">Use Well-Lit Photos</h3>
+                        <p class="help-card-text">
+                            Good lighting helps our AI better understand the shape and details of your subject.
+                        </p>
+                    </div>
+                    <div class="help-card hover-lift">
+                        <div class="help-card-icon">
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M10 12a2 2 0 100-4 2 2 0 000 4z"/>
+                                <path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <h3 class="help-card-title">Avoid Blurry Images</h3>
+                        <p class="help-card-text">
+                            Sharp, focused images produce cleaner 3D models with better defined edges.
+                        </p>
+                    </div>
+                    <div class="help-card hover-lift">
+                        <div class="help-card-icon">
+                            <svg fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/>
+                            </svg>
+                        </div>
+                        <h3 class="help-card-title">Multiple Angles</h3>
+                        <p class="help-card-text">
+                            Upload photos from different angles for more complete 3D reconstruction.
+                        </p>
+                    </div>
+                </div>
+                <div class="example-images">
+                    <h3 class="example-images-title">Example Images That Work Well</h3>
+                    <div class="example-images-grid">
+                        <img src="assets/example-good-1.jpg" alt="Good example 1" class="example-image hover-scale" loading="lazy">
+                        <img src="assets/example-good-2.jpg" alt="Good example 2" class="example-image hover-scale" loading="lazy">
+                        <img src="assets/example-good-3.jpg" alt="Good example 3" class="example-image hover-scale" loading="lazy">
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="assets/logo-cropped.png" alt="image2model" width="64" height="64" class="footer-logo">
+                    <p class="footer-tagline">Making 3D content creation accessible to everyone!</p>
+                </div>
+                <div class="footer-links">
+                    <ul class="footer-list">
+                        <li><a href="index.html#features">Features</a></li>
+                        <li><a href="index.html#pricing">Pricing</a></li>
+                        <li><a href="index.html#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p class="footer-text">&copy; 2025 image2model. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
     
     <script src="js/api.js"></script>
     <script src="js/upload.js"></script>
+    <script src="js/upload-enhanced.js"></script>
 </body>
 </html>
