@@ -70,6 +70,15 @@ image2model uses a **Unified Light Theme with Blue Accents** for consistency and
 
 ## Layout Patterns
 
+### Page Structure Pattern
+**IMPORTANT**: All pages follow a consistent visual hierarchy pattern:
+1. **Body Background**: Light gray (#f8f9fa) from `var(--bg-secondary)`
+2. **Section Backgrounds**: Main content sections also use #f8f9fa for consistency
+3. **Content Containers**: White (#ffffff) cards/containers inside gray sections
+4. **Visual Separation**: Achieved through white containers on gray backgrounds, not through alternating section colors
+
+This creates a clean, unified look where content "floats" on the page background.
+
 ### Hero Section
 - Gradient background (gradient-cool-ocean)
 - Geometric pattern overlay
@@ -80,18 +89,28 @@ image2model uses a **Unified Light Theme with Blue Accents** for consistency and
 - Primary CTA button with icon
 - Key stats display (processing time, batch ready)
 
+### Content Sections
+- **Background**: Always #f8f9fa (matching body background)
+- **Padding**: Typically `padding: 3rem 0` or `5rem 0`
+- **Container**: Max-width container for content alignment
+- **Cards/Content**: White backgrounds with subtle shadows
+- **Example sections**: features-section, examples-section, upload-section, help-tips-section
+
 ### Feature Cards
 - Grid layout (2 columns on desktop, 1 on mobile)
+- White background on gray section
 - Card hover effects with lift animation
 - Icon with gradient background
 - Title and description
 - Consistent padding and border radius
+- Subtle box-shadow for depth
 
 ### Examples Section
 - Gallery layout (side-by-side comparison)
 - Before/After images with labels
 - Card-based design with hover effects
 - "Try with this image" secondary buttons
+- White cards on gray section background
 
 ### Footer
 - Horizontal navigation (Features, Pricing, Contact)
@@ -150,6 +169,32 @@ image2model uses a **Unified Light Theme with Blue Accents** for consistency and
 - Tablet: max-width: 768px
 - Desktop: 769px and up
 
+## UI Development Patterns
+
+### Page-Specific Overrides
+When certain pages need specific styling adjustments:
+
+1. **Inline Style Blocks**: For critical overrides that ensure visual consistency
+   - Place in `<style>` tags within the HTML `<head>`
+   - Use for theme-specific adjustments (e.g., blue theme overrides in index.html)
+   - Keep overrides minimal and well-commented
+
+2. **Section Background Consistency**: 
+   - Use explicit background colors (#f8f9fa) rather than CSS variables when consistency is critical
+   - This ensures sections match across different pages even if variables change
+
+3. **Component Background Hierarchy**:
+   - Sections: Gray background (#f8f9fa)
+   - Content containers: White background (#ffffff)
+   - Interactive elements: White or light backgrounds with borders/shadows
+
+### CSS Architecture
+1. **Base styles**: style.css (general styles, resets)
+2. **Variables**: variables.css (color palette, spacing)
+3. **Components**: components.css (reusable UI elements)
+4. **Page-specific**: landing-page.css, upload-page.css, etc.
+5. **Inline overrides**: When specific visual consistency is required
+
 ## Best Practices
 
 1. **Accessibility**
@@ -171,6 +216,12 @@ image2model uses a **Unified Light Theme with Blue Accents** for consistency and
 
 4. **Visual Hierarchy**
    - Large hero section draws attention
-   - Clear section breaks
+   - Clear section breaks with consistent backgrounds
+   - White content cards on gray sections
    - Consistent card heights in grids
    - Proper use of whitespace
+
+5. **Consistency Patterns**
+   - Always check index.html as the source of truth for styling patterns
+   - Maintain the gray section/white content pattern across all pages
+   - Use subtle shadows and borders for depth, not background color changes

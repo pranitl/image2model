@@ -34,8 +34,9 @@
     </nav>
 
     <!-- Breadcrumb Navigation -->
-    <div class="container">
-        <nav class="breadcrumb animate-fade-in" aria-label="Breadcrumb">
+    <section class="breadcrumb-section">
+        <div class="container">
+            <nav class="breadcrumb animate-fade-in" aria-label="Breadcrumb">
             <div class="breadcrumb-item">
                 <a href="index.html">Home</a>
                 <span class="breadcrumb-separator">→</span>
@@ -52,7 +53,8 @@
                 <span>Results</span>
             </div>
         </nav>
-    </div>
+        </div>
+    </section>
 
     <!-- Hero Section -->
     <section class="upload-hero animate-fade-in">
@@ -83,10 +85,13 @@
 
     <!-- Main Content -->
     <main>
-        <div class="container">
-            <form id="uploadForm" enctype="multipart/form-data">
-                <!-- Enhanced Upload Zone -->
-                <div class="upload-zone-wrapper animate-fade-in-up delay-400">
+        <!-- Upload Section -->
+        <section class="upload-section">
+            <div class="container">
+                <div class="upload-wrapper">
+                    <form id="uploadForm" enctype="multipart/form-data">
+                    <!-- Enhanced Upload Zone -->
+                    <div class="upload-zone-wrapper animate-fade-in-up delay-400">
                     <div id="dropZone" class="upload-zone hover-lift">
                         <div class="upload-zone-content">
                             <svg class="upload-icon" viewBox="0 0 24 24" fill="none">
@@ -182,21 +187,25 @@
                     </div>
                 </div>
 
-                <!-- Action Section -->
-                <div class="upload-actions animate-fade-in delay-800">
-                    <div class="upload-actions-primary">
-                        <button type="submit" id="generateBtn" class="btn btn-primary btn-lg hover-lift" disabled>
-                            <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
-                                <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 6h12v10H4V6z" clip-rule="evenodd"/>
-                            </svg>
-                            Generate 3D Models
-                        </button>
-                    </div>
-                </div>
-            </form>
+                        <!-- Action Section -->
+                        <div class="upload-actions animate-fade-in delay-800">
+                            <div class="upload-actions-primary">
+                                <button type="submit" id="generateBtn" class="btn btn-primary btn-lg hover-lift" disabled>
+                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 6h12v10H4V6z" clip-rule="evenodd"/>
+                                    </svg>
+                                    Generate 3D Models
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+            </div>
+        </section>
 
-            <!-- Help Section -->
-            <section class="help-section animate-fade-in delay-1000">
+        <!-- Help Section -->
+        <section class="help-tips-section">
+            <div class="container">
+                <div class="help-section animate-fade-in delay-1000">
                 <div class="help-header">
                     <h2 class="help-title">Tips for Best Results</h2>
                 </div>
@@ -245,8 +254,8 @@
                         <img src="assets/examples/chair-before.png" alt="Good example - Chair" class="example-image hover-scale" loading="lazy">
                     </div>
                 </div>
-            </section>
-        </div>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
