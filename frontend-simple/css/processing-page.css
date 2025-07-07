@@ -3,6 +3,14 @@
    ================================================================= */
 
 /* =================================================================
+   Breadcrumb Section
+   ================================================================= */
+.breadcrumb-section {
+    background-color: #f8f9fa;
+    padding: 0;
+}
+
+/* =================================================================
    Processing Hero Section
    ================================================================= */
 .processing-hero {
@@ -69,7 +77,8 @@
    Batch Information Section
    ================================================================= */
 .batch-info-section {
-    margin-bottom: 2rem;
+    background-color: #f8f9fa;
+    padding: 2rem 0;
 }
 
 .batch-details {
@@ -77,9 +86,9 @@
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--spacing-lg);
     padding: var(--spacing-xl);
-    background: var(--bg-secondary);
+    background: white;
     border-radius: var(--radius-xl);
-    border: 1px solid var(--border-color);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .batch-item {
@@ -118,7 +127,8 @@
    Overall Progress Section
    ================================================================= */
 .overall-progress-section {
-    margin-bottom: 3rem;
+    background-color: #f8f9fa;
+    padding: 3rem 0;
 }
 
 .progress-header {
@@ -140,9 +150,10 @@
 }
 
 .progress-container {
-    background: var(--bg-secondary);
+    background: white;
     padding: var(--spacing-lg);
     border-radius: var(--radius-lg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .progress-bar {
@@ -196,7 +207,8 @@
    Files Grid Section
    ================================================================= */
 .files-grid-section {
-    margin-bottom: 3rem;
+    background-color: #f8f9fa;
+    padding: 3rem 0;
 }
 
 .section-header {
@@ -215,9 +227,10 @@
 .grid-view-toggle {
     display: flex;
     gap: var(--spacing-xs);
-    background: var(--bg-secondary);
+    background: white;
     padding: var(--spacing-xs);
     border-radius: var(--radius-md);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .view-btn {
@@ -253,13 +266,14 @@
 
 /* File Card Styles */
 .file-card {
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-color);
+    background: white;
+    border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     transition: all var(--transition-normal);
     position: relative;
     overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .file-card:hover {
@@ -274,7 +288,7 @@
 
 .file-card.file-status-processing {
     border-color: var(--blue-400);
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(66, 153, 225, 0.05) 100%);
+    background: linear-gradient(135deg, white 0%, rgba(66, 153, 225, 0.05) 100%);
 }
 
 .file-card.file-status-processing::before {
@@ -299,12 +313,12 @@
 
 .file-card.file-status-completed {
     border-color: var(--success);
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(16, 185, 129, 0.05) 100%);
+    background: linear-gradient(135deg, white 0%, rgba(16, 185, 129, 0.05) 100%);
 }
 
 .file-card.file-status-failed {
     border-color: var(--error);
-    background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(239, 68, 68, 0.05) 100%);
+    background: linear-gradient(135deg, white 0%, rgba(239, 68, 68, 0.05) 100%);
 }
 
 .file-card-content {
@@ -447,14 +461,19 @@
    Tips Section
    ================================================================= */
 .tips-section {
-    background: var(--bg-secondary);
-    padding: var(--spacing-xl);
-    border-radius: var(--radius-xl);
-    margin-bottom: 3rem;
-    text-align: center;
+    background-color: #f8f9fa;
+    padding: 3rem 0;
 }
 
-.tips-section h3 {
+.tips-content {
+    background: white;
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-xl);
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.tips-content h3 {
     font-size: var(--text-lg);
     color: var(--text-primary);
     margin-bottom: var(--spacing-lg);
@@ -494,8 +513,9 @@
    Action Section
    ================================================================= */
 .action-section {
+    background-color: #f8f9fa;
     text-align: center;
-    padding: var(--spacing-xl) 0;
+    padding: 3rem 0;
 }
 
 /* =================================================================

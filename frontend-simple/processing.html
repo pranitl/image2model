@@ -7,6 +7,7 @@
     <title>Processing - image2model</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/shared-components.css">
     <link rel="stylesheet" href="css/processing-page.css">
     <script src="js/animations.js" defer></script>
 </head>
@@ -33,25 +34,27 @@
     </nav>
 
     <!-- Breadcrumb Navigation -->
-    <div class="container">
-        <nav class="breadcrumb animate-fade-in" aria-label="Breadcrumb">
-            <div class="breadcrumb-item">
-                <a href="index.html">Home</a>
-                <span class="breadcrumb-separator">→</span>
-            </div>
-            <div class="breadcrumb-item">
-                <a href="upload.html">Upload</a>
-                <span class="breadcrumb-separator">→</span>
-            </div>
-            <div class="breadcrumb-item">
-                <span class="breadcrumb-current">Processing</span>
-                <span class="breadcrumb-separator">→</span>
-            </div>
-            <div class="breadcrumb-item">
-                <span>Results</span>
-            </div>
-        </nav>
-    </div>
+    <section class="breadcrumb-section">
+        <div class="container">
+            <nav class="breadcrumb animate-fade-in" aria-label="Breadcrumb">
+                <div class="breadcrumb-item">
+                    <a href="index.html">Home</a>
+                    <span class="breadcrumb-separator">→</span>
+                </div>
+                <div class="breadcrumb-item">
+                    <a href="upload.html">Upload</a>
+                    <span class="breadcrumb-separator">→</span>
+                </div>
+                <div class="breadcrumb-item">
+                    <span class="breadcrumb-current">Processing</span>
+                    <span class="breadcrumb-separator">→</span>
+                </div>
+                <div class="breadcrumb-item">
+                    <span>Results</span>
+                </div>
+            </nav>
+        </div>
+    </section>
 
     <!-- Hero Section -->
     <section class="processing-hero animate-fade-in">
@@ -82,10 +85,10 @@
 
     <!-- Main Content -->
     <main>
-        <div class="container">
-            <!-- Batch Information Section -->
-            <section class="batch-info-section animate-fade-in delay-600">
-                <div class="batch-details card">
+        <!-- Batch Information Section -->
+        <section class="batch-info-section">
+            <div class="container">
+                <div class="batch-details card animate-fade-in delay-600">
                     <div class="batch-item">
                         <div class="batch-icon">
                             <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
@@ -131,11 +134,13 @@
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Overall Progress Section -->
-            <section class="overall-progress-section animate-fade-in delay-800">
-                <div class="progress-header">
+        <!-- Overall Progress Section -->
+        <section class="overall-progress-section">
+            <div class="container">
+                <div class="progress-header animate-fade-in delay-800">
                     <h2>Overall Progress</h2>
                     <div class="progress-stats">
                         <span id="filesCompleted">0</span> of <span id="totalFiles">0</span> files completed
@@ -148,11 +153,13 @@
                         </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- File Processing Grid -->
-            <section class="files-grid-section animate-fade-in delay-1000">
-                <div class="section-header">
+        <!-- File Processing Grid -->
+        <section class="files-grid-section">
+            <div class="container">
+                <div class="section-header animate-fade-in delay-1000">
                     <h2>Processing Status</h2>
                     <div class="grid-view-toggle">
                         <button class="view-btn active" data-view="grid" title="Grid view">
@@ -170,13 +177,16 @@
                 <div id="fileGrid" class="file-grid">
                     <!-- File cards will be dynamically inserted here -->
                 </div>
-            </section>
+            </div>
+        </section>
 
-            <!-- Status Message -->
-            <div id="statusMessage" class="status-message" style="display: none;"></div>
+        <!-- Status Message -->
+        <div id="statusMessage" class="status-message" style="display: none;"></div>
 
-            <!-- Tips Section -->
-            <section class="tips-section animate-fade-in delay-1200">
+        <!-- Tips Section -->
+        <section class="tips-section">
+            <div class="container">
+                <div class="tips-content animate-fade-in delay-1200">
                 <h3>Did You Know?</h3>
                 <div class="tips-carousel">
                     <div class="tip-card active">
@@ -192,18 +202,21 @@
                         <p>The generated 3D models are compatible with most 3D software including Blender, Unity, and Unreal Engine.</p>
                     </div>
                 </div>
-            </section>
+                </div>
+            </div>
+        </section>
 
-            <!-- Action Buttons -->
-            <section class="action-section animate-fade-in delay-1400">
+        <!-- Action Buttons -->
+        <section class="action-section">
+            <div class="container animate-fade-in delay-1400">
                 <button id="cancelBtn" class="btn btn-secondary hover-lift">
                     <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
                     </svg>
                     Cancel Processing
                 </button>
-            </section>
-        </div>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
