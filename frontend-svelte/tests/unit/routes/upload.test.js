@@ -77,10 +77,10 @@ describe('Upload Page', () => {
 
   it('should handle form submission', async () => {
     global.fetch = vi.fn(() => 
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ batch_id: 'test-batch-123' })
-      })
+      Promise.resolve(new Response(JSON.stringify({ batch_id: 'test-batch-123' }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' }
+      }))
     );
     
     const { container } = render(UploadPage);
