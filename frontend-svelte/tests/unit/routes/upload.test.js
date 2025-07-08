@@ -18,13 +18,10 @@ describe('Upload Page', () => {
     // Check main elements exist
     expect(screen.getByText('Upload Your Images')).toBeInTheDocument();
     expect(screen.getByText('Transform photos into professional 3D models in minutes')).toBeInTheDocument();
-    expect(screen.getByText('Drag & drop your images here')).toBeInTheDocument();
-    expect(screen.getByText('Browse Files')).toBeInTheDocument();
+    expect(screen.getByText('Drop images here or click to browse')).toBeInTheDocument();
     
-    // Check file info
-    expect(screen.getByText('Supports JPEG, JPG, PNG')).toBeInTheDocument();
-    expect(screen.getByText('Max 10MB per file')).toBeInTheDocument();
-    expect(screen.getByText('Up to 25 images')).toBeInTheDocument();
+    // Check file info - it's now in a single line
+    expect(screen.getByText('Supports JPEG, PNG • Max 10MB per file • Up to 25 images')).toBeInTheDocument();
     
     // Check help section
     expect(screen.getByText('Tips for Best Results')).toBeInTheDocument();
@@ -44,7 +41,7 @@ describe('Upload Page', () => {
     expect(container.querySelector('.file-preview-section')).toBeFalsy();
     
     // The component should have the upload zone
-    expect(screen.getByText('Drag & drop your images here')).toBeInTheDocument();
+    expect(screen.getByText('Drop images here or click to browse')).toBeInTheDocument();
   });
 
   it('should validate file types', async () => {
@@ -110,14 +107,14 @@ describe('Upload Page', () => {
   it('should handle drag over state', async () => {
     const { container } = render(UploadPage);
     
-    const dropZone = container.querySelector('.upload-zone');
+    const uploadArea = container.querySelector('.upload-area');
     
     // Simulate drag over
-    await fireEvent.dragOver(dropZone);
-    expect(dropZone).toHaveClass('drag-over');
+    await fireEvent.dragOver(uploadArea);
+    expect(uploadArea).toHaveClass('drag-over');
     
     // Simulate drag leave
-    await fireEvent.dragLeave(dropZone);
-    expect(dropZone).not.toHaveClass('drag-over');
+    await fireEvent.dragLeave(uploadArea);
+    expect(uploadArea).not.toHaveClass('drag-over');
   });
 });

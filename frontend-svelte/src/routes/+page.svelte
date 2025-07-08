@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
   import { scrollReveal, staggerReveal, parallax } from '$lib/actions/animations.js';
+  import Footer from '$lib/components/Footer.svelte';
   
   let heroLogoElement;
   let mobileMenuActive = false;
@@ -295,26 +296,7 @@
 </section>
 
 <!-- Footer -->
-<footer class="site-footer">
-  <div class="footer-container">
-    <div class="footer-content">
-      <div class="footer-brand">
-        <img src="/assets/logo-cropped.png" alt="image2model" width="64" height="64" class="footer-logo">
-        <p class="footer-tagline">Making 3D content creation accessible to everyone!</p>
-      </div>
-      <div class="footer-links">
-        <ul class="footer-list">
-          <li><a href="#features">Features</a></li>
-          <li><a href="#pricing">Pricing</a></li>
-          <li><a href="#contact">Contact</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p class="footer-text">&copy; 2025 image2model. All rights reserved.</p>
-    </div>
-  </div>
-</footer>
+<Footer />
 
 <style>
   /* Blue Theme Style Overrides for Better Contrast */
