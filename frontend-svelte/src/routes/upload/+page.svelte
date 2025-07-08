@@ -8,6 +8,7 @@
   import Footer from '$lib/components/Footer.svelte';
   import Button from '$lib/components/Button.svelte';
   import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+  import ProgressIndicator from '$lib/components/ProgressIndicator.svelte';
   
   // State management
   let files = [];
@@ -235,19 +236,8 @@
       <p class="upload-hero-subtitle animate-fade-in-up delay-200">
         Transform photos into professional 3D models in minutes
       </p>
-      <div class="progress-indicator animate-fade-in-scale delay-400">
-        <div class="progress-step active">
-          <span class="progress-step-number">1</span>
-          <span class="progress-step-text">Upload</span>
-        </div>
-        <div class="progress-step">
-          <span class="progress-step-number">2</span>
-          <span class="progress-step-text">Process</span>
-        </div>
-        <div class="progress-step">
-          <span class="progress-step-number">3</span>
-          <span class="progress-step-text">Download</span>
-        </div>
+      <div class="animate-fade-in-scale delay-400">
+        <ProgressIndicator currentStep={1} />
       </div>
     </div>
   </div>

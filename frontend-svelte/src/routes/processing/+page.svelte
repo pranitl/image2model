@@ -9,6 +9,7 @@
   import Breadcrumb from '$lib/components/Breadcrumb.svelte';
   import Button from '$lib/components/Button.svelte';
   import Hero from '$lib/components/Hero.svelte';
+  import ProgressIndicator from '$lib/components/ProgressIndicator.svelte';
 
   // State management
   let taskId = '';
@@ -279,19 +280,8 @@
     <div class="hero-content">
       <h1 style="color: white; font-size: 3rem; font-weight: 700; margin-bottom: 1rem;">Processing Your Images</h1>
       <p style="color: white; font-size: 1.25rem; opacity: 0.9; margin-bottom: 2rem;">Your 3D models are being generated</p>
-      <div class="progress-indicator animate-fade-in-scale delay-400" use:scrollReveal>
-        <div class="progress-step complete">
-          <span class="progress-step-number">✓</span>
-          <span class="progress-step-text">Upload</span>
-        </div>
-        <div class="progress-step active">
-          <span class="progress-step-number">2</span>
-          <span class="progress-step-text">Process</span>
-        </div>
-        <div class="progress-step">
-          <span class="progress-step-number">3</span>
-          <span class="progress-step-text">Download</span>
-        </div>
+      <div class="animate-fade-in-scale delay-400" use:scrollReveal>
+        <ProgressIndicator currentStep={2} />
       </div>
     </div>
   </div>
@@ -495,74 +485,6 @@
   }
 
 
-  /* Progress Indicator - matching upload page style */
-  .progress-indicator {
-    display: inline-flex;
-    align-items: center;
-    gap: 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 0.5rem 1.5rem;
-    border-radius: 9999px;
-    backdrop-filter: blur(10px);
-    margin-top: 2rem;
-  }
-
-  .progress-step {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    position: relative;
-  }
-
-  .progress-step:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    left: calc(100% + 0.5rem);
-    top: 50%;
-    transform: translateY(-50%);
-    width: 1rem;
-    height: 2px;
-    background: rgba(255, 255, 255, 0.3);
-  }
-
-  .progress-step-number {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid rgba(255, 255, 255, 0.3);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.875rem;
-    font-weight: 600;
-    transition: all 0.3s ease;
-  }
-
-  .progress-step.complete .progress-step-number {
-    background: white;
-    color: #2c3e50;
-    border-color: white;
-  }
-
-  .progress-step.active .progress-step-number {
-    background: white;
-    color: #2c3e50;
-    border-color: white;
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-  }
-
-  .progress-step-text {
-    font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.9);
-    font-weight: 400;
-  }
-
-  .progress-step.active .progress-step-text {
-    color: white;
-    font-weight: 500;
-  }
 
   /* Batch Information */
   .batch-info-section {
