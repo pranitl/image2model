@@ -12,8 +12,123 @@
   import ProgressIndicator from '$lib/components/ProgressIndicator.svelte';
   import Icon from '$lib/components/Icon.svelte';
   import ModelCard from '$lib/components/ModelCard.svelte';
+  import ImageGrid from '$lib/components/ImageGrid.svelte';
   import api from '$lib/services/api';
 
+  // Check if we're in dev mode
+  $: isDevMode = $page.url.searchParams.get('dev') === 'true';
+  $: showResults = $page.url.searchParams.get('results') === 'true';
+  
+  // Dev mode mock data for results
+  const mockCompletedFiles = [
+    {
+      filename: 'modern-chair-model.glb',
+      name: 'modern-chair-model.glb',
+      size: 2457600,
+      downloadUrl: '#',
+      mimeType: 'model/gltf-binary',
+      createdTime: new Date().toISOString(),
+      rendered_image: { url: 'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=400&h=400&fit=crop' }
+    },
+    {
+      filename: 'wooden-table-model.glb',
+      name: 'wooden-table-model.glb',
+      size: 3145728,
+      downloadUrl: '#',
+      mimeType: 'model/gltf-binary',
+      createdTime: new Date().toISOString(),
+      rendered_image: { url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop' }
+    },
+    {
+      filename: 'minimalist-lamp-model.glb',
+      name: 'minimalist-lamp-model.glb',
+      size: 1572864,
+      downloadUrl: '#',
+      mimeType: 'model/gltf-binary',
+      createdTime: new Date().toISOString(),
+      rendered_image: { url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop' }
+    },
+    {
+      filename: 'velvet-sofa-model.glb',
+      name: 'velvet-sofa-model.glb',
+      size: 4194304,
+      downloadUrl: '#',
+      mimeType: 'model/gltf-binary',
+      createdTime: new Date().toISOString(),
+      rendered_image: { url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop' }
+    },
+    {
+      filename: 'office-desk-model.glb',
+      name: 'office-desk-model.glb',
+      size: 2097152,
+      downloadUrl: '#',
+      mimeType: 'model/gltf-binary',
+      createdTime: new Date().toISOString(),
+      rendered_image: { url: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=400&h=400&fit=crop' }
+    },
+    {
+      filename: 'bookshelf-model.glb',
+      name: 'bookshelf-model.glb',
+      size: 2621440,
+      downloadUrl: '#',
+      mimeType: 'model/gltf-binary',
+      createdTime: new Date().toISOString(),
+      rendered_image: { url: 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=400&h=400&fit=crop' }
+    }
+  ];
+  
+  // Dev mode mock data
+  const mockProcessingFiles = [
+    {
+      id: 'file-1',
+      name: 'modern-chair-view1.jpg',
+      preview: 'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=400&h=400&fit=crop',
+      status: 'completed',
+      progress: 100,
+      message: 'Completed - 3D model generated'
+    },
+    {
+      id: 'file-2',
+      name: 'wooden-table-angle2.jpg',
+      preview: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop',
+      status: 'completed',
+      progress: 100,
+      message: 'Completed - 3D model generated'
+    },
+    {
+      id: 'file-3',
+      name: 'minimalist-lamp.jpg',
+      preview: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop',
+      status: 'completed',
+      progress: 100,
+      message: 'Completed - 3D model generated'
+    },
+    {
+      id: 'file-4',
+      name: 'velvet-sofa-front.jpg',
+      preview: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop',
+      status: 'processing',
+      progress: 75,
+      message: 'Processing - Generating texture maps...'
+    },
+    {
+      id: 'file-5',
+      name: 'office-desk-setup.jpg',
+      preview: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=400&h=400&fit=crop',
+      status: 'pending',
+      progress: 0,
+      message: 'Queued - Waiting to process'
+    },
+    {
+      id: 'file-6',
+      name: 'bookshelf-walnut.jpg',
+      preview: 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=400&h=400&fit=crop',
+      status: 'pending',
+      progress: 0,
+      message: 'Queued - Waiting to process'
+    }
+  ];
+  
   // State management
   let taskId = '';
   let files = [];
@@ -62,7 +177,7 @@
   // Parse task ID from URL - support both 'taskId' and 'batch' for compatibility
   $: {
     taskId = $page.url.searchParams.get('taskId') || $page.url.searchParams.get('batch') || '';
-    if (!taskId && typeof window !== 'undefined') {
+    if (!taskId && !isDevMode && typeof window !== 'undefined') {
       toast.error('No task ID provided');
       goto('/upload');
     }
@@ -70,6 +185,51 @@
 
   // Initialize processing
   onMount(async () => {
+    // Handle dev mode
+    if (isDevMode) {
+      taskId = 'dev-task-123';
+      jobId = 'dev-job-123';
+      
+      if (showResults) {
+        // Show results view
+        isCompleted = true;
+        isProcessing = false;
+        completedFiles = mockCompletedFiles;
+        totalSize = mockCompletedFiles.reduce((sum, f) => sum + f.size, 0);
+        filesCompleted = mockCompletedFiles.length;
+        totalFiles = mockCompletedFiles.length;
+        elapsedTime = 125;
+      } else {
+        // Show processing view
+        files = mockProcessingFiles;
+        totalFiles = mockProcessingFiles.length;
+        filesCompleted = 3;
+        overallProgress = 55;
+        elapsedTime = 45;
+        
+        // Simulate progress updates
+        const progressInterval = setInterval(() => {
+          elapsedTime++;
+          
+          // Update file progress
+          files = files.map(file => {
+            if (file.status === 'processing' && file.progress < 95) {
+              return { ...file, progress: file.progress + Math.random() * 5 };
+            }
+            return file;
+          });
+          
+          // Update overall progress
+          const totalProgress = files.reduce((sum, f) => sum + f.progress, 0);
+          overallProgress = Math.round(totalProgress / files.length);
+        }, 1000);
+        
+        return () => clearInterval(progressInterval);
+      }
+      
+      return;
+    }
+    
     if (!taskId) return;
 
     // Start elapsed time counter
@@ -468,28 +628,14 @@
           </button>
         </div>
       </div>
-      <div class="file-grid {currentView}" use:staggerReveal>
-        {#each files as file (file.id)}
-          <div class="file-card">
-            <div class="file-card-header">
-              <h3 class="file-name">{file.name}</h3>
-              <span class="file-status" style="color: {getStatusColor(file.status)}">
-                {file.status}
-              </span>
-            </div>
-            <div class="file-progress">
-              <div class="file-progress-bar">
-                <div 
-                  class="file-progress-fill" 
-                  style="width: {file.progress}%; background-color: {getStatusColor(file.status)}"
-                ></div>
-              </div>
-              <span class="file-progress-text">{file.progress}%</span>
-            </div>
-            <p class="file-message">{file.message}</p>
-          </div>
-        {/each}
-      </div>
+      <ImageGrid 
+        items={files.map(f => ({ 
+          ...f, 
+          statusText: f.status === 'processing' ? `${f.progress}%` : f.status
+        }))} 
+        showOverlay={true}
+        gridSize="medium"
+      />
     </div>
   </section>
 
