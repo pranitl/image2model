@@ -10,6 +10,7 @@
   import Breadcrumb from '$lib/components/Breadcrumb.svelte';
   import Hero from '$lib/components/Hero.svelte';
   import ProgressIndicator from '$lib/components/ProgressIndicator.svelte';
+  import api from '$lib/services/api';
   
   // State management
   let files = [];
@@ -151,58 +152,47 @@
     
     uploading = true;
     
-    const maxRetries = 3;
-    let retryCount = 0;
-    
-    while (retryCount < maxRetries) {
-      try {
-        const formData = new FormData();
-        
-        // Add files
-        files.forEach(fileObj => {
-          formData.append('files', fileObj.file);
-        });
-        
-        // Add face limit
-        formData.append('face_limit', faceLimit || 'auto');
-        
-        const response = await fetch('/api/v1/upload/batch', {
-          method: 'POST',
-          body: formData,
-          signal: AbortSignal.timeout(60000) // 60 second timeout
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Upload failed: ${response.statusText}`);
+    try {
+      // Store file info in session for processing page
+      if (browser) {
+        const fileNames = files.map(f => f.name);
+        sessionStorage.setItem('processingFiles', JSON.stringify({
+          files: fileNames,
+          taskId: null // Will be updated after upload
+        }));
+      }
+      
+      // Use the API service with retry logic
+      const result = await api.retryOperation(
+        async () => api.uploadBatch(files, faceLimit || 'auto'),
+        3, // max retries
+        1000 // initial backoff
+      );
+      
+      if (result.success) {
+        // Update session storage with task ID
+        if (browser) {
+          const data = JSON.parse(sessionStorage.getItem('processingFiles') || '{}');
+          data.taskId = result.taskId || result.batchId;
+          sessionStorage.setItem('processingFiles', JSON.stringify(data));
         }
         
-        const result = await response.json();
-        
-        // Success!
         toast.success('Files uploaded successfully!');
         
-        // Navigate to processing page with batch ID
-        if (result.batch_id && browser) {
-          goto(`/processing?batch=${result.batch_id}`);
+        // Navigate to processing page
+        const taskId = result.taskId || result.batchId;
+        if (taskId && browser) {
+          goto(`/processing?taskId=${taskId}`);
         }
-        break; // Exit retry loop on success
-        
-      } catch (error) {
-        retryCount++;
-        console.error(`Upload attempt ${retryCount} failed:`, error);
-        
-        if (retryCount >= maxRetries) {
-          toast.error(`Failed to upload files after ${maxRetries} attempts. ${error.message}`);
-        } else {
-          toast.warning(`Upload failed. Retrying... (${retryCount}/${maxRetries})`);
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1)));
-        }
+      } else {
+        throw new Error(result.error || 'Upload failed');
       }
+    } catch (error) {
+      console.error('Upload failed:', error);
+      toast.error(`Failed to upload files: ${error.message}`);
+    } finally {
+      uploading = false;
     }
-    
-    uploading = false;
   }
   
   // Helper functions

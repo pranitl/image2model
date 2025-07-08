@@ -10,6 +10,9 @@
   import Button from '$lib/components/Button.svelte';
   import Hero from '$lib/components/Hero.svelte';
   import ProgressIndicator from '$lib/components/ProgressIndicator.svelte';
+  import Icon from '$lib/components/Icon.svelte';
+  import ModelCard from '$lib/components/ModelCard.svelte';
+  import api from '$lib/services/api';
 
   // State management
   let taskId = '';
@@ -24,6 +27,13 @@
   let elapsedInterval = null;
   let currentView = 'grid'; // 'grid' or 'list'
   let currentTipIndex = 0;
+  
+  // Completion state
+  let isCompleted = false;
+  let completedFiles = [];
+  let jobId = null;
+  let totalSize = 0;
+  let isLoadingResults = false;
 
   // Tips for carousel
   const tips = [
@@ -42,7 +52,7 @@
   ];
 
   // Breadcrumb items
-  const breadcrumbItems = [
+  let breadcrumbItems = [
     { label: 'Home', href: '/' },
     { label: 'Upload', href: '/upload' },
     { label: 'Processing', current: true },
@@ -120,31 +130,20 @@
   function connectToSSE() {
     if (!taskId) return;
 
-    eventSource = new EventSource(`/api/v1/status/tasks/${taskId}/stream`);
-
-    eventSource.addEventListener('task_progress', (event) => {
-      const data = JSON.parse(event.data);
-      handleProgressUpdate(data);
-    });
-
-    eventSource.addEventListener('task_completed', (event) => {
-      const data = JSON.parse(event.data);
-      handleCompletion(data);
-    });
-
-    eventSource.addEventListener('task_failed', (event) => {
-      const data = JSON.parse(event.data);
-      isProcessing = false;
-      toast.error(`Processing failed: ${data.error || 'Unknown error'}`);
-    });
-
-    eventSource.onerror = (error) => {
-      console.error('SSE error:', error);
-      if (eventSource.readyState === EventSource.CLOSED) {
-        // Attempt to reconnect after 5 seconds
-        setTimeout(connectToSSE, 5000);
+    const stream = api.createProgressStream(taskId, {
+      onProgress: handleProgressUpdate,
+      onComplete: handleCompletion,
+      onError: (error) => {
+        isProcessing = false;
+        toast.error(`Processing failed: ${error}`);
+      },
+      onFileUpdate: (data) => {
+        // Handle individual file updates if needed
+        console.log('File update:', data);
       }
-    };
+    });
+
+    eventSource = stream.eventSource;
   }
 
   // Handle progress updates
@@ -193,16 +192,54 @@
   }
 
   // Handle batch completion
-  function handleCompletion(data) {
+  async function handleCompletion(data) {
     isProcessing = false;
+    isCompleted = true;
+    jobId = data.result?.job_id || data.job_id || taskId;
+    
     if (eventSource) {
       eventSource.close();
     }
     
-    toast.success('Processing complete!');
-    setTimeout(() => {
-      goto(`/results?batch=${taskId}`);
-    }, 2000);
+    // Update breadcrumb to show we're on results
+    breadcrumbItems = breadcrumbItems.map((item, index) => ({
+      ...item,
+      current: index === 3 // Results is the 4th item (0-indexed)
+    }));
+    
+    toast.success('Processing complete! Loading your models...');
+    
+    // Fetch the completed files
+    await fetchCompletedFiles();
+  }
+  
+  // New function to fetch completed files
+  async function fetchCompletedFiles() {
+    isLoadingResults = true;
+    
+    try {
+      const response = await api.getJobFiles(jobId);
+      
+      if (response.success) {
+        completedFiles = response.files;
+        totalSize = response.files.reduce((sum, f) => sum + (f.size || 0), 0);
+        
+        // Update files array to show completion
+        files = files.map((file) => ({
+          ...file,
+          status: 'completed',
+          progress: 100,
+          message: 'Completed'
+        }));
+      } else {
+        toast.error('Failed to load completed files');
+      }
+    } catch (error) {
+      console.error('Error fetching completed files:', error);
+      toast.error('Error loading results');
+    } finally {
+      isLoadingResults = false;
+    }
   }
 
   // Cancel processing
@@ -254,6 +291,51 @@
   function toggleView(view) {
     currentView = view;
   }
+  
+  // Download all files
+  async function downloadAll() {
+    const downloadBtn = document.querySelector('#downloadAllBtn');
+    if (downloadBtn) downloadBtn.disabled = true;
+    
+    let downloadCount = 0;
+    
+    // Download each file sequentially
+    for (const file of completedFiles) {
+      try {
+        const link = document.createElement('a');
+        
+        if (api.isExternalUrl(file.downloadUrl)) {
+          link.href = file.downloadUrl;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+        } else {
+          link.href = file.downloadUrl || api.getDownloadUrl(jobId, file.filename);
+          link.download = file.filename;
+        }
+        
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        downloadCount++;
+        
+        // Small delay between downloads to prevent browser blocking
+        await new Promise(resolve => setTimeout(resolve, 500));
+      } catch (error) {
+        console.error(`Failed to download ${file.filename}:`, error);
+      }
+    }
+    
+    if (downloadBtn) downloadBtn.disabled = false;
+    
+    // Show completion message
+    if (downloadCount === completedFiles.length) {
+      toast.success('All files downloaded successfully!');
+    } else {
+      toast.warning(`Downloaded ${downloadCount} of ${completedFiles.length} files.`);
+    }
+  }
 </script>
 
 <svelte:head>
@@ -272,18 +354,25 @@
 
 <!-- Hero Section -->
 <Hero 
-  title="Processing Your Images" 
-  subtitle="Your 3D models are being generated"
+  title={isCompleted ? "Success!" : "Processing Your Images"} 
+  subtitle={isCompleted ? "Your 3D models are ready for download" : "Your 3D models are being generated"}
 >
   <div slot="content" class="animate-fade-in-scale delay-400" use:scrollReveal>
-    <ProgressIndicator currentStep={2} />
+    {#if isCompleted}
+      <div class="success-icon animate-bounce-in">
+        <Icon name="check-circle" size={80} color="white" />
+      </div>
+    {/if}
+    <ProgressIndicator currentStep={isCompleted ? 3 : 2} />
   </div>
 </Hero>
 
 <!-- Main Content -->
 <main>
-  <!-- Batch Information Section -->
-  <section class="batch-info-section">
+  {#if !isCompleted}
+    <!-- Processing View -->
+    <!-- Batch Information Section -->
+    <section class="batch-info-section">
     <div class="container">
       <div class="batch-details card" use:scrollReveal>
         <div class="batch-item">
@@ -445,6 +534,123 @@
       {/if}
     </div>
   </section>
+  
+  {:else}
+    <!-- Results View -->
+    <!-- Summary Section -->
+    <section class="summary-section">
+      <div class="container">
+        <div class="summary-card card" use:scrollReveal>
+          <div class="summary-item">
+            <div class="summary-icon">
+              <Icon name="document" size={24} />
+            </div>
+            <div>
+              <span class="summary-label">Models Generated</span>
+              <span class="summary-value">{completedFiles.length}</span>
+            </div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-icon">
+              <Icon name="clock" size={24} />
+            </div>
+            <div>
+              <span class="summary-label">Processing Time</span>
+              <span class="summary-value">{formatTime(elapsedTime)}</span>
+            </div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-icon">
+              <Icon name="arrow-down" size={24} />
+            </div>
+            <div>
+              <span class="summary-label">Total Size</span>
+              <span class="summary-value">{api.formatFileSize(totalSize)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Download Actions -->
+    <section class="download-actions">
+      <div class="container">
+        <Button 
+          id="downloadAllBtn"
+          variant="primary"
+          size="lg"
+          on:click={downloadAll}
+          class="hover-lift"
+          disabled={completedFiles.length === 0}
+        >
+          <Icon name="cloud-download" size={20} />
+          <span>Download All Models</span>
+          <span class="badge">{api.formatFileSize(totalSize)}</span>
+        </Button>
+      </div>
+    </section>
+    
+    <!-- Models Grid -->
+    <section class="models-grid-section">
+      <div class="container">
+        <h2>Your 3D Models</h2>
+        {#if isLoadingResults}
+          <div class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading your models...</p>
+          </div>
+        {:else if completedFiles.length === 0}
+          <div class="empty-state">
+            <Icon name="info" size={64} color="#94a3b8" />
+            <h3>No models generated</h3>
+            <p>The processing completed but no 3D models were generated.</p>
+            <Button href="/upload" variant="primary">Try Again</Button>
+          </div>
+        {:else}
+          <div class="model-grid" use:staggerReveal>
+            {#each completedFiles as file}
+              <div data-stagger>
+                <ModelCard {file} {jobId} />
+              </div>
+            {/each}
+          </div>
+        {/if}
+      </div>
+    </section>
+    
+    <!-- What's Next Section -->
+    <section class="whats-next-section">
+      <div class="container">
+        <h2>What's Next?</h2>
+        <div class="next-steps-grid" use:staggerReveal>
+          <div class="next-step-card card hover-lift" data-stagger>
+            <div class="step-icon">
+              <Icon name="eye" size={32} />
+            </div>
+            <h3>View in 3D</h3>
+            <p>Preview your models using our online 3D viewer or download for use in your favorite 3D software.</p>
+            <Button href="#" variant="ghost" size="sm">Coming Soon</Button>
+          </div>
+          <div class="next-step-card card hover-lift" data-stagger>
+            <div class="step-icon">
+              <Icon name="document" size={32} />
+            </div>
+            <h3>Import Guide</h3>
+            <p>Learn how to import your 3D models into popular software like Blender, Unity, or Unreal Engine.</p>
+            <Button href="#" variant="ghost" size="sm">View Guide</Button>
+          </div>
+          <div class="next-step-card card hover-lift" data-stagger>
+            <div class="step-icon">
+              <Icon name="external-link" size={32} />
+            </div>
+            <h3>Process More</h3>
+            <p>Ready to create more 3D models? Upload new images and continue your creative journey.</p>
+            <Button href="/upload" variant="ghost" size="sm">Upload More Images</Button>
+          </div>
+        </div>
+      </div>
+    </section>
+  {/if}
 </main>
 
 <Footer />
@@ -765,6 +971,210 @@
     text-align: center;
   }
 
+  /* Success Icon Animation */
+  .success-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 1.5rem;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @keyframes bounceIn {
+    0% {
+      opacity: 0;
+      transform: scale(0.3);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    70% {
+      transform: scale(0.9);
+    }
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  :global(.animate-bounce-in) {
+    animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  }
+
+  /* Summary Section */
+  .summary-section {
+    background-color: #f8f9fa;
+    padding: 3rem 0;
+  }
+
+  .summary-card {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 2rem;
+    padding: 2rem;
+  }
+
+  .summary-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .summary-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+
+  .summary-label {
+    display: block;
+    font-size: 0.875rem;
+    color: #64748b;
+    margin-bottom: 0.25rem;
+  }
+
+  .summary-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  /* Download Actions */
+  .download-actions {
+    background-color: #f8f9fa;
+    text-align: center;
+    padding: 0 0 3rem;
+  }
+
+  :global(.badge) {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    margin-left: 0.5rem;
+  }
+
+  /* Models Grid */
+  .models-grid-section {
+    background-color: #f8f9fa;
+    padding: 0 0 3rem;
+  }
+
+  .models-grid-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 2rem;
+  }
+
+  .model-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+  }
+
+  /* Loading & Empty States */
+  .loading-state,
+  .empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+
+  .spinner {
+    width: 48px;
+    height: 48px;
+    border: 3px solid #e2e8f0;
+    border-top-color: #3498db;
+    border-radius: 50%;
+    margin: 0 auto 1rem;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .empty-state h3 {
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin: 1rem 0;
+  }
+
+  .empty-state p {
+    color: #64748b;
+    margin-bottom: 2rem;
+  }
+
+  /* What's Next Section */
+  .whats-next-section {
+    background-color: #f8f9fa;
+    padding: 0 0 4rem;
+  }
+
+  .whats-next-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .next-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+  }
+
+  .next-step-card {
+    padding: 2rem;
+    text-align: center;
+    background: white;
+    border-radius: 12px;
+    transition: all 0.2s;
+  }
+
+  .next-step-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  }
+
+  .step-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 1.5rem;
+    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+  }
+
+  .next-step-card h3 {
+    font-size: 1.25rem;
+    color: #1e293b;
+    margin-bottom: 1rem;
+  }
+
+  .next-step-card p {
+    color: #64748b;
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+  }
+
   /* Responsive */
   @media (max-width: 768px) {
     .processing-hero-content h1 {
@@ -792,6 +1202,19 @@
       flex-direction: column;
       gap: 1rem;
       align-items: flex-start;
+    }
+    
+    .summary-card {
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+    
+    .model-grid {
+      grid-template-columns: 1fr;
+    }
+    
+    .next-steps-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>
