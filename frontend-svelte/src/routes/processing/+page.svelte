@@ -49,9 +49,9 @@
 
   // Parse task ID from URL
   $: {
-    taskId = $page.url.searchParams.get('id') || '';
+    taskId = $page.url.searchParams.get('batch') || '';
     if (!taskId && typeof window !== 'undefined') {
-      toast.error('No task ID provided');
+      toast.error('No batch ID provided');
       goto('/upload');
     }
   }
@@ -165,7 +165,7 @@
     
     toast.success('Processing complete! Redirecting to results...');
     setTimeout(() => {
-      goto(`/results?id=${taskId}`);
+      goto(`/results?batch=${taskId}`);
     }, 2000);
   }
 
@@ -418,7 +418,7 @@
         </Button>
       {:else}
         <Button 
-          href="/results?id={taskId}"
+          href="/results?batch={taskId}"
           class="hover-lift"
         >
           View Results
