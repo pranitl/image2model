@@ -2,6 +2,7 @@
   import '../app-core.css';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
+  import Toast from '$lib/components/Toast.svelte';
   
   let mounted = false;
   
@@ -17,3 +18,4 @@
 </svelte:head>
 
 <slot />
+<Toast />
