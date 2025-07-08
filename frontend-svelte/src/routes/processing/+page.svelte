@@ -70,27 +70,10 @@
       currentTipIndex = (currentTipIndex + 1) % tips.length;
     }, 5000);
 
-    // Fetch initial batch info
-    try {
-      const response = await fetch(`/api/v1/processing/batch/${taskId}`);
-      if (!response.ok) throw new Error('Failed to fetch batch info');
-      
-      const data = await response.json();
-      totalFiles = data.total_files || 0;
-      files = data.files || [];
-      
-      // Initialize file progress
-      files = files.map(file => ({
-        id: file.id,
-        name: file.name,
-        status: 'pending',
-        progress: 0,
-        message: 'Waiting to start...'
-      }));
-    } catch (error) {
-      console.error('Error fetching batch info:', error);
-      toast.error('Failed to load processing information');
-    }
+    // For now, we'll get file info from the SSE stream
+    // Set some placeholder data
+    totalFiles = 1; // Will be updated from SSE
+    files = [];
 
     // Connect to SSE for real-time updates
     connectToSSE();
@@ -113,12 +96,23 @@
   function connectToSSE() {
     if (!taskId) return;
 
-    eventSource = new EventSource(`/api/v1/processing/stream/${taskId}`);
+    eventSource = new EventSource(`/api/v1/status/tasks/${taskId}/stream`);
 
-    eventSource.onmessage = (event) => {
+    eventSource.addEventListener('task_progress', (event) => {
       const data = JSON.parse(event.data);
       handleProgressUpdate(data);
-    };
+    });
+
+    eventSource.addEventListener('task_completed', (event) => {
+      const data = JSON.parse(event.data);
+      handleCompletion(data);
+    });
+
+    eventSource.addEventListener('task_failed', (event) => {
+      const data = JSON.parse(event.data);
+      isProcessing = false;
+      toast.error(`Processing failed: ${data.error || 'Unknown error'}`);
+    });
 
     eventSource.onerror = (error) => {
       console.error('SSE error:', error);
@@ -127,33 +121,51 @@
         setTimeout(connectToSSE, 5000);
       }
     };
-
-    eventSource.addEventListener('complete', (event) => {
-      const data = JSON.parse(event.data);
-      handleCompletion(data);
-    });
   }
 
   // Handle progress updates
   function handleProgressUpdate(data) {
-    if (data.file_id) {
-      // Update specific file progress
-      files = files.map(file => {
-        if (file.id === data.file_id) {
-          return {
-            ...file,
-            status: data.status,
-            progress: data.progress || file.progress,
-            message: data.message || file.message
-          };
-        }
-        return file;
-      });
+    // Update overall progress from SSE data
+    if (data.progress !== undefined) {
+      overallProgress = Math.round(data.progress);
     }
 
-    // Update overall progress
-    filesCompleted = files.filter(f => f.status === 'completed').length;
-    overallProgress = totalFiles > 0 ? Math.round((filesCompleted / totalFiles) * 100) : 0;
+    // Update file counts if provided
+    if (data.total_files !== undefined) {
+      totalFiles = data.total_files;
+    }
+    if (data.total !== undefined && data.total > 0) {
+      totalFiles = data.total;
+    }
+
+    // Update current/completed count
+    if (data.current !== undefined) {
+      filesCompleted = data.current;
+    }
+
+    // For now, show a simple message about progress
+    // Later this will show individual file progress
+    if (data.message) {
+      // Update the files array to show some progress
+      if (files.length === 0 && totalFiles > 0) {
+        // Create placeholder files
+        files = Array.from({ length: totalFiles }, (_, i) => ({
+          id: `file-${i}`,
+          name: `Image ${i + 1}`,
+          status: i < filesCompleted ? 'completed' : 'processing',
+          progress: i < filesCompleted ? 100 : Math.round((overallProgress / totalFiles)),
+          message: i < filesCompleted ? 'Completed' : data.message
+        }));
+      } else {
+        // Update existing files
+        files = files.map((file, i) => ({
+          ...file,
+          status: i < filesCompleted ? 'completed' : 'processing',
+          progress: i < filesCompleted ? 100 : Math.round((overallProgress / totalFiles)),
+          message: i < filesCompleted ? 'Completed' : data.message
+        }));
+      }
+    }
   }
 
   // Handle batch completion
@@ -175,13 +187,13 @@
     if (!confirmed) return;
 
     try {
-      const response = await fetch(`/api/v1/processing/cancel/${taskId}`, {
-        method: 'POST'
-      });
-
-      if (!response.ok) throw new Error('Failed to cancel processing');
-
-      toast.success('Processing cancelled');
+      // For now, just close the connection and navigate away
+      // TODO: Implement proper cancellation when backend endpoint is available
+      if (eventSource) {
+        eventSource.close();
+      }
+      
+      toast.info('Leaving processing page');
       goto('/upload');
     } catch (error) {
       console.error('Error cancelling processing:', error);
