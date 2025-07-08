@@ -38,7 +38,7 @@
           </svg>
           Start Creating Now
         </Button>
-        <Button href="#demo" variant="ghost" size="lg">
+        <Button href="#demo" variant="ghost-light" size="lg">
           Watch Demo
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
@@ -309,6 +309,31 @@
   
   :global(.hero-stats .stat-label) {
     color: #bdc3c7 !important;
+  }
+  
+  /* Fix z-index for hero content to be above geometric pattern */
+  :global(.hero-content) {
+    position: relative;
+    z-index: 2;
+  }
+  
+  /* Fix float animation to only move vertically */
+  :global(.hero-logo-animated) {
+    display: inline-block;
+    will-change: transform;
+  }
+  
+  :global(.animate-float) {
+    animation: float 3s ease-in-out infinite !important;
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) !important;
+    }
+    50% {
+      transform: translateY(-20px) !important;
+    }
   }
 
   /* Navigation Styles */
