@@ -8,6 +8,7 @@
   import Footer from '$lib/components/Footer.svelte';
   import Breadcrumb from '$lib/components/Breadcrumb.svelte';
   import Button from '$lib/components/Button.svelte';
+  import Hero from '$lib/components/Hero.svelte';
 
   // State management
   let taskId = '';
@@ -47,12 +48,14 @@
     { label: 'Results' }
   ];
 
-  // Parse task ID from URL
+  // Parse task ID from URL - support both 'taskId' and 'batch' for compatibility
   $: {
-    taskId = $page.url.searchParams.get('batch') || '';
+    taskId = $page.url.searchParams.get('taskId') || $page.url.searchParams.get('batch') || '';
+    // Temporarily disabled for testing - use dummy task ID
     if (!taskId && typeof window !== 'undefined') {
-      toast.error('No batch ID provided');
-      goto('/upload');
+      // toast.error('No task ID provided');
+      // goto('/upload');
+      taskId = 'test-preview-123';
     }
   }
 
@@ -270,31 +273,26 @@
 </section>
 
 <!-- Hero Section -->
-<section class="processing-hero">
-  <div class="geometric-pattern"></div>
-  <div class="container">
-    <div class="processing-hero-content" use:scrollReveal>
-      <h1 class="animate-fade-in-up">Processing Your Images</h1>
-      <p class="processing-hero-subtitle animate-fade-in-up delay-200">
-        Your 3D models are being generated
-      </p>
-      <div class="progress-indicator animate-fade-in-scale delay-400">
-        <div class="progress-step complete">
-          <span class="progress-step-number">✓</span>
-          <span class="progress-step-text">Upload</span>
-        </div>
-        <div class="progress-step active">
-          <span class="progress-step-number">2</span>
-          <span class="progress-step-text">Process</span>
-        </div>
-        <div class="progress-step">
-          <span class="progress-step-number">3</span>
-          <span class="progress-step-text">Download</span>
-        </div>
-      </div>
+<Hero 
+  title="Processing Your Images" 
+  subtitle="Your 3D models are being generated"
+  class="animate-fade-in"
+>
+  <div slot="content" class="progress-indicator animate-fade-in-scale delay-400" use:scrollReveal>
+    <div class="progress-step complete">
+      <span class="progress-step-number">✓</span>
+      <span class="progress-step-text">Upload</span>
+    </div>
+    <div class="progress-step active">
+      <span class="progress-step-number">2</span>
+      <span class="progress-step-text">Process</span>
+    </div>
+    <div class="progress-step">
+      <span class="progress-step-number">3</span>
+      <span class="progress-step-text">Download</span>
     </div>
   </div>
-</section>
+</Hero>
 
 <!-- Main Content -->
 <main>
@@ -477,42 +475,6 @@
     padding: 1rem 0;
   }
 
-  /* Processing Hero */
-  .processing-hero {
-    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
-    color: white;
-    padding: 4rem 0 5rem;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .geometric-pattern {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-    opacity: 0.5;
-  }
-
-  .processing-hero-content {
-    position: relative;
-    z-index: 1;
-    text-align: center;
-  }
-
-  .processing-hero-content h1 {
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-  }
-
-  .processing-hero-subtitle {
-    font-size: 1.25rem;
-    opacity: 0.9;
-    margin-bottom: 2rem;
-  }
 
   /* Progress Indicator */
   .progress-indicator {
@@ -830,6 +792,8 @@
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     text-align: center;
+    max-width: 800px;
+    margin: 0 auto;
   }
 
   .tips-content h3 {
