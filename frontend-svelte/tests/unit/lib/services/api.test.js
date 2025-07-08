@@ -63,10 +63,13 @@ describe('APIService', () => {
       });
 
       expect(fetch).toHaveBeenCalledWith(
-        expect.stringContaining('/upload/batch'),
+        expect.stringContaining('/upload/'),
         expect.objectContaining({
           method: 'POST',
-          body: expect.any(FormData)
+          body: expect.any(FormData),
+          headers: expect.objectContaining({
+            'Authorization': expect.stringContaining('Bearer')
+          })
         })
       );
     });
