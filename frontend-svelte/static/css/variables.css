@@ -1,0 +1,308 @@
+/* =================================================================
+   image2model CSS Variables and Brand Color System
+   Based on brand guidelines from /brand/guidelines/
+   ================================================================= */
+
+:root {
+    /* =================================================================
+       Brand Colors - Primary Palette
+       ================================================================= */
+    --brand-dark-charcoal: #3A424A;
+    --brand-vibrant-red: #E74C3C;
+    --brand-sky-blue: #3498DB;
+    --brand-bright-cyan: #5DADE2;
+    --brand-sunset-orange: #E67E22;
+    --brand-golden-yellow: #F39C12;
+    
+    /* =================================================================
+       Brand Colors - Neutral Palette
+       ================================================================= */
+    --brand-white: #FFFFFF;
+    --brand-light-gray: #ECF0F1;
+    --brand-silver-gray: #BDC3C7;
+    --brand-medium-gray: #95A5A6;
+    --brand-dark-gray: #7F8C8D;
+    --brand-black: #000000;
+    
+    /* =================================================================
+       Color Shade Variations (100-900 scale)
+       ================================================================= */
+    /* Red Shades */
+    --red-100: #FADBD8;
+    --red-200: #F5B7B1;
+    --red-300: #F1948A;
+    --red-400: #EC7063;
+    --red-500: #E74C3C; /* Base */
+    --red-600: #CB4335;
+    --red-700: #A93226;
+    --red-800: #922B21;
+    --red-900: #7B241C;
+    
+    /* Blue Shades */
+    --blue-100: #D6EAF8;
+    --blue-200: #AED6F1;
+    --blue-300: #85C1E9;
+    --blue-400: #5DADE2;
+    --blue-500: #3498DB; /* Base */
+    --blue-600: #2E86C1;
+    --blue-700: #2874A6;
+    --blue-800: #21618C;
+    --blue-900: #1B4F72;
+    
+    /* Yellow/Orange Shades */
+    --yellow-100: #FCF3CF;
+    --yellow-200: #F9E79F;
+    --yellow-300: #F7DC6F;
+    --yellow-400: #F4D03F;
+    --yellow-500: #F39C12; /* Base Golden Yellow */
+    --yellow-600: #D68910;
+    --yellow-700: #B9770E;
+    --yellow-800: #9C640C;
+    --yellow-900: #7E5109;
+    
+    --orange-100: #FAE5D3;
+    --orange-200: #F5CBA7;
+    --orange-300: #F0B27A;
+    --orange-400: #EB984E;
+    --orange-500: #E67E22; /* Base Sunset Orange */
+    --orange-600: #CA6F1E;
+    --orange-700: #AF601A;
+    --orange-800: #935116;
+    --orange-900: #784212;
+    
+    /* Gray Shades */
+    --gray-100: #FDFEFE;
+    --gray-200: #FBFCFC;
+    --gray-300: #F7F9F9;
+    --gray-400: #ECF0F1; /* Light Gray */
+    --gray-500: #BDC3C7; /* Silver Gray */
+    --gray-600: #95A5A6; /* Medium Gray */
+    --gray-700: #7F8C8D; /* Dark Gray */
+    --gray-800: #566573;
+    --gray-900: #3A424A; /* Dark Charcoal */
+    
+    /* =================================================================
+       Semantic Color Variables - Blue Theme Primary
+       ================================================================= */
+    --color-primary: var(--brand-bright-cyan);
+    --color-secondary: var(--brand-sky-blue);
+    --color-accent: var(--brand-bright-cyan);
+    --color-success: #27AE60;
+    --color-warning: var(--brand-golden-yellow);
+    --color-error: var(--brand-vibrant-red);
+    --color-info: var(--brand-sky-blue);
+    
+    /* =================================================================
+       Default Color Scheme - Light Theme
+       ================================================================= */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-tertiary: #ecf0f1;
+    --bg-accent: #e3f2fd;
+    
+    --text-primary: #2c3e50;
+    --text-secondary: #34495e;
+    --text-muted: #95a5a6;
+    --text-inverse: #ffffff;
+    
+    --border-color: #dee2e6;
+    --border-color-light: #e9ecef;
+    --border-color-dark: #ced4da;
+    
+    /* Interactive Elements */
+    --accent-primary: #3498db;
+    --accent-secondary: #5dade2;
+    --accent-hover: #2874a6;
+    --accent-active: var(--blue-700);
+    
+    
+    /* =================================================================
+       Gradient Presets
+       ================================================================= */
+    /* Primary gradients - Blue Theme */
+    --gradient-primary: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    --gradient-cool-ocean: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
+    --gradient-blue-medium: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
+    --gradient-blue-light: linear-gradient(135deg, #85C1E9 0%, #5DADE2 100%);
+    --gradient-subtle: linear-gradient(135deg, #3498db 0%, #2874a6 100%);
+    
+    /* DEPRECATED - These now point to non-orange alternatives */
+    --gradient-warm-sunset: var(--gradient-primary); /* Now uses red gradient instead of yellow-red */
+    --gradient-creative-burst: var(--gradient-cool-ocean); /* Now uses blue gradient instead of multi-color */
+    
+    /* Text Gradients */
+    --gradient-text-primary: linear-gradient(135deg, var(--brand-golden-yellow) 0%, var(--brand-vibrant-red) 100%);
+    --gradient-text-secondary: linear-gradient(135deg, var(--brand-bright-cyan) 0%, var(--brand-sky-blue) 100%);
+    
+    /* =================================================================
+       Component-Specific Colors
+       ================================================================= */
+    /* Buttons - Blue Theme Primary */
+    --btn-primary-bg: var(--brand-bright-cyan);
+    --btn-primary-hover: var(--brand-sky-blue);
+    --btn-primary-active: var(--blue-700);
+    --btn-primary-text: #1a2332;
+    
+    --btn-secondary-bg: #34495e;
+    --btn-secondary-hover: #2c3e50;
+    --btn-secondary-active: #1a2332;
+    --btn-secondary-text: var(--brand-white);
+    
+    --btn-accent-bg: var(--brand-golden-yellow);
+    --btn-accent-hover: var(--yellow-600);
+    --btn-accent-active: var(--yellow-700);
+    --btn-accent-text: var(--gray-900);
+    
+    /* Status Colors */
+    --status-success-bg: rgba(39, 174, 96, 0.1);
+    --status-success-border: #27AE60;
+    --status-success-text: #27AE60;
+    
+    --status-warning-bg: rgba(243, 156, 18, 0.1);
+    --status-warning-border: var(--brand-golden-yellow);
+    --status-warning-text: var(--brand-golden-yellow);
+    
+    --status-error-bg: rgba(231, 76, 60, 0.1);
+    --status-error-border: var(--brand-vibrant-red);
+    --status-error-text: var(--brand-vibrant-red);
+    
+    --status-info-bg: rgba(52, 152, 219, 0.1);
+    --status-info-border: var(--brand-sky-blue);
+    --status-info-text: var(--brand-sky-blue);
+    
+    /* =================================================================
+       Shadows (with brand color tints)
+       ================================================================= */
+    --shadow-sm: 0 1px 2px 0 rgba(58, 66, 74, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(58, 66, 74, 0.1), 0 2px 4px -1px rgba(58, 66, 74, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(58, 66, 74, 0.1), 0 4px 6px -2px rgba(58, 66, 74, 0.05);
+    --shadow-xl: 0 20px 25px -5px rgba(58, 66, 74, 0.1), 0 10px 10px -5px rgba(58, 66, 74, 0.04);
+    
+    --shadow-red: 0 4px 14px 0 rgba(231, 76, 60, 0.3);
+    --shadow-blue: 0 4px 14px 0 rgba(52, 152, 219, 0.3);
+    --shadow-yellow: 0 4px 14px 0 rgba(243, 156, 18, 0.3);
+    
+    /* =================================================================
+       Spacing System (unchanged)
+       ================================================================= */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    
+    /* =================================================================
+       Border Radius (unchanged)
+       ================================================================= */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+    --radius-full: 9999px;
+    
+    /* =================================================================
+       Transitions (unchanged)
+       ================================================================= */
+    --transition-fast: 150ms ease-in-out;
+    --transition-normal: 300ms ease-in-out;
+    --transition-slow: 500ms ease-in-out;
+}
+
+/* =================================================================
+   Dark Mode Override
+   ================================================================= */
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: var(--dark-bg-primary);
+        --bg-secondary: var(--dark-bg-secondary);
+        --bg-tertiary: var(--dark-bg-tertiary);
+        --bg-accent: var(--dark-bg-accent);
+        
+        --text-primary: var(--dark-text-primary);
+        --text-secondary: var(--dark-text-secondary);
+        --text-muted: var(--dark-text-muted);
+        --text-inverse: var(--dark-text-inverse);
+        
+        --border-color: var(--dark-border-color);
+        --border-color-light: var(--dark-border-color-light);
+        --border-color-dark: var(--dark-border-color-dark);
+        
+        --accent-primary: var(--dark-accent-primary);
+        --accent-secondary: var(--dark-accent-secondary);
+        --accent-hover: var(--dark-accent-hover);
+        --accent-active: var(--dark-accent-active);
+    }
+}
+
+/* =================================================================
+   Forced Dark Mode Class
+   ================================================================= */
+.dark-mode {
+    --bg-primary: var(--dark-bg-primary);
+    --bg-secondary: var(--dark-bg-secondary);
+    --bg-tertiary: var(--dark-bg-tertiary);
+    --bg-accent: var(--dark-bg-accent);
+    
+    --text-primary: var(--dark-text-primary);
+    --text-secondary: var(--dark-text-secondary);
+    --text-muted: var(--dark-text-muted);
+    --text-inverse: var(--dark-text-inverse);
+    
+    --border-color: var(--dark-border-color);
+    --border-color-light: var(--dark-border-color-light);
+    --border-color-dark: var(--dark-border-color-dark);
+    
+    --accent-primary: var(--dark-accent-primary);
+    --accent-secondary: var(--dark-accent-secondary);
+    --accent-hover: var(--dark-accent-hover);
+    --accent-active: var(--dark-accent-active);
+}
+
+/* =================================================================
+   Forced Light Mode Class
+   ================================================================= */
+.light-mode {
+    --bg-primary: var(--brand-white) !important;
+    --bg-secondary: var(--gray-400) !important;
+    --bg-tertiary: var(--gray-300) !important;
+    --bg-accent: var(--blue-100) !important;
+    
+    --text-primary: var(--gray-900) !important;
+    --text-secondary: var(--gray-700) !important;
+    --text-muted: var(--gray-600) !important;
+    --text-inverse: var(--brand-white) !important;
+    
+    --border-color: var(--gray-500) !important;
+    --border-color-light: var(--gray-400);
+    --border-color-dark: var(--gray-600);
+    
+    --accent-primary: var(--brand-vibrant-red) !important;
+    --accent-secondary: var(--brand-sky-blue) !important;
+    --accent-hover: var(--red-600) !important;
+    --accent-active: var(--red-700) !important;
+}
+
+/* =================================================================
+   Forced Dark Mode Class
+   ================================================================= */
+.dark-mode {
+    --bg-primary: var(--dark-bg-primary) !important;
+    --bg-secondary: var(--dark-bg-secondary) !important;
+    --bg-tertiary: var(--dark-bg-tertiary) !important;
+    --bg-accent: var(--dark-bg-accent) !important;
+    
+    --text-primary: var(--dark-text-primary) !important;
+    --text-secondary: var(--dark-text-secondary) !important;
+    --text-muted: var(--dark-text-muted) !important;
+    --text-inverse: var(--dark-text-inverse) !important;
+    
+    --border-color: var(--dark-border-color) !important;
+    --border-color-light: var(--dark-border-color-light) !important;
+    --border-color-dark: var(--dark-border-color-dark) !important;
+    
+    --accent-primary: var(--dark-accent-primary) !important;
+    --accent-secondary: var(--dark-accent-secondary) !important;
+    --accent-hover: var(--dark-accent-hover) !important;
+    --accent-active: var(--dark-accent-active) !important;
+}

@@ -1,0 +1,59 @@
+/* Import all the CSS files from our existing styles */
+@import '/css/variables.css';
+@import '/css/style.css';
+@import '/css/components.css';
+@import '/css/shared-components.css';
+@import '/css/typography.css';
+@import '/css/animations.css';
+@import '/css/animation-utilities.css';
+@import '/css/button-animations.css';
+@import '/css/card-animations.css';
+@import '/css/color-utilities.css';
+@import '/css/form-animations.css';
+@import '/css/loading-animations.css';
+@import '/css/special-effects.css';
+@import '/css/landing-page.css';
+
+/* Additional global styles for SvelteKit */
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light;
+  color: #213547;
+  background-color: #ffffff;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* Animation classes for Svelte actions */
+[data-stagger] {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+[data-stagger].animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.animate-in {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
