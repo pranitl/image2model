@@ -10,6 +10,17 @@ class APIService {
     
     // Default timeout for requests
     this.DEFAULT_TIMEOUT = 60000; // 60 seconds
+    
+    // Development API key (in production, this should come from environment)
+    this.API_KEY = 'test-api-key-for-development';
+  }
+
+  // Helper method to get common headers
+  getHeaders(additionalHeaders = {}) {
+    return {
+      'Authorization': `Bearer ${this.API_KEY}`,
+      ...additionalHeaders
+    };
   }
 
   // Helper method for handling API errors
@@ -41,9 +52,10 @@ class APIService {
     formData.append('face_limit', faceLimit.toString());
     
     try {
-      const response = await fetch(`${this.API_BASE}/upload/batch`, {
+      const response = await fetch(`${this.API_BASE}/upload/`, {
         method: 'POST',
         body: formData,
+        headers: this.getHeaders(),
         signal: AbortSignal.timeout(this.DEFAULT_TIMEOUT)
       });
       
@@ -52,8 +64,9 @@ class APIService {
       
       return {
         success: true,
-        batchId: data.batch_id,
-        taskId: data.task_id || data.batch_id, // Handle both response formats
+        batchId: data.batch_id || data.job_id,
+        taskId: data.task_id || data.job_id, // Use task_id if available, otherwise job_id
+        jobId: data.job_id,
         fileCount: data.total_files || files.length
       };
     } catch (error) {
@@ -78,7 +91,8 @@ class APIService {
     try {
       const response = await fetch(`${this.API_BASE}/upload/`, {
         method: 'POST',
-        body: formData
+        body: formData,
+        headers: this.getHeaders()
       });
       
       await this.handleApiError(response);
@@ -109,6 +123,7 @@ class APIService {
       onTaskUpdate = () => {}
     } = callbacks;
     
+    // Note: EventSource doesn't support custom headers, so auth may need to be handled differently
     const eventSource = new EventSource(`${this.API_BASE}/status/tasks/${taskId}/stream`);
     
     // Handle specific event types
@@ -156,7 +171,9 @@ class APIService {
   // Get list of processed files for a job
   async getJobFiles(jobId) {
     try {
-      const response = await fetch(`${this.API_BASE}/download/${jobId}/all`);
+      const response = await fetch(`${this.API_BASE}/download/${jobId}/all`, {
+        headers: this.getHeaders()
+      });
       await this.handleApiError(response);
       const data = await response.json();
       
@@ -188,7 +205,9 @@ class APIService {
   // Get job status (non-streaming)
   async getJobStatus(taskId) {
     try {
-      const response = await fetch(`${this.API_BASE}/status/tasks/${taskId}`);
+      const response = await fetch(`${this.API_BASE}/status/tasks/${taskId}`, {
+        headers: this.getHeaders()
+      });
       await this.handleApiError(response);
       const data = await response.json();
       return { success: true, ...data };
@@ -200,11 +219,13 @@ class APIService {
 
   // Download a single file
   getDownloadUrl(jobId, filename) {
+    // Note: Downloads via direct URL may need auth token in query params
     return `${this.API_BASE}/download/${jobId}/${encodeURIComponent(filename)}`;
   }
 
   // Get download all URL
   getDownloadAllUrl(jobId) {
+    // Note: Downloads via direct URL may need auth token in query params
     return `${this.API_BASE}/download/${jobId}/all`;
   }
 

@@ -1,12 +1,45 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, screen } from '@testing-library/svelte';
+import { readable } from 'svelte/store';
 import UploadPage from '../../../src/routes/upload/+page.svelte';
+
+// Mock SvelteKit stores
+vi.mock('$app/stores', () => ({
+  page: readable({
+    url: new URL('http://localhost:3000/upload'),
+    params: {},
+    route: { id: '/upload' },
+    status: 200,
+    error: null,
+    data: {},
+    form: null
+  })
+}));
+
+// Mock navigation
+vi.mock('$app/navigation', () => ({
+  goto: vi.fn()
+}));
+
+// Mock environment
+vi.mock('$app/environment', () => ({
+  browser: true
+}));
 
 // Mock the API module
 vi.mock('$lib/services/api', () => ({
   default: {
     uploadBatch: vi.fn(),
     retryOperation: vi.fn((fn) => fn())
+  }
+}));
+
+// Mock toast store
+vi.mock('$lib/stores/toast', () => ({
+  toast: {
+    error: vi.fn(),
+    success: vi.fn(),
+    info: vi.fn()
   }
 }));
 
