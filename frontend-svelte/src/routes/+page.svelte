@@ -2,65 +2,20 @@
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
   import { scrollReveal, staggerReveal, parallax } from '$lib/actions/animations.js';
+  import Navbar from '$lib/components/Navbar.svelte';
   import Footer from '$lib/components/Footer.svelte';
   
   let heroLogoElement;
-  let mobileMenuActive = false;
   let mounted = false;
   
   // Initialize on mount
   onMount(() => {
     mounted = true;
   });
-  
-  // Smooth scroll handler (SSR-safe)
-  function handleAnchorClick(e) {
-    if (!browser) return;
-    
-    const href = e.currentTarget.getAttribute('href');
-    if (href && href.startsWith('#')) {
-      e.preventDefault();
-      const targetId = href.slice(1);
-      const target = document.getElementById(targetId);
-      if (target) {
-        target.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
-    }
-  }
-  
-  function toggleMobileMenu() {
-    mobileMenuActive = !mobileMenuActive;
-  }
-  
-  function closeMobileMenu() {
-    mobileMenuActive = false;
-  }
 </script>
 
 <!-- Navigation Bar -->
-<nav class="navbar animate-fade-in">
-  <div class="navbar-container">
-    <a href="/" class="navbar-brand">
-      <img src="/assets/logo-cropped.png" alt="image2model" class="nav-logo" width="48" height="48" loading="eager">
-      <span class="brand-text">image2model</span>
-    </a>
-    <button class="navbar-toggle" class:active={mobileMenuActive} on:click={toggleMobileMenu} aria-label="Toggle navigation">
-      <span class="navbar-toggle-bar"></span>
-      <span class="navbar-toggle-bar"></span>
-      <span class="navbar-toggle-bar"></span>
-    </button>
-    <ul class="navbar-menu" class:active={mobileMenuActive}>
-      <li><a href="#features" class="navbar-link" on:click={handleAnchorClick} on:click={closeMobileMenu}>Features</a></li>
-      <li><a href="#how-it-works" class="navbar-link" on:click={handleAnchorClick} on:click={closeMobileMenu}>How It Works</a></li>
-      <li><a href="#examples" class="navbar-link" on:click={handleAnchorClick} on:click={closeMobileMenu}>Examples</a></li>
-      <li><a href="#pricing" class="navbar-link" on:click={handleAnchorClick} on:click={closeMobileMenu}>Pricing</a></li>
-      <li><a href="/upload" class="btn btn-primary btn-sm">Start Creating</a></li>
-    </ul>
-  </div>
-</nav>
+<Navbar variant="landing" />
 
 <!-- Hero Section -->
 <section class="hero gradient-cool-ocean">

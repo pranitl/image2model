@@ -4,7 +4,10 @@
   import { goto } from '$app/navigation';
   import { scrollReveal, staggerReveal } from '$lib/actions/animations.js';
   import { toast } from '$lib/stores/toast.js';
+  import Navbar from '$lib/components/Navbar.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  import Button from '$lib/components/Button.svelte';
+  import Breadcrumb from '$lib/components/Breadcrumb.svelte';
   
   // State management
   let files = [];
@@ -13,9 +16,7 @@
   let faceLimit = 10000; // Auto/Medium default
   let isAuto = true; // Track if we're in auto mode
   let uploading = false;
-  let mobileMenuActive = false;
   let fileInput;
-  let dropZone;
   
   // Constants
   const MAX_FILES = 25;
@@ -37,15 +38,6 @@
       objectUrls.forEach(url => URL.revokeObjectURL(url));
     };
   });
-  
-  // Navigation handlers
-  function toggleMobileMenu() {
-    mobileMenuActive = !mobileMenuActive;
-  }
-  
-  function closeMobileMenu() {
-    mobileMenuActive = false;
-  }
   
   // File handling
   function handleFileSelect(e) {
@@ -222,48 +214,17 @@
 </script>
 
 <!-- Navigation Bar -->
-<nav class="navbar animate-fade-in">
-  <div class="navbar-container">
-    <a href="/" class="navbar-brand">
-      <img src="/assets/logo-cropped.png" alt="image2model" class="nav-logo" width="48" height="48" loading="eager">
-      <span class="brand-text">image2model</span>
-    </a>
-    <button class="navbar-toggle" class:active={mobileMenuActive} on:click={toggleMobileMenu} aria-label="Toggle navigation">
-      <span class="navbar-toggle-bar"></span>
-      <span class="navbar-toggle-bar"></span>
-      <span class="navbar-toggle-bar"></span>
-    </button>
-    <ul class="navbar-menu" class:active={mobileMenuActive}>
-      <li><a href="/#features" class="navbar-link" on:click={closeMobileMenu}>Features</a></li>
-      <li><a href="/#how-it-works" class="navbar-link" on:click={closeMobileMenu}>How It Works</a></li>
-      <li><a href="/#examples" class="navbar-link" on:click={closeMobileMenu}>Examples</a></li>
-      <li><a href="/#pricing" class="navbar-link" on:click={closeMobileMenu}>Pricing</a></li>
-    </ul>
-  </div>
-</nav>
+<Navbar />
 
 <!-- Breadcrumb Navigation -->
-<section class="breadcrumb-section">
-  <div class="container">
-    <nav class="breadcrumb animate-fade-in" aria-label="Breadcrumb">
-      <div class="breadcrumb-item">
-        <a href="/">Home</a>
-        <span class="breadcrumb-separator">→</span>
-      </div>
-      <div class="breadcrumb-item">
-        <span class="breadcrumb-current">Upload</span>
-        <span class="breadcrumb-separator">→</span>
-      </div>
-      <div class="breadcrumb-item">
-        <span>Processing</span>
-        <span class="breadcrumb-separator">→</span>
-      </div>
-      <div class="breadcrumb-item">
-        <span>Results</span>
-      </div>
-    </nav>
-  </div>
-</section>
+<Breadcrumb 
+  items={[
+    { label: 'Home', href: '/' },
+    { label: 'Upload', current: true },
+    { label: 'Processing' },
+    { label: 'Results' }
+  ]}
+/>
 
 <!-- Hero Section -->
 <section class="upload-hero animate-fade-in">
@@ -415,16 +376,18 @@
           <!-- Action Section -->
           <div class="upload-actions animate-fade-in delay-800">
             <div class="upload-actions-primary">
-              <button 
+              <Button 
                 type="submit" 
-                class="btn btn-primary btn-lg hover-lift" 
+                variant="primary"
+                size="lg"
                 disabled={!canGenerate}
+                loading={uploading}
               >
                 <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
                   <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zM4 6h12v10H4V6z" clip-rule="evenodd"/>
                 </svg>
                 {uploading ? 'Uploading...' : 'Generate 3D Models'}
-              </button>
+              </Button>
             </div>
           </div>
         </form>
