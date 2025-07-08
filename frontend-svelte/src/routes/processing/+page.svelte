@@ -52,11 +52,9 @@
   // Parse task ID from URL - support both 'taskId' and 'batch' for compatibility
   $: {
     taskId = $page.url.searchParams.get('taskId') || $page.url.searchParams.get('batch') || '';
-    // Temporarily disabled for testing - use dummy task ID
     if (!taskId && typeof window !== 'undefined') {
-      // toast.error('No task ID provided');
-      // goto('/upload');
-      taskId = 'test-preview-123';
+      toast.error('No task ID provided');
+      goto('/upload');
     }
   }
 
@@ -202,10 +200,9 @@
     }
     
     toast.success('Processing complete!');
-    // Redirect disabled for testing
-    // setTimeout(() => {
-    //   goto(`/results?batch=${taskId}`);
-    // }, 2000);
+    setTimeout(() => {
+      goto(`/results?batch=${taskId}`);
+    }, 2000);
   }
 
   // Cancel processing
