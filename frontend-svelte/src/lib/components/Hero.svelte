@@ -19,12 +19,12 @@
 
 <style>
   .hero {
-    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%) !important;
-    color: white !important;
+    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
+    color: white;
     padding: 4rem 0 5rem;
     position: relative;
     overflow: hidden;
-    text-align: center; /* Ensure center alignment */
+    text-align: center;
   }
 
   .hero.landing {
@@ -64,7 +64,7 @@
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 1rem;
-    color: #ffffff;
+    color: white;
     line-height: 1.2;
   }
 
@@ -72,7 +72,7 @@
     font-size: 1.25rem;
     opacity: 0.9;
     margin-bottom: 2rem;
-    color: #ffffff;
+    color: white;
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
