@@ -596,6 +596,10 @@
   
   :global(.upload-content) {
     pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
   }
   
   :global(.upload-icon) {
@@ -610,12 +614,15 @@
     color: #1a202c;
     margin-bottom: 0.5rem;
     font-weight: 600;
+    text-align: center;
   }
   
   :global(.upload-info) {
     color: #666;
     font-size: 0.875rem;
     margin: 0;
+    text-align: center;
+    width: 100%;
   }
   
   /* Face limit preset buttons */
