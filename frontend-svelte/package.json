@@ -23,6 +23,7 @@
     "jsdom": "^23.0.1",
     "rollup-plugin-visualizer": "^6.0.3",
     "svelte": "^4.2.7",
+    "terser": "^5.43.1",
     "vite": "^5.0.8",
     "vite-bundle-visualizer": "^1.2.1",
     "vitest": "^1.1.0"
