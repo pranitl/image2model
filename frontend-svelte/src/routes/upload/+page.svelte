@@ -182,7 +182,7 @@
       const result = await response.json();
       
       // Navigate to processing page with batch ID
-      if (result.batch_id) {
+      if (result.batch_id && browser) {
         goto(`/processing?batch=${result.batch_id}`);
       }
     } catch (error) {
