@@ -37,7 +37,7 @@
     },
     {
       icon: '🎯',
-      text: 'The generated 3D models are compatible with most 3D software including Blender, Unity, and Unreal Engine.'
+      text: 'The generated 3D models are compatible with most 3D software including Rhino, Vectorworks, Blender, Unity, and Unreal Engine.'
     }
   ];
 
@@ -277,10 +277,10 @@
 <div style="background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%); color: white; padding: 4rem 0 5rem; position: relative; overflow: hidden; text-align: center;">
   <div class="geometric-pattern"></div>
   <div class="container">
-    <div class="hero-content">
+    <div class="hero-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
       <h1 style="color: white; font-size: 3rem; font-weight: 700; margin-bottom: 1rem;">Processing Your Images</h1>
       <p style="color: white; font-size: 1.25rem; opacity: 0.9; margin-bottom: 2rem;">Your 3D models are being generated</p>
-      <div class="animate-fade-in-scale delay-400" use:scrollReveal>
+      <div class="animate-fade-in-scale delay-400" use:scrollReveal style="display: flex; justify-content: center;">
         <ProgressIndicator currentStep={2} />
       </div>
     </div>
@@ -482,6 +482,11 @@
   .hero-content {
     position: relative;
     z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
   }
 
 
