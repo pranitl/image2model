@@ -1,0 +1,563 @@
+/* =================================================================
+   Special Effects
+   Parallax, gradients, shape morphing, and advanced animations
+   ================================================================= */
+
+/* =================================================================
+   Parallax Effects
+   ================================================================= */
+
+/* Basic Parallax */
+.parallax {
+    position: relative;
+    overflow: hidden;
+}
+
+.parallax-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    will-change: transform;
+}
+
+.parallax-layer-1 {
+    transform: translateZ(-1px) scale(2);
+}
+
+.parallax-layer-2 {
+    transform: translateZ(-2px) scale(3);
+}
+
+.parallax-layer-3 {
+    transform: translateZ(-3px) scale(4);
+}
+
+/* Mouse Parallax */
+.parallax-mouse {
+    transition: transform 0.1s ease-out;
+    will-change: transform;
+}
+
+/* Tilt Effect */
+.tilt-effect {
+    transform-style: preserve-3d;
+    transition: transform var(--duration-short) var(--ease-smooth);
+}
+
+.tilt-effect:hover {
+    transform: 
+        perspective(1000px)
+        rotateX(var(--tilt-x, 0deg))
+        rotateY(var(--tilt-y, 0deg));
+}
+
+.tilt-effect > * {
+    transform: translateZ(50px);
+}
+
+/* =================================================================
+   Gradient Animations
+   ================================================================= */
+
+/* Animated Gradient Background */
+.gradient-animated {
+    background: linear-gradient(
+        -45deg,
+        var(--brand-vibrant-red),
+        var(--brand-sunset-orange),
+        var(--brand-golden-yellow),
+        var(--brand-sky-blue),
+        var(--brand-bright-cyan)
+    );
+    background-size: 400% 400%;
+    animation: gradientShift 15s ease infinite;
+}
+
+/* Gradient Mesh */
+.gradient-mesh {
+    position: relative;
+    overflow: hidden;
+}
+
+.gradient-mesh::before,
+.gradient-mesh::after {
+    content: '';
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+        circle at center,
+        var(--brand-bright-cyan) 0%,
+        transparent 70%
+    );
+    animation: float 20s ease-in-out infinite;
+}
+
+.gradient-mesh::after {
+    background: radial-gradient(
+        circle at center,
+        var(--brand-vibrant-red) 0%,
+        transparent 70%
+    );
+    animation-delay: -10s;
+    animation-duration: 25s;
+}
+
+/* Gradient Text */
+.gradient-text {
+    background: var(--gradient-text-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-fill-color: transparent;
+    background-size: 200% 200%;
+    animation: gradientShift 3s ease infinite;
+}
+
+/* Gradient Border */
+.gradient-border {
+    position: relative;
+    background: var(--bg-primary);
+    z-index: 0;
+}
+
+.gradient-border::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: var(--gradient-cool-ocean);
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity var(--duration-medium) var(--ease-smooth);
+}
+
+.gradient-border:hover::before {
+    opacity: 1;
+    animation: gradientRotate 3s linear infinite;
+}
+
+/* =================================================================
+   Shape Morphing
+   ================================================================= */
+
+/* Blob Animation */
+.blob {
+    border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    animation: blobMorph 8s ease-in-out infinite;
+}
+
+@keyframes blobMorph {
+    0%, 100% {
+        border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%;
+    }
+    25% {
+        border-radius: 70% 30% 30% 70% / 70% 70% 30% 30%;
+    }
+    50% {
+        border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+    }
+    75% {
+        border-radius: 30% 70% 30% 70% / 30% 70% 70% 30%;
+    }
+}
+
+/* Geometric Shape Morph */
+.shape-morph {
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    animation: shapeMorph 6s ease-in-out infinite;
+}
+
+@keyframes shapeMorph {
+    0%, 100% {
+        clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    }
+    33% {
+        clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%);
+    }
+    66% {
+        clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%);
+    }
+}
+
+/* SVG Path Morphing */
+.svg-morph {
+    animation: svgMorph 4s ease-in-out infinite;
+}
+
+.svg-morph path {
+    transition: d var(--duration-long) var(--ease-in-out-cubic);
+}
+
+/* =================================================================
+   3D Effects
+   ================================================================= */
+
+/* 3D Card Flip */
+.flip-container {
+    perspective: 1000px;
+}
+
+.flip-card {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform var(--duration-long) var(--ease-in-out-cubic);
+}
+
+.flip-container:hover .flip-card {
+    transform: rotateY(180deg);
+}
+
+.flip-front,
+.flip-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border-radius: var(--radius-lg);
+}
+
+.flip-back {
+    transform: rotateY(180deg);
+}
+
+/* 3D Cube */
+.cube-container {
+    width: 200px;
+    height: 200px;
+    perspective: 800px;
+}
+
+.cube {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    animation: cubeRotate 10s linear infinite;
+}
+
+.cube-face {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    background: rgba(93, 173, 226, 0.8);
+    border: 1px solid var(--brand-bright-cyan);
+}
+
+.cube-face:nth-child(1) { transform: translateZ(100px); }
+.cube-face:nth-child(2) { transform: rotateY(90deg) translateZ(100px); }
+.cube-face:nth-child(3) { transform: rotateY(180deg) translateZ(100px); }
+.cube-face:nth-child(4) { transform: rotateY(-90deg) translateZ(100px); }
+.cube-face:nth-child(5) { transform: rotateX(90deg) translateZ(100px); }
+.cube-face:nth-child(6) { transform: rotateX(-90deg) translateZ(100px); }
+
+@keyframes cubeRotate {
+    from {
+        transform: rotateX(0deg) rotateY(0deg);
+    }
+    to {
+        transform: rotateX(360deg) rotateY(360deg);
+    }
+}
+
+/* =================================================================
+   Glow and Light Effects
+   ================================================================= */
+
+/* Neon Glow */
+.neon-glow {
+    color: var(--brand-bright-cyan);
+    text-shadow: 
+        0 0 10px var(--brand-bright-cyan),
+        0 0 20px var(--brand-bright-cyan),
+        0 0 40px var(--brand-bright-cyan),
+        0 0 80px var(--brand-bright-cyan);
+    animation: neonFlicker 2s infinite alternate;
+}
+
+@keyframes neonFlicker {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.8;
+    }
+}
+
+/* Spotlight Effect */
+.spotlight {
+    position: relative;
+    overflow: hidden;
+}
+
+.spotlight::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(
+        circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.1) 0%,
+        transparent 40%
+    );
+    pointer-events: none;
+}
+
+/* Shimmer Effect */
+.shimmer-effect {
+    position: relative;
+    overflow: hidden;
+}
+
+.shimmer-effect::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -150%;
+    width: 50%;
+    height: 200%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.3) 50%,
+        transparent 100%
+    );
+    transform: skewX(-20deg);
+    animation: shimmerMove 3s ease-in-out infinite;
+}
+
+@keyframes shimmerMove {
+    0% {
+        left: -150%;
+    }
+    100% {
+        left: 150%;
+    }
+}
+
+/* =================================================================
+   Particle Effects
+   ================================================================= */
+
+.particles {
+    position: relative;
+    overflow: hidden;
+}
+
+.particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--brand-bright-cyan);
+    border-radius: 50%;
+    opacity: 0;
+    animation: particleFloat 10s linear infinite;
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translateY(100vh) scale(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-100vh) scale(1);
+        opacity: 0;
+    }
+}
+
+/* Generate random particles */
+.particle:nth-child(1) { left: 10%; animation-delay: 0s; }
+.particle:nth-child(2) { left: 20%; animation-delay: 1s; }
+.particle:nth-child(3) { left: 30%; animation-delay: 2s; }
+.particle:nth-child(4) { left: 40%; animation-delay: 3s; }
+.particle:nth-child(5) { left: 50%; animation-delay: 4s; }
+.particle:nth-child(6) { left: 60%; animation-delay: 5s; }
+.particle:nth-child(7) { left: 70%; animation-delay: 6s; }
+.particle:nth-child(8) { left: 80%; animation-delay: 7s; }
+.particle:nth-child(9) { left: 90%; animation-delay: 8s; }
+
+/* =================================================================
+   Wave Effects
+   ================================================================= */
+
+.wave-container {
+    position: relative;
+    overflow: hidden;
+}
+
+.wave {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100px;
+    background: var(--brand-sky-blue);
+    opacity: 0.6;
+}
+
+.wave::before,
+.wave::after {
+    content: '';
+    position: absolute;
+    top: -100px;
+    left: 0;
+    width: 200%;
+    height: 100px;
+    background: inherit;
+    border-radius: 50%;
+}
+
+.wave::before {
+    animation: wave 10s linear infinite;
+}
+
+.wave::after {
+    animation: wave 10s linear infinite;
+    animation-delay: -5s;
+    opacity: 0.5;
+}
+
+@keyframes wave {
+    0% {
+        transform: translateX(0) translateY(0);
+    }
+    50% {
+        transform: translateX(-25%) translateY(-20px);
+    }
+    100% {
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+/* =================================================================
+   Glitch Effects
+   ================================================================= */
+
+.glitch {
+    position: relative;
+    color: var(--text-primary);
+    animation: glitchMain 2s infinite;
+}
+
+.glitch::before,
+.glitch::after {
+    content: attr(data-text);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.glitch::before {
+    animation: glitchTop 0.3s infinite;
+    color: var(--brand-vibrant-red);
+    z-index: -1;
+}
+
+.glitch::after {
+    animation: glitchBottom 0.3s infinite;
+    color: var(--brand-bright-cyan);
+    z-index: -2;
+}
+
+@keyframes glitchMain {
+    0%, 100% {
+        transform: translate(0);
+    }
+    20% {
+        transform: translate(-2px, 2px);
+    }
+    40% {
+        transform: translate(2px, -2px);
+    }
+    60% {
+        transform: translate(-2px, -2px);
+    }
+    80% {
+        transform: translate(2px, 2px);
+    }
+}
+
+@keyframes glitchTop {
+    0%, 100% {
+        clip-path: inset(0 0 60% 0);
+        transform: translate(0);
+    }
+    20% {
+        clip-path: inset(0 0 60% 0);
+        transform: translate(-3px);
+    }
+}
+
+@keyframes glitchBottom {
+    0%, 100% {
+        clip-path: inset(60% 0 0 0);
+        transform: translate(0);
+    }
+    20% {
+        clip-path: inset(60% 0 0 0);
+        transform: translate(3px);
+    }
+}
+
+/* =================================================================
+   Performance Optimizations
+   ================================================================= */
+
+/* Use GPU acceleration for complex effects */
+.gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+}
+
+/* Pause animations when not visible */
+.pause-when-hidden:not(:hover) {
+    animation-play-state: paused;
+}
+
+/* =================================================================
+   Accessibility
+   ================================================================= */
+
+/* Reduce effects for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+    .parallax-layer,
+    .gradient-animated,
+    .blob,
+    .shape-morph,
+    .cube,
+    .neon-glow,
+    .particles,
+    .wave,
+    .glitch {
+        animation: none !important;
+    }
+    
+    .gradient-animated {
+        background-size: 100% 100%;
+    }
+    
+    .tilt-effect:hover {
+        transform: none;
+    }
+    
+    .flip-container:hover .flip-card {
+        transform: none;
+    }
+}

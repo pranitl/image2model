@@ -1,0 +1,636 @@
+/* =================================================================
+   Form Animations and Micro-interactions
+   Input feedback, validation states, and interactive elements
+   ================================================================= */
+
+/* =================================================================
+   Input Field Animations
+   ================================================================= */
+
+/* Base Input Transitions */
+.input,
+.textarea,
+.select {
+    transition: 
+        border-color var(--duration-short) var(--ease-smooth),
+        box-shadow var(--duration-short) var(--ease-smooth),
+        background-color var(--duration-short) var(--ease-smooth),
+        transform var(--duration-short) var(--ease-out-cubic);
+}
+
+/* Focus States */
+.input:focus,
+.textarea:focus,
+.select:focus {
+    border-color: var(--accent-primary);
+    box-shadow: 
+        0 0 0 3px rgba(93, 173, 226, 0.1),
+        0 1px 2px rgba(58, 66, 74, 0.1);
+    transform: translateY(-1px);
+}
+
+/* Floating Label Animation */
+.form-field {
+    position: relative;
+}
+
+.form-field-input {
+    padding-top: 1.5rem;
+}
+
+.form-field-label {
+    position: absolute;
+    left: 1rem;
+    top: 1.25rem;
+    color: var(--text-muted);
+    font-size: var(--text-base);
+    pointer-events: none;
+    transition: 
+        transform var(--duration-medium) var(--ease-out-cubic),
+        font-size var(--duration-medium) var(--ease-smooth),
+        color var(--duration-short) var(--ease-smooth);
+    transform-origin: left center;
+}
+
+.form-field-input:focus ~ .form-field-label,
+.form-field-input:not(:placeholder-shown) ~ .form-field-label {
+    transform: translateY(-1rem) scale(0.85);
+    color: var(--accent-primary);
+}
+
+/* Input with Icon Animation */
+.input-icon-wrapper {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    transition: 
+        color var(--duration-short) var(--ease-smooth),
+        transform var(--duration-short) var(--ease-spring);
+}
+
+.input-icon-wrapper .input {
+    padding-left: 2.5rem;
+}
+
+.input-icon-wrapper .input:focus ~ .input-icon {
+    color: var(--accent-primary);
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* =================================================================
+   Validation States
+   ================================================================= */
+
+/* Success State */
+.input.is-valid,
+.textarea.is-valid {
+    border-color: var(--color-success);
+    background-color: rgba(39, 174, 96, 0.05);
+}
+
+.input.is-valid:focus,
+.textarea.is-valid:focus {
+    box-shadow: 
+        0 0 0 3px rgba(39, 174, 96, 0.1),
+        0 1px 2px rgba(58, 66, 74, 0.1);
+}
+
+/* Success Checkmark Animation */
+.validation-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%) scale(0);
+    width: 20px;
+    height: 20px;
+    opacity: 0;
+    transition: 
+        transform var(--duration-short) var(--ease-spring),
+        opacity var(--duration-short) var(--ease-smooth);
+}
+
+.input.is-valid ~ .validation-icon {
+    transform: translateY(-50%) scale(1);
+    opacity: 1;
+    color: var(--color-success);
+}
+
+/* Animated Checkmark SVG */
+.checkmark-circle {
+    stroke-dasharray: 166;
+    stroke-dashoffset: 166;
+    stroke-width: 2;
+    stroke-miterlimit: 10;
+    stroke: var(--color-success);
+    fill: none;
+    animation: checkmarkStroke 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+}
+
+.checkmark-check {
+    transform-origin: 50% 50%;
+    stroke-dasharray: 48;
+    stroke-dashoffset: 48;
+    animation: checkmarkStroke 0.3s cubic-bezier(0.65, 0, 0.45, 1) 0.3s forwards;
+}
+
+@keyframes checkmarkStroke {
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+/* Error State */
+.input.is-invalid,
+.textarea.is-invalid {
+    border-color: var(--color-error);
+    background-color: rgba(231, 76, 60, 0.05);
+    animation: shake var(--duration-medium) var(--ease-smooth);
+}
+
+.input.is-invalid:focus,
+.textarea.is-invalid:focus {
+    box-shadow: 
+        0 0 0 3px rgba(231, 76, 60, 0.1),
+        0 1px 2px rgba(58, 66, 74, 0.1);
+}
+
+/* Error Message Animation */
+.error-message {
+    color: var(--color-error);
+    font-size: var(--text-sm);
+    margin-top: 0.25rem;
+    opacity: 0;
+    transform: translateY(-10px);
+    animation: fadeInDown var(--duration-short) var(--ease-out-cubic) forwards;
+}
+
+/* =================================================================
+   Checkbox and Radio Animations
+   ================================================================= */
+
+/* Custom Checkbox */
+.checkbox {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.checkbox-input {
+    position: absolute;
+    opacity: 0;
+}
+
+.checkbox-box {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    transition: 
+        border-color var(--duration-short) var(--ease-smooth),
+        background-color var(--duration-short) var(--ease-smooth),
+        transform var(--duration-short) var(--ease-spring);
+    position: relative;
+}
+
+.checkbox-input:checked ~ .checkbox-box {
+    border-color: var(--accent-primary);
+    background-color: var(--accent-primary);
+    transform: scale(1.1);
+}
+
+.checkbox-checkmark {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 12px;
+    height: 12px;
+    opacity: 0;
+    transition: 
+        transform var(--duration-short) var(--ease-spring),
+        opacity var(--duration-short) var(--ease-smooth);
+}
+
+.checkbox-input:checked ~ .checkbox-box .checkbox-checkmark {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+}
+
+/* Checkbox Ripple Effect */
+.checkbox-box::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--accent-primary);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0.2;
+}
+
+.checkbox-input:focus ~ .checkbox-box::after {
+    animation: ripple var(--duration-medium) var(--ease-out-cubic);
+}
+
+/* Custom Radio Button */
+.radio {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.radio-input {
+    position: absolute;
+    opacity: 0;
+}
+
+.radio-circle {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--border-color);
+    border-radius: 50%;
+    background: var(--bg-primary);
+    transition: 
+        border-color var(--duration-short) var(--ease-smooth),
+        transform var(--duration-short) var(--ease-spring);
+    position: relative;
+}
+
+.radio-input:checked ~ .radio-circle {
+    border-color: var(--accent-primary);
+    transform: scale(1.1);
+}
+
+.radio-dot {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    transition: transform var(--duration-short) var(--ease-spring);
+}
+
+.radio-input:checked ~ .radio-circle .radio-dot {
+    transform: translate(-50%, -50%) scale(1);
+}
+
+/* =================================================================
+   Toggle Switch Animation
+   ================================================================= */
+
+.toggle {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+    cursor: pointer;
+}
+
+.toggle-input {
+    position: absolute;
+    opacity: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+    transition: 
+        background-color var(--duration-short) var(--ease-smooth),
+        box-shadow var(--duration-short) var(--ease-smooth);
+}
+
+.toggle-input:checked ~ .toggle-slider {
+    background: var(--gradient-cool-ocean);
+}
+
+.toggle-knob {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+    transition: 
+        transform var(--duration-short) var(--ease-spring),
+        box-shadow var(--duration-short) var(--ease-smooth);
+}
+
+.toggle-input:checked ~ .toggle-slider .toggle-knob {
+    transform: translateX(24px);
+    box-shadow: var(--shadow-md);
+}
+
+/* Toggle with Icons */
+.toggle-icon-off,
+.toggle-icon-on {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--text-muted);
+    transition: opacity var(--duration-short) var(--ease-smooth);
+}
+
+.toggle-icon-off {
+    right: 6px;
+}
+
+.toggle-icon-on {
+    left: 6px;
+    opacity: 0;
+}
+
+.toggle-input:checked ~ .toggle-slider .toggle-icon-off {
+    opacity: 0;
+}
+
+.toggle-input:checked ~ .toggle-slider .toggle-icon-on {
+    opacity: 1;
+    color: white;
+}
+
+/* =================================================================
+   Select Dropdown Animation
+   ================================================================= */
+
+.select-wrapper {
+    position: relative;
+}
+
+.select {
+    appearance: none;
+    padding-right: 2.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23666' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 12px;
+    transition: 
+        border-color var(--duration-short) var(--ease-smooth),
+        background-position var(--duration-short) var(--ease-smooth);
+}
+
+.select:focus {
+    background-position: right 1rem center;
+}
+
+/* Custom Dropdown Animation */
+.custom-select {
+    position: relative;
+}
+
+.custom-select-options {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    margin-top: 4px;
+    opacity: 0;
+    transform: translateY(-10px);
+    visibility: hidden;
+    transition: 
+        opacity var(--duration-short) var(--ease-smooth),
+        transform var(--duration-short) var(--ease-out-cubic),
+        visibility 0s linear var(--duration-short);
+    z-index: 100;
+}
+
+.custom-select.open .custom-select-options {
+    opacity: 1;
+    transform: translateY(0);
+    visibility: visible;
+    transition: 
+        opacity var(--duration-short) var(--ease-smooth),
+        transform var(--duration-short) var(--ease-out-cubic);
+}
+
+.custom-select-option {
+    padding: var(--spacing-sm) var(--spacing-md);
+    cursor: pointer;
+    transition: 
+        background-color var(--duration-short) var(--ease-smooth),
+        color var(--duration-short) var(--ease-smooth);
+}
+
+.custom-select-option:hover {
+    background-color: var(--bg-secondary);
+    color: var(--accent-primary);
+}
+
+/* =================================================================
+   File Upload Animation
+   ================================================================= */
+
+.file-upload {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.file-upload-input {
+    position: absolute;
+    left: -9999px;
+}
+
+.file-upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: var(--bg-secondary);
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    transition: 
+        border-color var(--duration-short) var(--ease-smooth),
+        background-color var(--duration-short) var(--ease-smooth),
+        transform var(--duration-short) var(--ease-spring);
+}
+
+.file-upload:hover .file-upload-label {
+    border-color: var(--accent-primary);
+    background-color: rgba(93, 173, 226, 0.05);
+    transform: scale(1.02);
+}
+
+.file-upload-input:focus ~ .file-upload-label {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* Drag Over State */
+.file-upload.drag-over .file-upload-label {
+    border-color: var(--accent-primary);
+    background-color: rgba(93, 173, 226, 0.1);
+    transform: scale(1.05);
+    animation: scalePulse var(--duration-xl) var(--ease-in-out-cubic) infinite;
+}
+
+/* =================================================================
+   Form Submit Animation
+   ================================================================= */
+
+.form-submit-wrapper {
+    position: relative;
+}
+
+.form-submit-success {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    width: 60px;
+    height: 60px;
+    background: var(--color-success);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 24px;
+    opacity: 0;
+}
+
+.form-submit-success.show {
+    animation: successPop var(--duration-medium) var(--ease-spring) forwards;
+}
+
+@keyframes successPop {
+    0% {
+        transform: translate(-50%, -50%) scale(0);
+        opacity: 0;
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        opacity: 1;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+    }
+}
+
+/* =================================================================
+   Range Slider Animation
+   ================================================================= */
+
+.range-slider {
+    position: relative;
+    width: 100%;
+}
+
+.range-input {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+    outline: none;
+}
+
+.range-input::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: 
+        transform var(--duration-short) var(--ease-spring),
+        box-shadow var(--duration-short) var(--ease-smooth);
+}
+
+.range-input::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 0 8px rgba(93, 173, 226, 0.1);
+}
+
+.range-input::-webkit-slider-thumb:active {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 12px rgba(93, 173, 226, 0.2);
+}
+
+/* Range Progress Fill */
+.range-progress {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    height: 6px;
+    background: var(--gradient-cool-ocean);
+    border-radius: var(--radius-full);
+    transform: translateY(-50%);
+    pointer-events: none;
+    transition: width var(--duration-short) var(--ease-smooth);
+}
+
+/* =================================================================
+   Accessibility Features
+   ================================================================= */
+
+/* Focus Visible Styles */
+.input:focus-visible,
+.textarea:focus-visible,
+.select:focus-visible,
+.checkbox-input:focus-visible ~ .checkbox-box,
+.radio-input:focus-visible ~ .radio-circle,
+.toggle-input:focus-visible ~ .toggle-slider {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+/* High Contrast Mode */
+@media (prefers-contrast: high) {
+    .input,
+    .textarea,
+    .select {
+        border-width: 2px;
+    }
+    
+    .checkbox-box,
+    .radio-circle {
+        border-width: 3px;
+    }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .input,
+    .textarea,
+    .select,
+    .checkbox-box,
+    .radio-circle,
+    .toggle-slider,
+    .toggle-knob,
+    .form-field-label {
+        transition-duration: 0.01ms !important;
+    }
+    
+    .input.is-invalid {
+        animation: none !important;
+    }
+}
