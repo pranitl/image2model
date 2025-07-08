@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
+    "build:analyze": "ANALYZE=true vite build",
     "preview": "vite preview",
     "check": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json",
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./jsconfig.json --watch",
@@ -20,8 +21,10 @@
     "@testing-library/svelte": "^4.1.0",
     "@vitest/ui": "^1.1.0",
     "jsdom": "^23.0.1",
+    "rollup-plugin-visualizer": "^6.0.3",
     "svelte": "^4.2.7",
     "vite": "^5.0.8",
+    "vite-bundle-visualizer": "^1.2.1",
     "vitest": "^1.1.0"
   },
   "type": "module"

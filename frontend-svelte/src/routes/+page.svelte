@@ -1,12 +1,21 @@
 <script>
   import { onMount } from 'svelte';
+  import { browser } from '$app/environment';
   import { scrollReveal, staggerReveal, parallax } from '$lib/actions/animations.js';
   
   let heroLogoElement;
   let mobileMenuActive = false;
+  let mounted = false;
   
-  // Smooth scroll handler
+  // Initialize on mount
+  onMount(() => {
+    mounted = true;
+  });
+  
+  // Smooth scroll handler (SSR-safe)
   function handleAnchorClick(e) {
+    if (!browser) return;
+    
     const href = e.currentTarget.getAttribute('href');
     if (href && href.startsWith('#')) {
       e.preventDefault();
