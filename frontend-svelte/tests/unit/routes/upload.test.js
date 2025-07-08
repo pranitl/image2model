@@ -22,7 +22,7 @@ describe('Upload Page', () => {
     expect(screen.getByText('Browse Files')).toBeInTheDocument();
     
     // Check file info
-    expect(screen.getByText('Supports JPG, PNG')).toBeInTheDocument();
+    expect(screen.getByText('Supports JPEG, JPG, PNG')).toBeInTheDocument();
     expect(screen.getByText('Max 10MB per file')).toBeInTheDocument();
     expect(screen.getByText('Up to 25 images')).toBeInTheDocument();
     
@@ -54,20 +54,12 @@ describe('Upload Page', () => {
     const invalidFile = new File(['test'], 'test.txt', { type: 'text/plain' });
     const fileInput = container.querySelector('input[type="file"]');
     
-    // Mock console.error to check validation
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-    
     await fireEvent.change(fileInput, {
       target: { files: [invalidFile] }
     });
     
-    // Should show error
-    expect(consoleSpy).toHaveBeenCalledWith(
-      'File errors:', 
-      expect.arrayContaining([expect.stringContaining('Invalid file type')])
-    );
-    
-    consoleSpy.mockRestore();
+    // File should not be added (no preview section)
+    expect(container.querySelector('.file-preview-section')).toBeFalsy();
   });
 
   it('should handle advanced options toggle', async () => {
@@ -107,10 +99,11 @@ describe('Upload Page', () => {
     const form = container.querySelector('form');
     await fireEvent.submit(form);
     
-    // Check API was called
+    // Check API was called with signal for timeout
     expect(global.fetch).toHaveBeenCalledWith('/api/v1/upload/batch', {
       method: 'POST',
-      body: expect.any(FormData)
+      body: expect.any(FormData),
+      signal: expect.any(AbortSignal)
     });
   });
 

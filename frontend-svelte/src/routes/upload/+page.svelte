@@ -9,7 +9,8 @@
   let files = [];
   let dragActive = false;
   let optionsExpanded = false;
-  let faceLimit = 10000;
+  let faceLimit = 10000; // Auto/Medium default
+  let isAuto = true; // Track if we're in auto mode
   let uploading = false;
   let mobileMenuActive = false;
   let fileInput;
@@ -110,9 +111,8 @@
   function handleDragLeave(e) {
     e.preventDefault();
     e.stopPropagation();
-    if (e.target === dropZone) {
-      dragActive = false;
-    }
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    dragActive = false;
   }
   
   function handleDrop(e) {
@@ -144,11 +144,8 @@
   }
   
   function setFaceLimit(value) {
-    if (value === 'auto') {
-      faceLimit = 0;
-    } else {
-      faceLimit = parseInt(value);
-    }
+    faceLimit = parseInt(value);
+    isAuto = false; // Reset auto flag when setting specific values
   }
   
   // Form submission with retry logic
@@ -303,62 +300,32 @@
         <form on:submit={handleSubmit}>
           <!-- Upload Zone -->
           <div class="upload-zone-wrapper animate-fade-in-up delay-400">
-            <div 
-              bind:this={dropZone}
-              class="upload-zone hover-lift"
-              class:drag-over={dragActive}
+            <label 
+              class="upload-area {dragActive ? 'drag-over' : ''}"
               on:dragover={handleDragOver}
               on:dragleave={handleDragLeave}
               on:drop={handleDrop}
               on:dragenter|preventDefault
             >
-              <div class="upload-zone-content">
-                <svg class="upload-icon" viewBox="0 0 24 24" fill="none">
-                  <path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3-3m0 0l3 3m-3-3v6" 
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <input 
+                bind:this={fileInput}
+                type="file" 
+                multiple 
+                accept=".jpg,.jpeg,.png" 
+                on:change={handleFileSelect}
+                class="file-input"
+              >
+              <div class="upload-content">
+                <svg class="upload-icon" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M5.5 13a3.5 3.5 0 01-.369-6.98 4 4 0 117.753-1.977A4.5 4.5 0 1113.5 13H11V9.413l1.293 1.293a1 1 0 001.414-1.414l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 001.414 1.414L9 9.414V13H5.5z"/>
+                  <path d="M9 13h2v5a1 1 0 11-2 0v-5z"/>
                 </svg>
-                <div class="upload-instructions">
-                  <h3>Drag & drop your images here</h3>
-                  <p>or click to browse</p>
-                </div>
-                <input 
-                  bind:this={fileInput}
-                  type="file" 
-                  multiple 
-                  accept=".jpg,.jpeg,.png" 
-                  on:change={handleFileSelect}
-                  hidden
-                >
-                <button 
-                  type="button" 
-                  class="btn btn-secondary hover-lift"
-                  on:click={() => fileInput.click()}
-                >
-                  Browse Files
-                </button>
-                <div class="file-info">
-                  <div class="file-info-item">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd"/>
-                    </svg>
-                    <span>Supports JPG, PNG</span>
-                  </div>
-                  <div class="file-info-item">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clip-rule="evenodd"/>
-                    </svg>
-                    <span>Max 10MB per file</span>
-                  </div>
-                  <div class="file-info-item">
-                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
-                      <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 1 1 0 000 2H6a2 2 0 00-2 2v6a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-1a1 1 0 100-2h1a4 4 0 014 4v6a4 4 0 01-4 4H6a4 4 0 01-4-4V7a4 4 0 014-4z" clip-rule="evenodd"/>
-                    </svg>
-                    <span>Up to 25 images</span>
-                  </div>
-                </div>
+                <h3 class="upload-title">Drop images here or click to browse</h3>
+                <p class="upload-info">
+                  Supports JPEG, PNG • Max 10MB per file • Up to 25 images
+                </p>
               </div>
-            </div>
+            </label>
           </div>
 
           <!-- File Preview Gallery -->
@@ -432,9 +399,9 @@
                   >
                   <div class="face-limit-presets">
                     <button type="button" class="preset-btn" class:active={faceLimit === 5000} on:click={() => setFaceLimit(5000)}>Low</button>
-                    <button type="button" class="preset-btn" class:active={faceLimit === 10000} on:click={() => setFaceLimit(10000)}>Medium</button>
+                    <button type="button" class="preset-btn" class:active={faceLimit === 10000 && !isAuto} on:click={() => { setFaceLimit(10000); isAuto = false; }}>Medium</button>
                     <button type="button" class="preset-btn" class:active={faceLimit === 20000} on:click={() => setFaceLimit(20000)}>High</button>
-                    <button type="button" class="preset-btn" class:active={faceLimit === 0} on:click={() => setFaceLimit('auto')}>Auto</button>
+                    <button type="button" class="preset-btn" class:active={faceLimit === 10000 && isAuto} on:click={() => { setFaceLimit(10000); isAuto = true; }}>Auto</button>
                   </div>
                   <p class="face-limit-description">
                     Controls the level of detail in your 3D model. Higher values create more detailed models but take longer to process.
@@ -593,5 +560,92 @@
   .file-preview-section {
     display: block !important;
     margin-top: 2rem;
+  }
+  
+  /* New upload area styles */
+  :global(.upload-area) {
+    display: block;
+    width: 100%;
+    padding: 3rem 2rem;
+    background: white;
+    border: 2px dashed #e0e0e0;
+    border-radius: 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+  
+  :global(.upload-area:hover) {
+    border-color: #2196f3;
+    background: #f5f5f5;
+  }
+  
+  :global(.upload-area.drag-over) {
+    border-color: #2196f3;
+    background: #e3f2fd;
+  }
+  
+  :global(.file-input) {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+  
+  :global(.upload-content) {
+    pointer-events: none;
+  }
+  
+  :global(.upload-icon) {
+    width: 48px;
+    height: 48px;
+    color: #2196f3;
+    margin-bottom: 1rem;
+  }
+  
+  :global(.upload-title) {
+    font-size: 1.25rem;
+    color: #1a202c;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+  }
+  
+  :global(.upload-info) {
+    color: #666;
+    font-size: 0.875rem;
+    margin: 0;
+  }
+  
+  /* Face limit preset buttons */
+  :global(.preset-btn) {
+    flex: 1;
+    padding: 0.5rem 1rem;
+    background: white;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    color: #666;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  :global(.preset-btn:hover) {
+    border-color: #2196f3;
+    color: #2196f3;
+    background: #e3f2fd;
+  }
+  
+  :global(.preset-btn.active) {
+    background: #2196f3;
+    color: white;
+    border-color: #2196f3;
+    box-shadow: 0 2px 4px rgba(33, 150, 243, 0.2);
+  }
+  
+  :global(.preset-btn.active:hover) {
+    background: #1976d2;
+    border-color: #1976d2;
   }
 </style>
