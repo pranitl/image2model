@@ -107,19 +107,37 @@
           <div class="dev-card">
             <h3>Empty States</h3>
             <p>No files, no results, etc.</p>
-            <Button href="/dev/empty-states" variant="ghost">View Scenarios</Button>
+            <Button href="/dev/empty-states" variant="ghost">View Empty Upload</Button>
           </div>
 
           <div class="dev-card">
             <h3>Error States</h3>
-            <p>Failed uploads, network errors</p>
-            <Button href="/dev/error-states" variant="ghost">View Scenarios</Button>
+            <p>Processing failed</p>
+            <Button href="/dev/error-states" variant="ghost">View Error</Button>
           </div>
 
           <div class="dev-card">
-            <h3>Edge Cases</h3>
-            <p>Large files, many files, etc.</p>
-            <Button href="/dev/edge-cases" variant="ghost">View Scenarios</Button>
+            <h3>Edge Case: Many Files</h3>
+            <p>50+ generated models</p>
+            <Button href="/dev/edge-cases?case=manyFiles" variant="ghost">View 50 Files</Button>
+          </div>
+          
+          <div class="dev-card">
+            <h3>Edge Case: Large Files</h3>
+            <p>Very large model files</p>
+            <Button href="/dev/edge-cases?case=largeFiles" variant="ghost">View Large Files</Button>
+          </div>
+          
+          <div class="dev-card">
+            <h3>Edge Case: Slow Processing</h3>
+            <p>Processing taking long time</p>
+            <Button href="/dev/edge-cases?case=slowProcessing" variant="ghost">View Slow</Button>
+          </div>
+          
+          <div class="dev-card">
+            <h3>Edge Case: Mixed Results</h3>
+            <p>Some files failed</p>
+            <Button href="/dev/edge-cases?case=mixedResults" variant="ghost">View Mixed</Button>
           </div>
         </div>
       </div>

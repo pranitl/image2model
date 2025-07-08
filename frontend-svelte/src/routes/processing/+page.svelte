@@ -18,6 +18,8 @@
   // Check if we're in dev mode
   $: isDevMode = $page.url.searchParams.get('dev') === 'true';
   $: showResults = $page.url.searchParams.get('results') === 'true';
+  $: showError = $page.url.searchParams.get('error') === 'true';
+  $: edgeCase = $page.url.searchParams.get('edgeCase');
   
   // Dev mode mock data for results
   const mockCompletedFiles = [
@@ -190,7 +192,94 @@
       taskId = 'dev-task-123';
       jobId = 'dev-job-123';
       
-      if (showResults) {
+      if (showError) {
+        // Show error state
+        isCompleted = true;
+        isProcessing = false;
+        completedFiles = [];
+        totalFiles = 6;
+        filesCompleted = 0;
+        elapsedTime = 45;
+        // Error will be shown in the results section
+      } else if (edgeCase === 'manyFiles') {
+        // Edge case: Many files
+        isCompleted = true;
+        isProcessing = false;
+        // Generate 50 mock completed files
+        completedFiles = Array.from({ length: 50 }, (_, i) => ({
+          filename: `model-${i + 1}.glb`,
+          name: `model-${i + 1}.glb`,
+          size: Math.floor(Math.random() * 5000000) + 1000000,
+          downloadUrl: '#',
+          mimeType: 'model/gltf-binary',
+          createdTime: new Date().toISOString(),
+          rendered_image: { 
+            url: `https://images.unsplash.com/photo-${1590000000000 + i * 1000000}?w=400&h=400&fit=crop` 
+          }
+        }));
+        totalSize = completedFiles.reduce((sum, f) => sum + f.size, 0);
+        filesCompleted = completedFiles.length;
+        totalFiles = completedFiles.length;
+        elapsedTime = 890;
+      } else if (edgeCase === 'slowProcessing') {
+        // Edge case: Very slow processing
+        files = mockProcessingFiles.map((f, i) => ({
+          ...f,
+          status: i === 0 ? 'processing' : 'pending',
+          progress: i === 0 ? 5 : 0,
+          message: i === 0 ? 'Processing - This is taking longer than expected...' : 'Queued'
+        }));
+        totalFiles = files.length;
+        filesCompleted = 0;
+        overallProgress = 5;
+        elapsedTime = 300; // 5 minutes
+      } else if (edgeCase === 'largeFiles') {
+        // Edge case: Very large files
+        isCompleted = true;
+        isProcessing = false;
+        completedFiles = [
+          {
+            filename: 'ultra-hd-furniture-model.glb',
+            name: 'ultra-hd-furniture-model.glb',
+            size: 524288000, // 500MB
+            downloadUrl: '#',
+            mimeType: 'model/gltf-binary',
+            createdTime: new Date().toISOString(),
+            rendered_image: { url: 'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=400&h=400&fit=crop' }
+          },
+          {
+            filename: 'complex-architectural-model.glb',
+            name: 'complex-architectural-model.glb',
+            size: 1073741824, // 1GB
+            downloadUrl: '#',
+            mimeType: 'model/gltf-binary',
+            createdTime: new Date().toISOString(),
+            rendered_image: { url: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400&h=400&fit=crop' }
+          }
+        ];
+        totalSize = completedFiles.reduce((sum, f) => sum + f.size, 0);
+        filesCompleted = completedFiles.length;
+        totalFiles = completedFiles.length;
+        elapsedTime = 1800; // 30 minutes
+      } else if (edgeCase === 'mixedResults') {
+        // Edge case: Mixed results - some succeeded, some failed
+        isCompleted = true;
+        isProcessing = false;
+        completedFiles = mockCompletedFiles.slice(0, 3); // Only 3 succeeded
+        totalSize = completedFiles.reduce((sum, f) => sum + f.size, 0);
+        filesCompleted = 3;
+        totalFiles = 6; // But 6 were submitted
+        elapsedTime = 180;
+      } else if (edgeCase === 'singleFile') {
+        // Edge case: Single file
+        isCompleted = true;
+        isProcessing = false;
+        completedFiles = [mockCompletedFiles[0]];
+        totalSize = completedFiles[0].size;
+        filesCompleted = 1;
+        totalFiles = 1;
+        elapsedTime = 45;
+      } else if (showResults) {
         // Show results view
         isCompleted = true;
         isProcessing = false;
@@ -514,13 +603,17 @@
 
 <!-- Hero Section -->
 <Hero 
-  title={isCompleted ? "Success!" : "Processing Your Images"} 
-  subtitle={isCompleted ? "Your 3D models are ready for download" : "Your 3D models are being generated"}
+  title={showError ? "Processing Failed" : (isCompleted ? "Success!" : "Processing Your Images")} 
+  subtitle={showError ? "We encountered an error while processing your images" : (isCompleted ? "Your 3D models are ready for download" : "Your 3D models are being generated")}
 >
   <div slot="content" class="animate-fade-in-scale delay-400" use:scrollReveal>
-    {#if isCompleted}
+    {#if isCompleted && !showError}
       <div class="success-icon animate-bounce-in">
         <Icon name="check-circle" size={80} color="white" />
+      </div>
+    {:else if showError}
+      <div class="error-icon animate-bounce-in">
+        <Icon name="x-circle" size={80} color="white" />
       </div>
     {/if}
     <ProgressIndicator currentStep={isCompleted ? 3 : 2} />
@@ -693,7 +786,7 @@
             </div>
             <div>
               <span class="summary-label">Models Generated</span>
-              <span class="summary-value">{completedFiles.length}</span>
+              <span class="summary-value">{completedFiles.length}{#if edgeCase === 'mixedResults'} of {totalFiles}{/if}</span>
             </div>
           </div>
           <div class="summary-item">
@@ -719,6 +812,7 @@
     </section>
     
     <!-- Download Actions -->
+    {#if !showError && completedFiles.length > 0}
     <section class="download-actions">
       <div class="container">
         <Button 
@@ -735,6 +829,7 @@
         </Button>
       </div>
     </section>
+    {/if}
     
     <!-- Models Grid -->
     <section class="models-grid-section">
@@ -744,6 +839,13 @@
           <div class="loading-state">
             <div class="spinner"></div>
             <p>Loading your models...</p>
+          </div>
+        {:else if showError}
+          <div class="empty-state error">
+            <Icon name="x-circle" size={64} color="#ef4444" />
+            <h3>Processing Failed</h3>
+            <p>Unable to generate 3D models from your images.</p>
+            <Button href="/upload" variant="primary">Upload New Images</Button>
           </div>
         {:else if completedFiles.length === 0}
           <div class="empty-state">
@@ -765,6 +867,7 @@
     </section>
     
     <!-- What's Next Section -->
+    {#if !showError && completedFiles.length > 0}
     <section class="whats-next-section">
       <div class="container">
         <h2>What's Next?</h2>
@@ -796,6 +899,7 @@
         </div>
       </div>
     </section>
+    {/if}
   {/if}
 </main>
 
@@ -1257,6 +1361,10 @@
     font-size: 1.25rem;
     color: #1e293b;
     margin: 1rem 0;
+  }
+
+  .empty-state.error h3 {
+    color: #dc2626;
   }
 
   .empty-state p {

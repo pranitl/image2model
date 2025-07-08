@@ -4,6 +4,8 @@
   import Button from '$lib/components/Button.svelte';
   import Hero from '$lib/components/Hero.svelte';
   import Icon from '$lib/components/Icon.svelte';
+  import ImageGrid from '$lib/components/ImageGrid.svelte';
+  import ModelCard from '$lib/components/ModelCard.svelte';
 </script>
 
 <Navbar />
@@ -16,23 +18,38 @@
   
   <section class="gallery-content">
     <div class="container">
-      <!-- Upload Empty States -->
+      <!-- Grid-Based Empty States -->
       <div class="component-section">
-        <h2>Upload Page Empty States</h2>
+        <h2>Grid Empty States</h2>
         <div class="component-grid large">
           <div class="component-demo">
-            <h3>No Files Selected</h3>
-            <div class="demo-area large">
-              <div class="empty-state">
-                <div class="empty-icon">
-                  <Icon name="cloud-upload" size={64} />
+            <h3>Empty Upload Grid</h3>
+            <div class="demo-area">
+              <div class="grid-container">
+                <div class="upload-header">
+                  <h4>Selected Images</h4>
+                  <span class="file-count">0 images</span>
                 </div>
-                <h3>No images uploaded yet</h3>
-                <p>Drag and drop your images here or click to browse</p>
-                <Button variant="primary">
-                  <Icon name="upload" size={20} />
-                  Select Images
-                </Button>
+                <ImageGrid items={[]} />
+                <div class="empty-message">
+                  <Icon name="image" size={48} color="#94a3b8" />
+                  <p>No images selected yet</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="component-demo">
+            <h3>Processing Grid - No Files</h3>
+            <div class="demo-area">
+              <div class="grid-container">
+                <h4 class="grid-title">Source Images</h4>
+                <ImageGrid items={[]} />
+                <div class="empty-message">
+                  <Icon name="image" size={48} color="#94a3b8" />
+                  <p>No images to process</p>
+                  <Button href="/upload" variant="primary" size="sm">Upload Images</Button>
+                </div>
               </div>
             </div>
           </div>
@@ -41,16 +58,19 @@
 
       <!-- Results Empty States -->
       <div class="component-section">
-        <h2>Results Page Empty States</h2>
+        <h2>Results Empty States</h2>
         <div class="component-grid">
           <div class="component-demo">
             <h3>No Models Generated</h3>
             <div class="demo-area">
-              <div class="empty-state">
-                <Icon name="info" size={64} color="#94a3b8" />
-                <h3>No models generated</h3>
-                <p>The processing completed but no 3D models were generated.</p>
-                <Button href="/upload" variant="primary">Try Again</Button>
+              <div class="grid-container">
+                <h4 class="grid-title">Generated 3D Models</h4>
+                <div class="empty-results">
+                  <Icon name="cube" size={64} color="#94a3b8" />
+                  <h3>No models generated</h3>
+                  <p>The processing completed but no 3D models were generated.</p>
+                  <Button href="/upload" variant="primary">Try Again</Button>
+                </div>
               </div>
             </div>
           </div>
@@ -58,11 +78,71 @@
           <div class="component-demo">
             <h3>Processing Failed</h3>
             <div class="demo-area">
-              <div class="empty-state error">
-                <Icon name="x-circle" size={64} color="#ef4444" />
-                <h3>Processing Failed</h3>
-                <p>Unable to generate 3D models from your images.</p>
-                <Button href="/upload" variant="primary">Upload New Images</Button>
+              <div class="grid-container">
+                <h4 class="grid-title">Generated 3D Models</h4>
+                <div class="empty-results error">
+                  <Icon name="x-circle" size={64} color="#ef4444" />
+                  <h3>Processing Failed</h3>
+                  <p>Unable to generate 3D models from your images.</p>
+                  <Button href="/upload" variant="primary">Upload New Images</Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload Page Specific States -->
+      <div class="component-section">
+        <h2>Upload Page States</h2>
+        <div class="component-grid large">
+          <div class="component-demo">
+            <h3>Initial Upload State</h3>
+            <div class="demo-area large">
+              <div class="dropzone-empty">
+                <div class="empty-icon">
+                  <Icon name="cloud-upload" size={64} />
+                </div>
+                <h3>Drop your images here</h3>
+                <p>or click to select files</p>
+                <Button variant="primary">
+                  <Icon name="upload" size={20} />
+                  Select Images
+                </Button>
+                <p class="file-hint">Supports JPG, PNG, and WebP images</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="component-demo">
+            <h3>Mixed State - Some Files Selected</h3>
+            <div class="demo-area">
+              <div class="grid-container">
+                <div class="upload-header">
+                  <h4>Selected Images</h4>
+                  <span class="file-count">3 images</span>
+                </div>
+                <ImageGrid 
+                  items={[
+                    {
+                      id: 'sample-1',
+                      name: 'chair.jpg',
+                      preview: 'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=200&h=200&fit=crop'
+                    },
+                    {
+                      id: 'sample-2',
+                      name: 'table.jpg',
+                      preview: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=200&fit=crop'
+                    },
+                    {
+                      id: 'sample-3',
+                      name: 'lamp.jpg',
+                      preview: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop'
+                    }
+                  ]}
+                  onRemove={() => {}}
+                  gridSize="small"
+                />
               </div>
             </div>
           </div>
@@ -313,6 +393,32 @@
     min-height: 300px;
   }
 
+  /* Grid container styles */
+  .grid-container {
+    width: 100%;
+  }
+
+  .upload-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .upload-header h4 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .grid-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 1rem 0;
+  }
+
   /* Empty state styles */
   .empty-state {
     text-align: center;
@@ -360,6 +466,64 @@
   .empty-icon {
     color: #94a3b8;
     margin-bottom: 1rem;
+  }
+
+  /* Empty message for grids */
+  .empty-message {
+    text-align: center;
+    padding: 2rem;
+    color: #94a3b8;
+  }
+
+  .empty-message p {
+    margin: 0.5rem 0 0;
+    color: #64748b;
+  }
+
+  /* Empty results */
+  .empty-results {
+    text-align: center;
+    padding: 3rem;
+  }
+
+  .empty-results h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 1rem 0 0.5rem;
+  }
+
+  .empty-results p {
+    color: #64748b;
+    margin: 0 0 1.5rem;
+  }
+
+  .empty-results.error h3 {
+    color: #dc2626;
+  }
+
+  /* Dropzone empty state */
+  .dropzone-empty {
+    text-align: center;
+    padding: 4rem 2rem;
+  }
+
+  .dropzone-empty h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 1rem 0 0.5rem;
+  }
+
+  .dropzone-empty p {
+    color: #64748b;
+    margin: 0 0 1.5rem;
+  }
+
+  .file-hint {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    margin-top: 1rem;
   }
 
   .welcome-icon {
@@ -442,6 +606,26 @@
   .dev-nav {
     padding: 2rem 0;
     border-top: 1px solid #e2e8f0;
+  }
+
+  /* Section header styles */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+  }
+
+  .section-header h4 {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .file-count {
+    font-size: 0.875rem;
+    color: #64748b;
   }
 
   /* Override hero gradient text */
