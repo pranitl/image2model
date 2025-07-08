@@ -1,6 +1,5 @@
 <script>
   export let items = [];
-  export let current = '';
 </script>
 
 <section class="breadcrumb-section">

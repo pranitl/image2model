@@ -29,8 +29,11 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# Python libraries (but not frontend lib folders)
+/lib/
+/lib64/
+!/frontend*/src/lib/
+!/frontend*/static/lib/
 parts/
 sdist/
 var/
@@ -411,3 +414,11 @@ worktrees/
 *.app 
 
 .mcp.json
+# Frontend-specific ignores
+frontend-svelte/build/
+frontend-svelte/.svelte-kit/
+frontend-svelte/package/
+frontend-svelte/vite.config.js.timestamp-*
+frontend-svelte/vite.config.ts.timestamp-*
+frontend-simple/node_modules/
+
