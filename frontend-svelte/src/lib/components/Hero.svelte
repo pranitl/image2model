@@ -64,18 +64,28 @@
     font-size: 3rem;
     font-weight: 700;
     margin-bottom: 1rem;
-    color: white;
+    color: white !important;
     line-height: 1.2;
+    /* Override any gradient text effects */
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: white !important;
+    text-fill-color: white !important;
   }
 
   .hero-subtitle {
     font-size: 1.25rem;
     opacity: 0.9;
     margin-bottom: 2rem;
-    color: white;
+    color: white !important;
     max-width: 600px;
     margin-left: auto;
     margin-right: auto;
+    /* Override any gradient text effects */
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    -webkit-text-fill-color: white !important;
+    text-fill-color: white !important;
   }
 
   /* Animation classes */
