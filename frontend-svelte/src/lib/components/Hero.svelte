@@ -19,8 +19,8 @@
 
 <style>
   .hero {
-    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
-    color: white;
+    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%) !important;
+    color: white !important;
     padding: 4rem 0 5rem;
     position: relative;
     overflow: hidden;
