@@ -4,6 +4,7 @@
   import { scrollReveal, staggerReveal, parallax } from '$lib/actions/animations.js';
   import Navbar from '$lib/components/Navbar.svelte';
   import Footer from '$lib/components/Footer.svelte';
+  import Button from '$lib/components/Button.svelte';
   
   let heroLogoElement;
   let mounted = false;
@@ -30,19 +31,19 @@
         Turn your photos into professional 3D models instantly. No expertise required - just upload and let our AI work its magic.
       </p>
       <div class="hero-cta animate-fade-in-scale delay-400">
-        <a href="/upload" class="btn btn-primary btn-lg hover-lift">
+        <Button href="/upload" variant="primary" size="lg">
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L11 6.414V13a1 1 0 11-2 0V6.414L7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3z"/>
             <path d="M3 11a1 1 0 011 1v3a1 1 0 001 1h10a1 1 0 001-1v-3a1 1 0 112 0v3a3 3 0 01-3 3H5a3 3 0 01-3-3v-3a1 1 0 011-1z"/>
           </svg>
           Start Creating Now
-        </a>
-        <a href="#demo" class="btn btn-ghost btn-lg">
+        </Button>
+        <Button href="#demo" variant="ghost" size="lg">
           Watch Demo
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
           </svg>
-        </a>
+        </Button>
       </div>
       <div class="hero-stats animate-fade-in delay-600">
         <div class="stat-item">
