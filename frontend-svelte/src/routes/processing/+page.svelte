@@ -197,10 +197,11 @@
       eventSource.close();
     }
     
-    toast.success('Processing complete! Redirecting to results...');
-    setTimeout(() => {
-      goto(`/results?batch=${taskId}`);
-    }, 2000);
+    toast.success('Processing complete!');
+    // Redirect disabled for testing
+    // setTimeout(() => {
+    //   goto(`/results?batch=${taskId}`);
+    // }, 2000);
   }
 
   // Cancel processing
@@ -478,7 +479,7 @@
 
   /* Processing Hero */
   .processing-hero {
-    background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
+    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
     color: white;
     padding: 4rem 0 5rem;
     position: relative;
@@ -559,13 +560,13 @@
 
   .progress-step.complete .progress-step-number {
     background: white;
-    color: #3498DB;
+    color: #2c3e50;
     border-color: white;
   }
 
   .progress-step.active .progress-step-number {
     background: white;
-    color: #3498DB;
+    color: #2c3e50;
     border-color: white;
     animation: pulse 2s infinite;
   }
@@ -612,7 +613,7 @@
   .batch-icon {
     width: 40px;
     height: 40px;
-    background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
+    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
     border-radius: 10px;
     display: flex;
     align-items: center;
@@ -675,7 +676,7 @@
 
   .progress-bar-fill {
     height: 100%;
-    background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
+    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
     border-radius: 15px;
     transition: width 0.5s ease;
     position: relative;
@@ -729,7 +730,7 @@
   }
 
   .view-btn.active {
-    background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
+    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
     color: white;
     border-color: transparent;
   }
