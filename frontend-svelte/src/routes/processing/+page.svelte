@@ -70,10 +70,32 @@
       currentTipIndex = (currentTipIndex + 1) % tips.length;
     }, 5000);
 
-    // For now, we'll get file info from the SSE stream
-    // Set some placeholder data
-    totalFiles = 1; // Will be updated from SSE
-    files = [];
+    // Try to get file information from sessionStorage
+    try {
+      const storedData = sessionStorage.getItem('processingFiles');
+      if (storedData) {
+        const data = JSON.parse(storedData);
+        if (data.taskId === taskId && data.files) {
+          // We have the actual filenames!
+          totalFiles = data.files.length;
+          files = data.files.map((name, i) => ({
+            id: `file-${i}`,
+            name: name,
+            status: 'pending',
+            progress: 0,
+            message: 'Waiting to start...'
+          }));
+        }
+      }
+    } catch (e) {
+      console.log('Could not retrieve file information from session');
+    }
+
+    // If we don't have file info, we'll get it from SSE
+    if (files.length === 0) {
+      totalFiles = 1; // Will be updated from SSE
+      files = [];
+    }
 
     // Connect to SSE for real-time updates
     connectToSSE();
@@ -145,24 +167,24 @@
 
     // For now, show a simple message about progress
     // Later this will show individual file progress
-    if (data.message) {
+    if (data.message || overallProgress > 0) {
       // Update the files array to show some progress
       if (files.length === 0 && totalFiles > 0) {
-        // Create placeholder files
+        // Create placeholder files only if we don't have actual names
         files = Array.from({ length: totalFiles }, (_, i) => ({
           id: `file-${i}`,
           name: `Image ${i + 1}`,
           status: i < filesCompleted ? 'completed' : 'processing',
           progress: i < filesCompleted ? 100 : Math.round((overallProgress / totalFiles)),
-          message: i < filesCompleted ? 'Completed' : data.message
+          message: i < filesCompleted ? 'Completed' : data.message || 'Processing...'
         }));
-      } else {
-        // Update existing files
+      } else if (files.length > 0) {
+        // Update existing files (preserving actual names)
         files = files.map((file, i) => ({
           ...file,
-          status: i < filesCompleted ? 'completed' : 'processing',
-          progress: i < filesCompleted ? 100 : Math.round((overallProgress / totalFiles)),
-          message: i < filesCompleted ? 'Completed' : data.message
+          status: i < filesCompleted ? 'completed' : (filesCompleted === i ? 'processing' : 'pending'),
+          progress: i < filesCompleted ? 100 : (filesCompleted === i ? Math.round((overallProgress / totalFiles)) : 0),
+          message: i < filesCompleted ? 'Completed' : (filesCompleted === i ? (data.message || 'Processing...') : 'Waiting...')
         }));
       }
     }
