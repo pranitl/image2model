@@ -1,7 +1,20 @@
 <script>
+  /**
+   * @type {string} title - Main heading text displayed in the hero section
+   */
   export let title = '';
+  
+  /**
+   * @type {string} subtitle - Optional subtitle text displayed below the title
+   */
   export let subtitle = '';
-  export let variant = 'default'; // 'default' or 'landing'
+  
+  /**
+   * @type {'default'|'landing'} variant - Visual variant of the hero section
+   * - 'default': Standard hero with normal padding
+   * - 'landing': Larger hero with increased height for landing pages
+   */
+  export let variant = 'default';
 </script>
 
 <section class="hero {variant}" {...$$restProps}>

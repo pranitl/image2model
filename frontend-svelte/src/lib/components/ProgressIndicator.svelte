@@ -1,6 +1,15 @@
 <script>
-  export let currentStep = 1; // 1, 2, or 3
+  /**
+   * @type {number} currentStep - Current active step in the progress flow
+   * @default 1
+   * Valid values: 1 (Upload), 2 (Process), 3 (Download)
+   */
+  export let currentStep = 1;
   
+  /**
+   * Step definitions for the progress indicator
+   * @readonly
+   */
   const steps = [
     { number: 1, text: 'Upload' },
     { number: 2, text: 'Process' },
