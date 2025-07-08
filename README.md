@@ -31,7 +31,8 @@ An AI-powered platform that converts 2D images into 3D models using advanced mac
    ```
 
 3. **Access the application**
-   - **Frontend**: http://localhost:3000 (Vanilla JavaScript)
+   - **Frontend (Vanilla JS)**: http://localhost:3000
+   - **Frontend (SvelteKit)**: http://localhost:3001 - *New modern UI*
    - **Backend API**: http://localhost:8000 (FastAPI)
    - **API Documentation**: http://localhost:8000/docs (Swagger UI)
    - **Database Admin**: http://localhost:5050 (PgAdmin) - *Development only*
@@ -52,6 +53,15 @@ image2model/
 │   │   └── results.js     # Results display
 │   ├── assets/            # Static assets
 │   └── *.html             # HTML pages
+├── frontend-svelte/       # SvelteKit frontend (modern UI)
+│   ├── src/
+│   │   ├── lib/           # Reusable components
+│   │   │   ├── components/ # UI components
+│   │   │   └── services/  # API services
+│   │   └── routes/        # Page routes
+│   │       ├── upload/    # Upload page
+│   │       ├── processing/ # Processing page
+│   │       └── dev/       # Developer tools
 ├── backend/               # FastAPI/Python application
 │   ├── app/
 │   │   ├── api/           # API endpoints
@@ -68,7 +78,7 @@ image2model/
 
 ### Technology Stack
 
-**Frontend:**
+**Frontend (Vanilla JS):**
 - Vanilla JavaScript (ES6+) with modular architecture
 - Native HTML5 APIs for drag-and-drop file uploads
 - Server-Sent Events (SSE) for real-time progress updates
@@ -76,6 +86,15 @@ image2model/
 - Model Viewer library for 3D model preview
 - Responsive CSS with modern design patterns
 - No build step required - direct browser execution
+
+**Frontend (SvelteKit):**
+- SvelteKit with server-side rendering
+- Component-based architecture with reusable UI components
+- Grid-based image display with overlay states
+- Developer mode for testing various UI states
+- TypeScript support (optional)
+- Vite for fast development and building
+- Responsive design with modern CSS
 
 **Backend:**
 - FastAPI 0.104+ with async/await support
@@ -129,12 +148,19 @@ make db-reset        # Reset database (destructive)
 
 ### Running Without Docker
 
-**Frontend:**
+**Frontend (Vanilla JS):**
 ```bash
 cd frontend-simple
 # No installation needed - open index.html in browser
 # Or use a simple HTTP server:
 python -m http.server 3000
+```
+
+**Frontend (SvelteKit):**
+```bash
+cd frontend-svelte
+npm install
+npm run dev  # Runs on http://localhost:3001
 ```
 
 **Backend:**
@@ -143,6 +169,44 @@ cd backend
 pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
+
+### SvelteKit Developer Mode
+
+The SvelteKit frontend includes a comprehensive developer dashboard for testing various UI states:
+
+**Access Dev Dashboard:** http://localhost:3001/dev
+
+**Available Test Scenarios:**
+
+1. **Page States**
+   - Upload with Files: `/dev/upload-with-files` - Upload page with pre-populated images
+   - Processing Active: `/dev/processing-active` - Shows active processing with progress
+   - Results View: `/dev/results` - Displays completed 3D models
+
+2. **Empty/Error States**
+   - Empty States: `/dev/empty-states` - Upload page with no files
+   - Error States: `/dev/error-states` - Processing failure scenarios
+   - Edge Cases: `/dev/edge-cases` - Various edge case scenarios:
+     - `?case=manyFiles` - 50+ generated models
+     - `?case=largeFiles` - Very large model files (500MB-1GB)
+     - `?case=slowProcessing` - Simulates slow processing
+     - `?case=mixedResults` - Some files succeed, some fail
+     - `?case=singleFile` - Single file processing
+
+3. **Component Gallery**
+   - Buttons: `/dev/components/buttons` - All button variants
+   - Cards: `/dev/components/cards` - Model cards and variants
+   - Forms: `/dev/components/forms` - Form elements
+   - Icons: `/dev/components/icons` - Available icons
+   - Loading: `/dev/components/loading` - Loading states
+   - Toasts: `/dev/components/toasts` - Notification examples
+
+**Key Features:**
+- Grid-based image display with overlay states
+- Reusable ImageGrid component for consistent layouts
+- Real-time processing simulation
+- Error state handling with appropriate UI feedback
+- No duplicate code - dev mode uses same components with mock data
 
 ### Environment Variables
 
