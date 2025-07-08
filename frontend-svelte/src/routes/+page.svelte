@@ -2,64 +2,21 @@
   import { onMount } from 'svelte';
   import { browser } from '$app/environment';
   import { scrollReveal, staggerReveal, parallax } from '$lib/actions/animations.js';
+  import Navbar from '$lib/components/Navbar.svelte';
+  import Footer from '$lib/components/Footer.svelte';
+  import Button from '$lib/components/Button.svelte';
   
   let heroLogoElement;
-  let mobileMenuActive = false;
   let mounted = false;
   
   // Initialize on mount
   onMount(() => {
     mounted = true;
   });
-  
-  // Smooth scroll handler (SSR-safe)
-  function handleAnchorClick(e) {
-    if (!browser) return;
-    
-    const href = e.currentTarget.getAttribute('href');
-    if (href && href.startsWith('#')) {
-      e.preventDefault();
-      const targetId = href.slice(1);
-      const target = document.getElementById(targetId);
-      if (target) {
-        target.scrollIntoView({
-          behavior: 'smooth',
-          block: 'start'
-        });
-      }
-    }
-  }
-  
-  function toggleMobileMenu() {
-    mobileMenuActive = !mobileMenuActive;
-  }
-  
-  function closeMobileMenu() {
-    mobileMenuActive = false;
-  }
 </script>
 
 <!-- Navigation Bar -->
-<nav class="navbar animate-fade-in">
-  <div class="navbar-container">
-    <a href="/" class="navbar-brand">
-      <img src="/assets/logo-cropped.png" alt="image2model" class="nav-logo" width="48" height="48" loading="eager">
-      <span class="brand-text">image2model</span>
-    </a>
-    <button class="navbar-toggle" class:active={mobileMenuActive} on:click={toggleMobileMenu} aria-label="Toggle navigation">
-      <span class="navbar-toggle-bar"></span>
-      <span class="navbar-toggle-bar"></span>
-      <span class="navbar-toggle-bar"></span>
-    </button>
-    <ul class="navbar-menu" class:active={mobileMenuActive}>
-      <li><a href="#features" class="navbar-link" on:click={handleAnchorClick} on:click={closeMobileMenu}>Features</a></li>
-      <li><a href="#how-it-works" class="navbar-link" on:click={handleAnchorClick} on:click={closeMobileMenu}>How It Works</a></li>
-      <li><a href="#examples" class="navbar-link" on:click={handleAnchorClick} on:click={closeMobileMenu}>Examples</a></li>
-      <li><a href="#pricing" class="navbar-link" on:click={handleAnchorClick} on:click={closeMobileMenu}>Pricing</a></li>
-      <li><a href="/upload" class="btn btn-primary btn-sm">Start Creating</a></li>
-    </ul>
-  </div>
-</nav>
+<Navbar variant="landing" />
 
 <!-- Hero Section -->
 <section class="hero gradient-cool-ocean">
@@ -74,19 +31,19 @@
         Turn your photos into professional 3D models instantly. No expertise required - just upload and let our AI work its magic.
       </p>
       <div class="hero-cta animate-fade-in-scale delay-400">
-        <a href="/upload" class="btn btn-primary btn-lg hover-lift">
+        <Button href="/upload" variant="primary" size="lg">
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
             <path d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L11 6.414V13a1 1 0 11-2 0V6.414L7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3z"/>
             <path d="M3 11a1 1 0 011 1v3a1 1 0 001 1h10a1 1 0 001-1v-3a1 1 0 112 0v3a3 3 0 01-3 3H5a3 3 0 01-3-3v-3a1 1 0 011-1z"/>
           </svg>
           Start Creating Now
-        </a>
-        <a href="#demo" class="btn btn-ghost btn-lg">
+        </Button>
+        <Button href="#demo" variant="ghost-light" size="lg">
           Watch Demo
           <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
           </svg>
-        </a>
+        </Button>
       </div>
       <div class="hero-stats animate-fade-in delay-600">
         <div class="stat-item">
@@ -295,26 +252,7 @@
 </section>
 
 <!-- Footer -->
-<footer class="site-footer">
-  <div class="footer-container">
-    <div class="footer-content">
-      <div class="footer-brand">
-        <img src="/assets/logo-cropped.png" alt="image2model" width="64" height="64" class="footer-logo">
-        <p class="footer-tagline">Making 3D content creation accessible to everyone!</p>
-      </div>
-      <div class="footer-links">
-        <ul class="footer-list">
-          <li><a href="#features">Features</a></li>
-          <li><a href="#pricing">Pricing</a></li>
-          <li><a href="#contact">Contact</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <p class="footer-text">&copy; 2025 image2model. All rights reserved.</p>
-    </div>
-  </div>
-</footer>
+<Footer />
 
 <style>
   /* Blue Theme Style Overrides for Better Contrast */
@@ -371,6 +309,31 @@
   
   :global(.hero-stats .stat-label) {
     color: #bdc3c7 !important;
+  }
+  
+  /* Fix z-index for hero content to be above geometric pattern */
+  :global(.hero-content) {
+    position: relative;
+    z-index: 2;
+  }
+  
+  /* Fix float animation to only move vertically */
+  :global(.hero-logo-animated) {
+    display: inline-block;
+    will-change: transform;
+  }
+  
+  :global(.animate-float) {
+    animation: float 3s ease-in-out infinite !important;
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0px) !important;
+    }
+    50% {
+      transform: translateY(-20px) !important;
+    }
   }
 
   /* Navigation Styles */
