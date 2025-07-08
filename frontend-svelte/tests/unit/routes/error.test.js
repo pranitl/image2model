@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/svelte';
 import { writable } from 'svelte/store';
-import ErrorPage from './+error.svelte';
+import ErrorPage from '../../../src/routes/+error.svelte';
 
 // Mock the $app/stores module
 vi.mock('$app/stores', () => ({

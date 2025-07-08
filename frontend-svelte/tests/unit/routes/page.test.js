@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { render, screen } from '@testing-library/svelte';
-import Page from './+page.svelte';
+import { render, screen, within } from '@testing-library/svelte';
+import Page from '../../../src/routes/+page.svelte';
 
 describe('Landing Page', () => {
   it('should render the hero section', () => {
@@ -15,10 +15,13 @@ describe('Landing Page', () => {
   it('should render the navigation menu', () => {
     render(Page);
     
-    expect(screen.getByText('Features')).toBeInTheDocument();
-    expect(screen.getByText('How It Works')).toBeInTheDocument();
-    expect(screen.getByText('Examples')).toBeInTheDocument();
-    expect(screen.getByText('Pricing')).toBeInTheDocument();
+    // Get the navbar specifically to avoid duplicate text issues
+    const navbar = screen.getByRole('navigation');
+    
+    expect(within(navbar).getByText('Features')).toBeInTheDocument();
+    expect(within(navbar).getByText('How It Works')).toBeInTheDocument();
+    expect(within(navbar).getByText('Examples')).toBeInTheDocument();
+    expect(within(navbar).getByText('Pricing')).toBeInTheDocument();
   });
   
   it('should render all main sections', () => {
