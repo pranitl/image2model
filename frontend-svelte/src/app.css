@@ -14,7 +14,7 @@
 @import '/css/special-effects.css';
 @import '/css/landing-page.css';
 @import '/css/upload-page.css';
-@import '/css/processing-page.css';
+/* @import '/css/processing-page.css'; -- Commented out, using Hero component instead */
 @import '/css/results-page.css';
 
 /* Additional global styles for SvelteKit */
