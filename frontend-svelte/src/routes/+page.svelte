@@ -527,7 +527,6 @@
   }
   
   :global(.footer-bottom) {
-    text-align: center;
     padding-top: 2rem;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
   }
@@ -536,6 +535,7 @@
     color: #95a5a6;
     margin: 0;
     font-size: 0.875rem;
+    text-align: left;
   }
   
   /* Navbar alignment fixes */
@@ -556,10 +556,26 @@
     line-height: 1;
   }
   
+  :global(.navbar-menu) {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  :global(.navbar-menu li) {
+    display: flex;
+    align-items: center;
+  }
+  
   :global(.navbar-menu .btn-sm) {
-    padding: 0.375rem 1rem !important;
+    padding: 0.25rem 0.875rem !important;
     font-size: 0.875rem !important;
-    line-height: 1.5 !important;
+    line-height: 1.25 !important;
+    height: auto !important;
+    min-height: unset !important;
   }
   
   /* Hero stats spacing fix */
