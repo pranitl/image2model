@@ -464,4 +464,134 @@
   :global(.example-description) {
     color: #34495e !important;
   }
+  
+  /* Footer styling with blue theme */
+  :global(.site-footer) {
+    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
+    color: #ecf0f1;
+    padding: 3rem 0 2rem;
+    margin-top: 4rem;
+  }
+  
+  :global(.footer-container) {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+  
+  :global(.footer-content) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 2rem;
+    margin-bottom: 2rem;
+  }
+  
+  :global(.footer-brand) {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  :global(.footer-logo) {
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  }
+  
+  :global(.footer-tagline) {
+    color: #bdc3c7;
+    margin: 0;
+  }
+  
+  :global(.footer-links) {
+    display: flex;
+    align-items: center;
+  }
+  
+  :global(.footer-list) {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 2rem;
+  }
+  
+  :global(.footer-list a) {
+    color: #ecf0f1;
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  
+  :global(.footer-list a:hover) {
+    color: #5dade2;
+  }
+  
+  :global(.footer-bottom) {
+    text-align: center;
+    padding-top: 2rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  :global(.footer-text) {
+    color: #95a5a6;
+    margin: 0;
+    font-size: 0.875rem;
+  }
+  
+  /* Navbar alignment fixes */
+  :global(.navbar-brand) {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+  }
+  
+  :global(.nav-logo) {
+    vertical-align: middle;
+  }
+  
+  :global(.brand-text) {
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1;
+  }
+  
+  :global(.navbar-menu .btn-sm) {
+    padding: 0.375rem 1rem !important;
+    font-size: 0.875rem !important;
+    line-height: 1.5 !important;
+  }
+  
+  /* Hero stats spacing fix */
+  :global(.hero-stats) {
+    display: flex;
+    justify-content: center;
+    gap: 4rem !important;
+    margin-top: 3rem;
+  }
+  
+  :global(.stat-item) {
+    text-align: center;
+  }
+  
+  /* Responsive adjustments */
+  @media (max-width: 768px) {
+    :global(.footer-content) {
+      flex-direction: column;
+      text-align: center;
+    }
+    
+    :global(.footer-brand) {
+      flex-direction: column;
+    }
+    
+    :global(.footer-list) {
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    :global(.hero-stats) {
+      gap: 2rem !important;
+    }
+  }
 </style>
