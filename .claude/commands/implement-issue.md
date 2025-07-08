@@ -112,7 +112,7 @@ For each major file created:
 2. Utility classes file (e.g., color-utilities.css)
 3. Accessibility guide (e.g., color-accessibility.md)
 4. Usage documentation (e.g., README.md, guide.md)
-5. Interactive test page (e.g., test-colors.html)
+
 ```
 
 ### Step 4: Git Workflow

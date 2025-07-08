@@ -2,6 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, fireEvent, screen } from '@testing-library/svelte';
 import UploadPage from '../../../src/routes/upload/+page.svelte';
 
+// Mock the API module
+vi.mock('$lib/services/api', () => ({
+  default: {
+    uploadBatch: vi.fn(),
+    retryOperation: vi.fn((fn) => fn())
+  }
+}));
+
 describe('Upload Page', () => {
   beforeEach(() => {
     // Mock fetch for API calls
@@ -10,6 +18,9 @@ describe('Upload Page', () => {
     // Mock URL.createObjectURL
     global.URL.createObjectURL = vi.fn(() => 'blob:mock-url');
     global.URL.revokeObjectURL = vi.fn();
+    
+    // Mock window to not be defined to ensure relative URLs in tests
+    delete global.window;
   });
 
   it('should render upload page with all key elements', () => {
@@ -76,12 +87,16 @@ describe('Upload Page', () => {
   });
 
   it('should handle form submission', async () => {
-    global.fetch = vi.fn(() => 
-      Promise.resolve(new Response(JSON.stringify({ batch_id: 'test-batch-123' }), {
-        status: 200,
-        headers: { 'Content-Type': 'application/json' }
-      }))
-    );
+    // Import the mocked API
+    const api = await import('$lib/services/api');
+    
+    // Setup successful upload response
+    api.default.uploadBatch.mockResolvedValue({
+      success: true,
+      batchId: 'test-batch-123',
+      taskId: 'test-task-123',
+      fileCount: 1
+    });
     
     const { container } = render(UploadPage);
     
@@ -96,12 +111,12 @@ describe('Upload Page', () => {
     const form = container.querySelector('form');
     await fireEvent.submit(form);
     
-    // Check API was called with signal for timeout
-    expect(global.fetch).toHaveBeenCalledWith('/api/v1/upload/batch', {
-      method: 'POST',
-      body: expect.any(FormData),
-      signal: expect.any(AbortSignal)
-    });
+    // Check API was called
+    expect(api.default.uploadBatch).toHaveBeenCalled();
+    expect(api.default.uploadBatch).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ name: 'test.jpg' })]),
+      10000 // default face limit
+    );
   });
 
   it('should handle drag over state', async () => {

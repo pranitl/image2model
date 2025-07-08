@@ -6,6 +6,9 @@ global.fetch = vi.fn();
 global.EventSource = vi.fn();
 global.AbortSignal = { timeout: vi.fn(() => ({})) };
 
+// Mock window to not be defined for APIService tests
+delete global.window;
+
 describe('APIService', () => {
   let apiService;
 
@@ -20,13 +23,14 @@ describe('APIService', () => {
 
   describe('constructor', () => {
     it('should initialize with correct API base URL', () => {
+      // Without window defined, it should use the relative path
       expect(apiService.API_BASE).toBe('/api/v1');
     });
 
     it('should use window origin when available', () => {
-      global.window = { location: { origin: 'http://localhost:3000' } };
+      global.window = { location: { origin: 'http://localhost:8000' } };
       const service = new APIService();
-      expect(service.API_BASE).toBe('http://localhost:3000/api/v1');
+      expect(service.API_BASE).toBe('http://localhost:8000/api/v1');
       delete global.window;
     });
   });
