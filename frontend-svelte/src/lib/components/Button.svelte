@@ -1,15 +1,53 @@
 <script>
   import { createEventDispatcher } from 'svelte';
   
-  export let variant = 'primary'; // primary, secondary, ghost, ghost-light
-  export let size = 'md'; // sm, md, lg
+  /**
+   * @type {'primary'|'secondary'|'ghost'|'ghost-light'} variant - Visual style variant
+   * @default 'primary'
+   */
+  export let variant = 'primary';
+  
+  /**
+   * @type {'sm'|'md'|'lg'} size - Button size
+   * @default 'md'
+   */
+  export let size = 'md';
+  
+  /**
+   * @type {boolean} disabled - Whether the button is disabled
+   * @default false
+   */
   export let disabled = false;
+  
+  /**
+   * @type {string} type - HTML button type attribute
+   * @default 'button'
+   */
   export let type = 'button';
+  
+  /**
+   * @type {string|null} href - If provided, renders as an anchor link instead of button
+   * @default null
+   */
   export let href = null;
+  
+  /**
+   * @type {boolean} fullWidth - Whether button should take full container width
+   * @default false
+   */
   export let fullWidth = false;
+  
+  /**
+   * @type {boolean} loading - Shows loading spinner and disables interaction
+   * @default false
+   */
   export let loading = false;
   
   const dispatch = createEventDispatcher();
+  
+  // Extract class from $$restProps to avoid unknown prop warning
+  let className = '';
+  $: className = $$restProps.class || '';
   
   function handleClick(e) {
     if (!disabled && !loading) {
@@ -23,15 +61,17 @@
     `btn-${size}`,
     fullWidth && 'btn-full',
     (disabled || loading) && 'btn-disabled',
-    'hover-lift'
+    'hover-lift',
+    className
   ].filter(Boolean).join(' ');
 </script>
 
 {#if href && !disabled && !loading}
-  <a {href} class={classes}>
+  <a {href} class={classes} {...$$restProps}>
     {#if loading}
       <span class="btn-spinner"></span>
     {/if}
+    <slot name="icon" />
     <slot />
   </a>
 {:else}
@@ -40,10 +80,12 @@
     class={classes}
     disabled={disabled || loading}
     on:click={handleClick}
+    {...$$restProps}
   >
     {#if loading}
       <span class="btn-spinner"></span>
     {/if}
+    <slot name="icon" />
     <slot />
   </button>
 {/if}

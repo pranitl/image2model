@@ -8,6 +8,8 @@
   import Footer from '$lib/components/Footer.svelte';
   import Button from '$lib/components/Button.svelte';
   import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+  import Hero from '$lib/components/Hero.svelte';
+  import ProgressIndicator from '$lib/components/ProgressIndicator.svelte';
   
   // State management
   let files = [];
@@ -227,31 +229,14 @@
 />
 
 <!-- Hero Section -->
-<section class="upload-hero animate-fade-in">
-  <div class="geometric-pattern"></div>
-  <div class="container">
-    <div class="upload-hero-content">
-      <h1 class="animate-fade-in-up">Upload Your Images</h1>
-      <p class="upload-hero-subtitle animate-fade-in-up delay-200">
-        Transform photos into professional 3D models in minutes
-      </p>
-      <div class="progress-indicator animate-fade-in-scale delay-400">
-        <div class="progress-step active">
-          <span class="progress-step-number">1</span>
-          <span class="progress-step-text">Upload</span>
-        </div>
-        <div class="progress-step">
-          <span class="progress-step-number">2</span>
-          <span class="progress-step-text">Process</span>
-        </div>
-        <div class="progress-step">
-          <span class="progress-step-number">3</span>
-          <span class="progress-step-text">Download</span>
-        </div>
-      </div>
-    </div>
+<Hero 
+  title="Upload Your Images"
+  subtitle="Transform photos into professional 3D models in minutes"
+>
+  <div slot="content" class="animate-fade-in-scale delay-400">
+    <ProgressIndicator currentStep={1} />
   </div>
-</section>
+</Hero>
 
 <!-- Main Content -->
 <main>
@@ -457,17 +442,6 @@
 <style>
   /* Import upload page specific styles */
   @import '/css/upload-page.css';
-  
-  /* Blue Theme Overrides to match landing page */
-  :global(.upload-hero) {
-    background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%) !important;
-  }
-  
-  :global(.upload-hero h1) {
-    color: #ffffff !important;
-    -webkit-text-fill-color: initial !important;
-    background: none !important;
-  }
   
   :global(.navbar) {
     background-color: rgba(26, 35, 50, 0.98);
