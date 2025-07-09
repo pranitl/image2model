@@ -2,7 +2,7 @@
 // Consolidates all API calls from upload, processing, and results functionality
 
 class APIService {
-  constructor() {
+  constructor(apiKey = null) {
     // API base URL - dynamically set based on current origin
     this.API_BASE = typeof window !== 'undefined' 
       ? `${window.location.origin}/api/v1`
@@ -12,11 +12,19 @@ class APIService {
     this.DEFAULT_TIMEOUT = 60000; // 60 seconds
     
     // API key from environment variables
-    this.API_KEY = import.meta.env?.VITE_API_KEY || 'dev-api-key-123456';
+    this.API_KEY = apiKey;
     
     // Debug logging in development
     if (import.meta.env.MODE === 'development') {
       console.log('API Service initialized with key:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'NOT SET');
+    }
+  }
+
+  // Set API key after initialization
+  setApiKey(apiKey) {
+    this.API_KEY = apiKey;
+    if (import.meta.env.MODE === 'development') {
+      console.log('API key updated:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'NOT SET');
     }
   }
 

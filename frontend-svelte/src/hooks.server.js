@@ -1,5 +1,14 @@
+import { API_KEY } from '$env/static/private';
+
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
+  // Make API key available to all routes
+  event.locals.apiKey = API_KEY;
+  
+  if (!API_KEY) {
+    throw new Error('API_KEY environment variable is required');
+  }
+  
   const response = await resolve(event);
   
   // Add security headers

@@ -66,9 +66,9 @@
             <h3>Special Characters</h3>
             <div class="demo-area">
               <div class="text-card">
-                <h4>File: <>&"'`{}[]()*.jpg</h4>
+                <h4>File: &lt;&gt;&amp;&quot;&apos;`&#123;&#125;[]()*.jpg</h4>
                 <p>Unicode: 你好世界 🌍 مرحبا بالعالم</p>
-                <code>Path: C:\Users\John's Files\Images & Videos\</code>
+                <code>Path: C:\Users\John&apos;s Files\Images &amp; Videos\</code>
               </div>
             </div>
           </div>

@@ -214,33 +214,44 @@
       }
       
       // Use the API service with retry logic
-      const result = await api.retryOperation(
-        async () => api.uploadBatch(files, faceLimit || 'auto'),
-        3, // max retries
-        1000 // initial backoff
-      );
+      let result;
+      try {
+        result = await api.uploadBatch(files, faceLimit);
+        console.log('Direct upload result:', result);
+      } catch (uploadError) {
+        console.error('Direct upload error:', uploadError);
+        throw uploadError;
+      }
+      
+      console.log('Upload result:', result);
       
       if (result.success) {
         // Update session storage with task ID
         if (browser) {
           const data = JSON.parse(sessionStorage.getItem('processingFiles') || '{}');
-          data.taskId = result.taskId || result.batchId;
+          data.taskId = result.taskId || result.batchId || result.jobId;
           sessionStorage.setItem('processingFiles', JSON.stringify(data));
         }
         
         toast.success('Files uploaded successfully!');
         
         // Navigate to processing page
-        const taskId = result.taskId || result.batchId;
+        const taskId = result.taskId || result.batchId || result.jobId;
+        console.log('Navigating to processing page with taskId:', taskId);
+        
         if (taskId && browser) {
-          goto(`/processing?taskId=${taskId}`);
+          await goto(`/processing?taskId=${taskId}`);
+        } else {
+          console.error('No taskId available or not in browser');
+          console.log('browser:', browser, 'taskId:', taskId);
         }
       } else {
         throw new Error(result.error || 'Upload failed');
       }
     } catch (error) {
       console.error('Upload failed:', error);
-      toast.error(`Failed to upload files: ${error.message}`);
+      console.error('Full error object:', error);
+      toast.error(`Failed to upload files: ${error.message || error}`);
     } finally {
       uploading = false;
     }

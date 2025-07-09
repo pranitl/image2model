@@ -12,6 +12,10 @@ RUN npm ci
 # Copy source files
 COPY . .
 
+# Set build-time environment variables
+ARG API_KEY
+ENV API_KEY=${API_KEY}
+
 # Build the app
 RUN npm run build
 
