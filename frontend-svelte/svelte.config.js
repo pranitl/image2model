@@ -7,7 +7,10 @@ const config = {
       out: 'build',
       precompress: false,
       envPrefix: 'VITE_'
-    })
+    }),
+    csrf: {
+      checkOrigin: false
+    }
   }
 };
 

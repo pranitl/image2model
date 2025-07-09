@@ -1,6 +1,7 @@
 // Layout server-side error handling
-export function load({ url }) {
+export function load({ url, locals }) {
   return {
-    url: url.pathname
+    url: url.pathname,
+    apiKey: locals.apiKey
   };
 }

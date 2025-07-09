@@ -4,12 +4,59 @@
   import { goto } from '$app/navigation';
   import { scrollReveal, staggerReveal } from '$lib/actions/animations.js';
   import { toast } from '$lib/stores/toast.js';
+  import { page } from '$app/stores';
+  import { apiKey } from '$lib/stores/auth.js';
   import Navbar from '$lib/components/Navbar.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import Button from '$lib/components/Button.svelte';
   import Breadcrumb from '$lib/components/Breadcrumb.svelte';
   import Hero from '$lib/components/Hero.svelte';
   import ProgressIndicator from '$lib/components/ProgressIndicator.svelte';
+  import ImageGrid from '$lib/components/ImageGrid.svelte';
+  import api from '$lib/services/api';
+  
+  // Check if we're in dev mode
+  $: isDevMode = $page.url.searchParams.get('dev') === 'true';
+  
+  // Dev mode mock files
+  const mockFiles = [
+    {
+      id: 'dev-1',
+      name: 'modern-chair-view1.jpg',
+      size: 2457600,
+      preview: 'https://images.unsplash.com/photo-1592078615290-033ee584e267?w=400&h=400&fit=crop'
+    },
+    {
+      id: 'dev-2',
+      name: 'wooden-table-angle2.jpg',
+      size: 3145728,
+      preview: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop'
+    },
+    {
+      id: 'dev-3',
+      name: 'minimalist-lamp.jpg',
+      size: 1572864,
+      preview: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=400&fit=crop'
+    },
+    {
+      id: 'dev-4',
+      name: 'velvet-sofa-front.jpg',
+      size: 2097152,
+      preview: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&h=400&fit=crop'
+    },
+    {
+      id: 'dev-5',
+      name: 'office-desk-setup.jpg',
+      size: 1887436,
+      preview: 'https://images.unsplash.com/photo-1518455027359-f3f8164ba6bd?w=400&h=400&fit=crop'
+    },
+    {
+      id: 'dev-6',
+      name: 'bookshelf-walnut.jpg',
+      size: 2621440,
+      preview: 'https://images.unsplash.com/photo-1594736797933-d0501ba2fe65?w=400&h=400&fit=crop'
+    }
+  ];
   
   // State management
   let files = [];
@@ -35,6 +82,12 @@
   
   // Lifecycle
   onMount(() => {
+    // Load mock files if in dev mode
+    if (isDevMode) {
+      files = mockFiles;
+      optionsExpanded = true;
+    }
+    
     return () => {
       // Cleanup object URLs on component destroy
       objectUrls.forEach(url => URL.revokeObjectURL(url));
@@ -147,62 +200,72 @@
   async function handleSubmit(e) {
     e.preventDefault();
     
-    if (!canGenerate || uploading) return;
+    // Validate upload state
+    
+    if (!canGenerate || uploading) {
+      return;
+    }
+    
+    // Check if API key is available
+    if (!$apiKey) {
+      toast.error('Application is still loading. Please try again in a moment.');
+      return;
+    }
+    
+    // Make sure API service has the key
+    if (!api.API_KEY || api.API_KEY !== $apiKey) {
+      api.setApiKey($apiKey);
+    }
     
     uploading = true;
     
-    const maxRetries = 3;
-    let retryCount = 0;
-    
-    while (retryCount < maxRetries) {
+    try {
+      // Store file info in session for processing page
+      if (browser) {
+        const fileNames = files.map(f => f.name);
+        sessionStorage.setItem('processingFiles', JSON.stringify({
+          files: fileNames,
+          taskId: null // Will be updated after upload
+        }));
+      }
+      
+      // Use the API service with retry logic
+      let result;
       try {
-        const formData = new FormData();
+        // When in auto mode, pass null for face limit (backend will use default)
+        const faceLimitValue = isAuto ? null : faceLimit;
         
-        // Add files
-        files.forEach(fileObj => {
-          formData.append('files', fileObj.file);
-        });
-        
-        // Add face limit
-        formData.append('face_limit', faceLimit || 'auto');
-        
-        const response = await fetch('/api/v1/upload/batch', {
-          method: 'POST',
-          body: formData,
-          signal: AbortSignal.timeout(60000) // 60 second timeout
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `Upload failed: ${response.statusText}`);
+        result = await api.uploadBatch(files, faceLimitValue);
+      } catch (uploadError) {
+        throw uploadError;
+      }
+      
+      // Process upload result
+      
+      if (result.success) {
+        // Update session storage with task ID
+        if (browser) {
+          const data = JSON.parse(sessionStorage.getItem('processingFiles') || '{}');
+          data.taskId = result.taskId || result.batchId || result.jobId;
+          sessionStorage.setItem('processingFiles', JSON.stringify(data));
         }
         
-        const result = await response.json();
-        
-        // Success!
         toast.success('Files uploaded successfully!');
         
-        // Navigate to processing page with batch ID
-        if (result.batch_id && browser) {
-          goto(`/processing?batch=${result.batch_id}`);
-        }
-        break; // Exit retry loop on success
+        // Navigate to processing page
+        const taskId = result.taskId || result.batchId || result.jobId;
         
-      } catch (error) {
-        retryCount++;
-        console.error(`Upload attempt ${retryCount} failed:`, error);
-        
-        if (retryCount >= maxRetries) {
-          toast.error(`Failed to upload files after ${maxRetries} attempts. ${error.message}`);
-        } else {
-          toast.warning(`Upload failed. Retrying... (${retryCount}/${maxRetries})`);
-          // Wait before retrying (exponential backoff)
-          await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount - 1)));
+        if (taskId && browser) {
+          await goto(`/processing?taskId=${taskId}`);
         }
+      } else {
+        throw new Error(result.error || 'Upload failed');
       }
+    } catch (error) {
+      toast.error(`Failed to upload files: ${error.message || error}`);
+    } finally {
+      uploading = false;
     }
-    
-    uploading = false;
   }
   
   // Helper functions
@@ -291,27 +354,11 @@
                   </button>
                 </div>
               </div>
-              <div class="file-gallery animate-fade-in-up" use:staggerReveal>
-                {#each files as file (file.id)}
-                  <div class="file-preview-card hover-lift" data-stagger>
-                    <img src={file.url} alt={file.name} class="file-preview-image">
-                    <div class="file-preview-info">
-                      <span class="file-name">{file.name}</span>
-                      <span class="file-size">{formatFileSize(file.size)}</span>
-                    </div>
-                    <button 
-                      type="button" 
-                      class="file-remove-btn"
-                      on:click={() => removeFile(file.id)}
-                      aria-label="Remove {file.name}"
-                    >
-                      <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/>
-                      </svg>
-                    </button>
-                  </div>
-                {/each}
-              </div>
+              <ImageGrid 
+                items={files.map(f => ({ ...f, preview: f.url || f.preview }))} 
+                onRemove={removeFile}
+                gridSize="medium"
+              />
             </div>
           {/if}
 

@@ -1,5 +1,18 @@
+import { env } from '$env/dynamic/private';
+
 /** @type {import('@sveltejs/kit').Handle} */
 export async function handle({ event, resolve }) {
+  // Get API key from runtime environment
+  const API_KEY = env.API_KEY || process.env.API_KEY;
+  
+  // Make API key available to all routes
+  event.locals.apiKey = API_KEY;
+  
+  if (!API_KEY) {
+    console.error('API_KEY not found in environment variables');
+    throw new Error('API_KEY environment variable is required');
+  }
+  
   const response = await resolve(event);
   
   // Add security headers

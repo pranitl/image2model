@@ -1,0 +1,2237 @@
+{
+    "openapi": "3.1.0",
+    "info": {
+      "title": "Image2Model",
+      "description": "AI-powered 3D model generation from images",
+      "version": "1.0.0"
+    },
+    "paths": {
+      "/api/v1/health/": {
+        "get": {
+          "tags": [
+            "health"
+          ],
+          "summary": "Health Check",
+          "description": "Basic health check endpoint.\nReturns the current status of the service.",
+          "operationId": "health_check_api_v1_health__get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HealthResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/health/detailed": {
+        "get": {
+          "tags": [
+            "health"
+          ],
+          "summary": "Detailed Health Check",
+          "description": "Comprehensive health check with system and component information.",
+          "operationId": "detailed_health_check_api_v1_health_detailed_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/DetailedHealthResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/health/metrics": {
+        "get": {
+          "tags": [
+            "health"
+          ],
+          "summary": "Get Metrics",
+          "description": "Prometheus metrics endpoint.\nReturns metrics in Prometheus format.",
+          "operationId": "get_metrics_api_v1_health_metrics_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/health/liveness": {
+        "get": {
+          "tags": [
+            "health"
+          ],
+          "summary": "Liveness Probe",
+          "description": "Kubernetes liveness probe endpoint.\nSimple check to verify the application is running.",
+          "operationId": "liveness_probe_api_v1_health_liveness_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/health/readiness": {
+        "get": {
+          "tags": [
+            "health"
+          ],
+          "summary": "Readiness Probe",
+          "description": "Kubernetes readiness probe endpoint.\nChecks if the application is ready to serve requests.",
+          "operationId": "readiness_probe_api_v1_health_readiness_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/upload/image": {
+        "post": {
+          "tags": [
+            "upload"
+          ],
+          "summary": "Upload Image",
+          "description": "Upload an image file for 3D model generation.\n\nArgs:\n    file: The image file to upload\n    \nReturns:\n    Upload response with file details\n    \nRaises:\n    FileValidationException: If file validation fails\n    DatabaseException: If file saving fails",
+          "operationId": "upload_image_api_v1_upload_image_post",
+          "requestBody": {
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "$ref": "#/components/schemas/Body_upload_image_api_v1_upload_image_post"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/UploadResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "HTTPBearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/upload/status/{file_id}": {
+        "get": {
+          "tags": [
+            "upload"
+          ],
+          "summary": "Get Upload Status",
+          "description": "Get the status of an uploaded file.\n\nArgs:\n    file_id: The unique identifier of the uploaded file\n    \nReturns:\n    File status information",
+          "operationId": "get_upload_status_api_v1_upload_status__file_id__get",
+          "parameters": [
+            {
+              "name": "file_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "File Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/upload/": {
+        "post": {
+          "tags": [
+            "upload"
+          ],
+          "summary": "Upload",
+          "description": "Upload image files for 3D model generation.\n\nArgs:\n    files: List of image files to upload (max 25 files)\n    face_limit: Optional parameter to limit the number of faces in generated 3D models\n    \nReturns:\n    Batch upload response with file details and job information",
+          "operationId": "upload_api_v1_upload__post",
+          "requestBody": {
+            "content": {
+              "multipart/form-data": {
+                "schema": {
+                  "$ref": "#/components/schemas/Body_upload_api_v1_upload__post"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/BatchUploadResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "HTTPBearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/upload/batch/{batch_id}/status": {
+        "get": {
+          "tags": [
+            "upload"
+          ],
+          "summary": "Get Batch Status",
+          "description": "Get the status of a batch upload job.\n\nArgs:\n    batch_id: The batch identifier\n    \nReturns:\n    Batch processing status information",
+          "operationId": "get_batch_status_api_v1_upload_batch__batch_id__status_get",
+          "parameters": [
+            {
+              "name": "batch_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Batch Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/models/generate": {
+        "post": {
+          "tags": [
+            "models"
+          ],
+          "summary": "Generate 3D Model",
+          "description": "Start 3D model generation from uploaded image using Tripo3D.\n\nArgs:\n    request: Model generation request\n    background_tasks: FastAPI background tasks\n    \nReturns:\n    Job information for tracking progress\n    \nRaises:\n    FileValidationException: If file validation fails\n    ProcessingException: If model generation fails to start",
+          "operationId": "generate_3d_model_api_v1_models_generate_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ModelGenerationRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/ModelGenerationResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/models/job/{job_id}": {
+        "get": {
+          "tags": [
+            "models"
+          ],
+          "summary": "Get Generation Status",
+          "description": "Get the status of a 3D model generation job.\n\nArgs:\n    job_id: The unique identifier of the generation job\n    \nReturns:\n    Job status and progress information",
+          "operationId": "get_generation_status_api_v1_models_job__job_id__get",
+          "parameters": [
+            {
+              "name": "job_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Job Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/models/available": {
+        "get": {
+          "tags": [
+            "models"
+          ],
+          "summary": "Get Available Models",
+          "description": "Get list of available 3D model generation models.\n\nReturns:\n    List of available models with their information",
+          "operationId": "get_available_models_api_v1_models_available_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "items": {
+                      "$ref": "#/components/schemas/ModelInfo"
+                    },
+                    "type": "array",
+                    "title": "Response Get Available Models Api V1 Models Available Get"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/models/download/{job_id}": {
+        "get": {
+          "tags": [
+            "models"
+          ],
+          "summary": "Download Model",
+          "description": "Download the generated 3D model.\n\nArgs:\n    job_id: The job identifier\n    format: The desired model format (obj, ply, stl)\n    \nReturns:\n    The 3D model file",
+          "operationId": "download_model_api_v1_models_download__job_id__get",
+          "parameters": [
+            {
+              "name": "job_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Job Id"
+              }
+            },
+            {
+              "name": "format",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "default": "obj",
+                "title": "Format"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/status/tasks/{task_id}/stream": {
+        "get": {
+          "tags": [
+            "status"
+          ],
+          "summary": "Stream Task Status",
+          "description": "Stream real-time progress updates for a specific Celery task via Server-Sent Events.\n\nArgs:\n    task_id: The Celery task ID to monitor\n    request: FastAPI request object for client disconnect detection\n    timeout: Maximum time in seconds to keep the connection alive (default: 3600)\n    \nReturns:\n    StreamingResponse with text/event-stream content type\n    \nRaises:\n    HTTPException: If task_id is invalid or timeout is out of range",
+          "operationId": "stream_task_status_api_v1_status_tasks__task_id__stream_get",
+          "parameters": [
+            {
+              "name": "task_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Task Id"
+              }
+            },
+            {
+              "name": "timeout",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "default": 3600,
+                "title": "Timeout"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/status/tasks/{task_id}/status": {
+        "get": {
+          "tags": [
+            "status"
+          ],
+          "summary": "Get Task Status",
+          "description": "Get current status of a specific Celery task (non-streaming endpoint).\n\nArgs:\n    task_id: The Celery task ID to check\n    \nReturns:\n    Dict with current task status information\n    \nRaises:\n    HTTPException: If task_id is invalid or task cannot be found",
+          "operationId": "get_task_status_api_v1_status_tasks__task_id__status_get",
+          "parameters": [
+            {
+              "name": "task_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Task Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/status/jobs/{job_id}/progress": {
+        "get": {
+          "tags": [
+            "status"
+          ],
+          "summary": "Get Job Progress",
+          "description": "Get aggregated progress for a parallel batch job from Redis.\n\nThis endpoint provides real-time progress information for jobs\nbeing processed in parallel, including individual file statuses.\n\nArgs:\n    job_id: The job identifier\n    \nReturns:\n    Dict with job progress information including:\n    - overall_progress: Overall percentage (0-100)\n    - total_files: Total number of files\n    - completed_files: Number of completed files\n    - failed_files: Number of failed files\n    - files: Dict of file statuses and progress",
+          "operationId": "get_job_progress_api_v1_status_jobs__job_id__progress_get",
+          "parameters": [
+            {
+              "name": "job_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Job Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/download/direct/{filename}": {
+        "get": {
+          "tags": [
+            "download"
+          ],
+          "summary": "Download File Direct",
+          "description": "Download a file directly by filename from the results directory.\n\nArgs:\n    filename: Name of the file to download\n    request: FastAPI request object for logging\n    \nReturns:\n    FileResponse with the requested file",
+          "operationId": "download_file_direct_api_v1_download_direct__filename__get",
+          "parameters": [
+            {
+              "name": "filename",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Filename"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/download/{job_id}/all": {
+        "get": {
+          "tags": [
+            "download"
+          ],
+          "summary": "List Job Files",
+          "description": "List all available files for a specific job.\n\nArgs:\n    job_id: Unique job identifier\n    request: FastAPI request object for logging\n    \nReturns:\n    List of available files with metadata and download URLs",
+          "operationId": "list_job_files_api_v1_download__job_id__all_get",
+          "parameters": [
+            {
+              "name": "job_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Job Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/JobFilesResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/download/{job_id}/{filename}": {
+        "get": {
+          "tags": [
+            "download"
+          ],
+          "summary": "Download Model",
+          "description": "Download a single 3D model file from a completed job.\n\nArgs:\n    job_id: Unique job identifier\n    filename: Name of the file to download\n    request: FastAPI request object for logging\n    \nReturns:\n    FileResponse with the requested model file",
+          "operationId": "download_model_api_v1_download__job_id___filename__get",
+          "security": [
+            {
+              "HTTPBearer": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "job_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Job Id"
+              }
+            },
+            {
+              "name": "filename",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Filename"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/debug/job/{job_id}": {
+        "get": {
+          "tags": [
+            "download"
+          ],
+          "summary": "Debug Job Store",
+          "description": "Debug endpoint to check job store connectivity and data.",
+          "operationId": "debug_job_store_api_v1_debug_job__job_id__get",
+          "parameters": [
+            {
+              "name": "job_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Job Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/admin/disk-usage": {
+        "get": {
+          "tags": [
+            "admin"
+          ],
+          "summary": "Get Disk Usage Endpoint",
+          "description": "Get current disk usage statistics for upload and output directories.",
+          "operationId": "get_disk_usage_endpoint_api_v1_admin_disk_usage_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/DiskUsageResponse"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "HTTPBearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/cleanup": {
+        "post": {
+          "tags": [
+            "admin"
+          ],
+          "summary": "Trigger Cleanup",
+          "description": "Trigger manual cleanup of old files.\n\nArgs:\n    request: Cleanup configuration including hours threshold and dry_run flag",
+          "operationId": "trigger_cleanup_api_v1_admin_cleanup_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/CleanupRequest"
+                    }
+                  ],
+                  "title": "Request",
+                  "default": {
+                    "hours": 24,
+                    "dry_run": false
+                  }
+                }
+              }
+            }
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/CleanupResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "HTTPBearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/cleanup-job": {
+        "post": {
+          "tags": [
+            "admin"
+          ],
+          "summary": "Cleanup Specific Job",
+          "description": "Clean up files for a specific job ID.\n\nArgs:\n    request: Job cleanup request with job_id",
+          "operationId": "cleanup_specific_job_api_v1_admin_cleanup_job_post",
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobCleanupRequest"
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "title": "Response Cleanup Specific Job Api V1 Admin Cleanup Job Post"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "HTTPBearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/admin/list-files": {
+        "get": {
+          "tags": [
+            "admin"
+          ],
+          "summary": "List Files",
+          "description": "List files in a specific directory with size and modification information.\n\nArgs:\n    directory: Directory to list ('uploads' or 'results')\n    limit: Maximum number of items to return",
+          "operationId": "list_files_api_v1_admin_list_files_get",
+          "security": [
+            {
+              "HTTPBearer": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "directory",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "description": "Directory to list (uploads or results)",
+                "title": "Directory"
+              },
+              "description": "Directory to list (uploads or results)"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "description": "Maximum number of items to return",
+                "default": 100,
+                "title": "Limit"
+              },
+              "description": "Maximum number of items to return"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/DirectoryListResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/admin/delete-job/{job_id}": {
+        "delete": {
+          "tags": [
+            "admin"
+          ],
+          "summary": "Delete Job Files",
+          "description": "Delete all files associated with a specific job ID.\n\nArgs:\n    job_id: The job ID whose files should be deleted",
+          "operationId": "delete_job_files_api_v1_admin_delete_job__job_id__delete",
+          "security": [
+            {
+              "HTTPBearer": []
+            }
+          ],
+          "parameters": [
+            {
+              "name": "job_id",
+              "in": "path",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "title": "Job Id"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/admin/system-health": {
+        "get": {
+          "tags": [
+            "admin"
+          ],
+          "summary": "Get System Health",
+          "description": "Get overall system health including disk usage and cleanup status.",
+          "operationId": "get_system_health_api_v1_admin_system_health_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          },
+          "security": [
+            {
+              "HTTPBearer": []
+            }
+          ]
+        }
+      },
+      "/api/v1/logs/statistics": {
+        "get": {
+          "tags": [
+            "logs"
+          ],
+          "summary": "Get Log Statistics",
+          "description": "Get comprehensive statistics about log files.",
+          "operationId": "get_log_statistics_api_v1_logs_statistics_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LogStatisticsResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/logs/rotate": {
+        "post": {
+          "tags": [
+            "logs"
+          ],
+          "summary": "Rotate Logs",
+          "description": "Manually trigger log rotation for all log files that need it.",
+          "operationId": "rotate_logs_api_v1_logs_rotate_post",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LogRotationResponse"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/logs/cleanup": {
+        "delete": {
+          "tags": [
+            "logs"
+          ],
+          "summary": "Cleanup Old Logs",
+          "description": "Clean up old log files beyond the retention period.",
+          "operationId": "cleanup_old_logs_api_v1_logs_cleanup_delete",
+          "parameters": [
+            {
+              "name": "older_than_days",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "maximum": 365,
+                "minimum": 1,
+                "description": "Remove logs older than this many days",
+                "default": 30,
+                "title": "Older Than Days"
+              },
+              "description": "Remove logs older than this many days"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LogCleanupResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/logs/analyze": {
+        "get": {
+          "tags": [
+            "logs"
+          ],
+          "summary": "Analyze Log Patterns",
+          "description": "Analyze log patterns for insights and anomalies.",
+          "operationId": "analyze_log_patterns_api_v1_logs_analyze_get",
+          "parameters": [
+            {
+              "name": "log_type",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "description": "Type of log to analyze",
+                "default": "celery_worker",
+                "title": "Log Type"
+              },
+              "description": "Type of log to analyze"
+            },
+            {
+              "name": "hours_back",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "integer",
+                "maximum": 168,
+                "minimum": 1,
+                "description": "Hours back to analyze",
+                "default": 24,
+                "title": "Hours Back"
+              },
+              "description": "Hours back to analyze"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/LogAnalysisResponse"
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/logs/summary/daily": {
+        "get": {
+          "tags": [
+            "logs"
+          ],
+          "summary": "Get Daily Summary",
+          "description": "Get daily log summary for analysis.",
+          "operationId": "get_daily_summary_api_v1_logs_summary_daily_get",
+          "parameters": [
+            {
+              "name": "date",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Date in YYYY-MM-DD format (default: today)",
+                "title": "Date"
+              },
+              "description": "Date in YYYY-MM-DD format (default: today)"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/logs/types": {
+        "get": {
+          "tags": [
+            "logs"
+          ],
+          "summary": "Get Log Types",
+          "description": "Get available log types for analysis.",
+          "operationId": "get_log_types_api_v1_logs_types_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/logs/export": {
+        "post": {
+          "tags": [
+            "logs"
+          ],
+          "summary": "Export Logs",
+          "description": "Export logs for a date range (background task).",
+          "operationId": "export_logs_api_v1_logs_export_post",
+          "parameters": [
+            {
+              "name": "start_date",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "description": "Start date in YYYY-MM-DD format",
+                "title": "Start Date"
+              },
+              "description": "Start date in YYYY-MM-DD format"
+            },
+            {
+              "name": "end_date",
+              "in": "query",
+              "required": true,
+              "schema": {
+                "type": "string",
+                "description": "End date in YYYY-MM-DD format",
+                "title": "End Date"
+              },
+              "description": "End date in YYYY-MM-DD format"
+            },
+            {
+              "name": "log_types",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "description": "Comma-separated log types",
+                "title": "Log Types"
+              },
+              "description": "Comma-separated log types"
+            },
+            {
+              "name": "format",
+              "in": "query",
+              "required": false,
+              "schema": {
+                "type": "string",
+                "pattern": "^(json|csv|txt)$",
+                "description": "Export format",
+                "default": "json",
+                "title": "Format"
+              },
+              "description": "Export format"
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            },
+            "422": {
+              "description": "Validation Error",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "$ref": "#/components/schemas/HTTPValidationError"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/api/v1/logs/health": {
+        "get": {
+          "tags": [
+            "logs"
+          ],
+          "summary": "Log System Health",
+          "description": "Check the health of the logging system.",
+          "operationId": "log_system_health_api_v1_logs_health_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/": {
+        "get": {
+          "summary": "Root",
+          "description": "Root endpoint.",
+          "operationId": "root__get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/health": {
+        "get": {
+          "summary": "Health Check",
+          "description": "Health check endpoint.",
+          "operationId": "health_check_health_get",
+          "responses": {
+            "200": {
+              "description": "Successful Response",
+              "content": {
+                "application/json": {
+                  "schema": {
+  
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "BatchUploadResponse": {
+          "properties": {
+            "batch_id": {
+              "type": "string",
+              "title": "Batch Id"
+            },
+            "job_id": {
+              "type": "string",
+              "title": "Job Id"
+            },
+            "task_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Id"
+            },
+            "uploaded_files": {
+              "items": {
+                "$ref": "#/components/schemas/UploadResponse"
+              },
+              "type": "array",
+              "title": "Uploaded Files"
+            },
+            "face_limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Face Limit"
+            },
+            "total_files": {
+              "type": "integer",
+              "title": "Total Files"
+            },
+            "status": {
+              "type": "string",
+              "title": "Status",
+              "default": "uploaded"
+            },
+            "message": {
+              "type": "string",
+              "title": "Message",
+              "default": "Files uploaded successfully, processing started"
+            }
+          },
+          "type": "object",
+          "required": [
+            "batch_id",
+            "job_id",
+            "uploaded_files",
+            "total_files"
+          ],
+          "title": "BatchUploadResponse",
+          "description": "Batch upload response model."
+        },
+        "Body_upload_api_v1_upload__post": {
+          "properties": {
+            "files": {
+              "items": {
+                "type": "string",
+                "format": "binary"
+              },
+              "type": "array",
+              "title": "Files"
+            },
+            "face_limit": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Face Limit",
+              "description": "Maximum number of faces for 3D model generation"
+            }
+          },
+          "type": "object",
+          "required": [
+            "files"
+          ],
+          "title": "Body_upload_api_v1_upload__post"
+        },
+        "Body_upload_image_api_v1_upload_image_post": {
+          "properties": {
+            "file": {
+              "type": "string",
+              "format": "binary",
+              "title": "File"
+            }
+          },
+          "type": "object",
+          "required": [
+            "file"
+          ],
+          "title": "Body_upload_image_api_v1_upload_image_post"
+        },
+        "CleanupRequest": {
+          "properties": {
+            "hours": {
+              "type": "integer",
+              "title": "Hours",
+              "default": 24
+            },
+            "dry_run": {
+              "type": "boolean",
+              "title": "Dry Run",
+              "default": false
+            }
+          },
+          "type": "object",
+          "title": "CleanupRequest",
+          "description": "Request model for cleanup operations."
+        },
+        "CleanupResponse": {
+          "properties": {
+            "freed_space_mb": {
+              "type": "number",
+              "title": "Freed Space Mb"
+            },
+            "files_removed": {
+              "type": "integer",
+              "title": "Files Removed"
+            },
+            "directories_removed": {
+              "type": "integer",
+              "title": "Directories Removed"
+            },
+            "errors": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "title": "Errors"
+            },
+            "cleanup_hours": {
+              "type": "integer",
+              "title": "Cleanup Hours"
+            },
+            "timestamp": {
+              "type": "string",
+              "title": "Timestamp"
+            }
+          },
+          "type": "object",
+          "required": [
+            "freed_space_mb",
+            "files_removed",
+            "directories_removed",
+            "errors",
+            "cleanup_hours",
+            "timestamp"
+          ],
+          "title": "CleanupResponse",
+          "description": "Response model for cleanup operations."
+        },
+        "ComponentHealth": {
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "Name"
+            },
+            "status": {
+              "type": "string",
+              "title": "Status"
+            },
+            "response_time_ms": {
+              "type": "number",
+              "title": "Response Time Ms"
+            },
+            "details": {
+              "type": "object",
+              "title": "Details",
+              "default": {
+  
+              }
+            }
+          },
+          "type": "object",
+          "required": [
+            "name",
+            "status",
+            "response_time_ms"
+          ],
+          "title": "ComponentHealth",
+          "description": "Individual component health status."
+        },
+        "DetailedHealthResponse": {
+          "properties": {
+            "status": {
+              "type": "string",
+              "title": "Status"
+            },
+            "service": {
+              "type": "string",
+              "title": "Service"
+            },
+            "version": {
+              "type": "string",
+              "title": "Version"
+            },
+            "timestamp": {
+              "type": "string",
+              "title": "Timestamp"
+            },
+            "system": {
+              "type": "object",
+              "title": "System"
+            },
+            "components": {
+              "items": {
+                "$ref": "#/components/schemas/ComponentHealth"
+              },
+              "type": "array",
+              "title": "Components"
+            },
+            "uptime_seconds": {
+              "type": "number",
+              "title": "Uptime Seconds"
+            }
+          },
+          "type": "object",
+          "required": [
+            "status",
+            "service",
+            "version",
+            "timestamp",
+            "system",
+            "components",
+            "uptime_seconds"
+          ],
+          "title": "DetailedHealthResponse",
+          "description": "Detailed health check response model."
+        },
+        "DirectoryListResponse": {
+          "properties": {
+            "directory": {
+              "type": "string",
+              "title": "Directory"
+            },
+            "total_size_mb": {
+              "type": "number",
+              "title": "Total Size Mb"
+            },
+            "total_files": {
+              "type": "integer",
+              "title": "Total Files"
+            },
+            "items": {
+              "items": {
+                "$ref": "#/components/schemas/app__api__endpoints__admin__FileInfo"
+              },
+              "type": "array",
+              "title": "Items"
+            }
+          },
+          "type": "object",
+          "required": [
+            "directory",
+            "total_size_mb",
+            "total_files",
+            "items"
+          ],
+          "title": "DirectoryListResponse",
+          "description": "Response model for directory listing."
+        },
+        "DiskUsageResponse": {
+          "properties": {
+            "upload_dir": {
+              "type": "object",
+              "title": "Upload Dir"
+            },
+            "output_dir": {
+              "type": "object",
+              "title": "Output Dir"
+            },
+            "timestamp": {
+              "type": "string",
+              "title": "Timestamp"
+            }
+          },
+          "type": "object",
+          "required": [
+            "upload_dir",
+            "output_dir",
+            "timestamp"
+          ],
+          "title": "DiskUsageResponse",
+          "description": "Response model for disk usage information."
+        },
+        "HTTPValidationError": {
+          "properties": {
+            "detail": {
+              "items": {
+                "$ref": "#/components/schemas/ValidationError"
+              },
+              "type": "array",
+              "title": "Detail"
+            }
+          },
+          "type": "object",
+          "title": "HTTPValidationError"
+        },
+        "HealthResponse": {
+          "properties": {
+            "status": {
+              "type": "string",
+              "title": "Status"
+            },
+            "service": {
+              "type": "string",
+              "title": "Service"
+            },
+            "version": {
+              "type": "string",
+              "title": "Version"
+            },
+            "timestamp": {
+              "type": "string",
+              "title": "Timestamp"
+            }
+          },
+          "type": "object",
+          "required": [
+            "status",
+            "service",
+            "version",
+            "timestamp"
+          ],
+          "title": "HealthResponse",
+          "description": "Basic health check response model."
+        },
+        "JobCleanupRequest": {
+          "properties": {
+            "job_id": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          "type": "object",
+          "required": [
+            "job_id"
+          ],
+          "title": "JobCleanupRequest",
+          "description": "Request model for job-specific cleanup."
+        },
+        "JobFilesResponse": {
+          "properties": {
+            "job_id": {
+              "type": "string",
+              "title": "Job Id"
+            },
+            "files": {
+              "items": {
+                "$ref": "#/components/schemas/app__api__endpoints__download__FileInfo"
+              },
+              "type": "array",
+              "title": "Files"
+            },
+            "download_urls": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "title": "Download Urls"
+            },
+            "total_files": {
+              "type": "integer",
+              "title": "Total Files"
+            }
+          },
+          "type": "object",
+          "required": [
+            "job_id",
+            "files",
+            "download_urls",
+            "total_files"
+          ],
+          "title": "JobFilesResponse",
+          "description": "Response model for job files listing."
+        },
+        "LogAnalysisResponse": {
+          "properties": {
+            "time_range": {
+              "type": "object",
+              "title": "Time Range"
+            },
+            "log_levels": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object",
+              "title": "Log Levels"
+            },
+            "error_patterns": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object",
+              "title": "Error Patterns"
+            },
+            "request_patterns": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "type": "object",
+              "title": "Request Patterns"
+            },
+            "performance_metrics": {
+              "type": "object",
+              "title": "Performance Metrics"
+            },
+            "lines_analyzed": {
+              "type": "integer",
+              "title": "Lines Analyzed"
+            }
+          },
+          "type": "object",
+          "required": [
+            "time_range",
+            "log_levels",
+            "error_patterns",
+            "request_patterns",
+            "performance_metrics",
+            "lines_analyzed"
+          ],
+          "title": "LogAnalysisResponse",
+          "description": "Log analysis response model."
+        },
+        "LogCleanupResponse": {
+          "properties": {
+            "status": {
+              "type": "string",
+              "title": "Status"
+            },
+            "removed_files": {
+              "type": "integer",
+              "title": "Removed Files"
+            },
+            "total_size_removed_mb": {
+              "type": "number",
+              "title": "Total Size Removed Mb"
+            },
+            "errors": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "title": "Errors"
+            }
+          },
+          "type": "object",
+          "required": [
+            "status",
+            "removed_files",
+            "total_size_removed_mb",
+            "errors"
+          ],
+          "title": "LogCleanupResponse",
+          "description": "Log cleanup response model."
+        },
+        "LogRotationResponse": {
+          "properties": {
+            "rotated_files": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "title": "Rotated Files"
+            },
+            "skipped_files": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "title": "Skipped Files"
+            },
+            "errors": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "title": "Errors"
+            }
+          },
+          "type": "object",
+          "required": [
+            "rotated_files",
+            "skipped_files",
+            "errors"
+          ],
+          "title": "LogRotationResponse",
+          "description": "Log rotation response model."
+        },
+        "LogStatisticsResponse": {
+          "properties": {
+            "total_files": {
+              "type": "integer",
+              "title": "Total Files"
+            },
+            "total_size_mb": {
+              "type": "number",
+              "title": "Total Size Mb"
+            },
+            "oldest_file": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Oldest File"
+            },
+            "newest_file": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Newest File"
+            },
+            "by_type": {
+              "type": "object",
+              "title": "By Type"
+            },
+            "log_directory": {
+              "type": "string",
+              "title": "Log Directory"
+            },
+            "disk_usage": {
+              "type": "object",
+              "title": "Disk Usage"
+            }
+          },
+          "type": "object",
+          "required": [
+            "total_files",
+            "total_size_mb",
+            "oldest_file",
+            "newest_file",
+            "by_type",
+            "log_directory",
+            "disk_usage"
+          ],
+          "title": "LogStatisticsResponse",
+          "description": "Log statistics response model."
+        },
+        "ModelGenerationRequest": {
+          "properties": {
+            "file_id": {
+              "type": "string",
+              "title": "File Id"
+            },
+            "model_type": {
+              "type": "string",
+              "title": "Model Type",
+              "default": "tripo3d"
+            },
+            "quality": {
+              "type": "string",
+              "title": "Quality",
+              "default": "standard"
+            },
+            "texture_enabled": {
+              "type": "boolean",
+              "title": "Texture Enabled",
+              "default": true
+            }
+          },
+          "type": "object",
+          "required": [
+            "file_id"
+          ],
+          "title": "ModelGenerationRequest",
+          "description": "Request model for 3D model generation."
+        },
+        "ModelGenerationResponse": {
+          "properties": {
+            "job_id": {
+              "type": "string",
+              "title": "Job Id"
+            },
+            "status": {
+              "type": "string",
+              "title": "Status"
+            },
+            "estimated_time": {
+              "type": "integer",
+              "title": "Estimated Time"
+            }
+          },
+          "type": "object",
+          "required": [
+            "job_id",
+            "status",
+            "estimated_time"
+          ],
+          "title": "ModelGenerationResponse",
+          "description": "Response model for 3D model generation."
+        },
+        "ModelInfo": {
+          "properties": {
+            "name": {
+              "type": "string",
+              "title": "Name"
+            },
+            "description": {
+              "type": "string",
+              "title": "Description"
+            },
+            "type": {
+              "type": "string",
+              "title": "Type"
+            },
+            "supported_formats": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array",
+              "title": "Supported Formats"
+            }
+          },
+          "type": "object",
+          "required": [
+            "name",
+            "description",
+            "type",
+            "supported_formats"
+          ],
+          "title": "ModelInfo",
+          "description": "Model information."
+        },
+        "UploadResponse": {
+          "properties": {
+            "file_id": {
+              "type": "string",
+              "title": "File Id"
+            },
+            "filename": {
+              "type": "string",
+              "title": "Filename"
+            },
+            "file_size": {
+              "type": "integer",
+              "title": "File Size"
+            },
+            "content_type": {
+              "type": "string",
+              "title": "Content Type"
+            },
+            "status": {
+              "type": "string",
+              "title": "Status"
+            },
+            "task_id": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Task Id"
+            }
+          },
+          "type": "object",
+          "required": [
+            "file_id",
+            "filename",
+            "file_size",
+            "content_type",
+            "status"
+          ],
+          "title": "UploadResponse",
+          "description": "Upload response model."
+        },
+        "ValidationError": {
+          "properties": {
+            "loc": {
+              "items": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              },
+              "type": "array",
+              "title": "Location"
+            },
+            "msg": {
+              "type": "string",
+              "title": "Message"
+            },
+            "type": {
+              "type": "string",
+              "title": "Error Type"
+            }
+          },
+          "type": "object",
+          "required": [
+            "loc",
+            "msg",
+            "type"
+          ],
+          "title": "ValidationError"
+        },
+        "app__api__endpoints__admin__FileInfo": {
+          "properties": {
+            "path": {
+              "type": "string",
+              "title": "Path"
+            },
+            "size_mb": {
+              "type": "number",
+              "title": "Size Mb"
+            },
+            "modified": {
+              "type": "string",
+              "title": "Modified"
+            },
+            "is_directory": {
+              "type": "boolean",
+              "title": "Is Directory"
+            },
+            "file_count": {
+              "anyOf": [
+                {
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "File Count"
+            }
+          },
+          "type": "object",
+          "required": [
+            "path",
+            "size_mb",
+            "modified",
+            "is_directory"
+          ],
+          "title": "FileInfo",
+          "description": "File information model."
+        },
+        "app__api__endpoints__download__FileInfo": {
+          "properties": {
+            "filename": {
+              "type": "string",
+              "title": "Filename"
+            },
+            "size": {
+              "type": "integer",
+              "title": "Size"
+            },
+            "mime_type": {
+              "type": "string",
+              "title": "Mime Type"
+            },
+            "created_time": {
+              "type": "number",
+              "title": "Created Time"
+            },
+            "rendered_image": {
+              "type": "object",
+              "title": "Rendered Image"
+            }
+          },
+          "type": "object",
+          "required": [
+            "filename",
+            "size",
+            "mime_type",
+            "created_time"
+          ],
+          "title": "FileInfo",
+          "description": "Model file information."
+        }
+      },
+      "securitySchemes": {
+        "HTTPBearer": {
+          "type": "http",
+          "scheme": "bearer"
+        }
+      }
+    }
+  }

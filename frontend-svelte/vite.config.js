@@ -3,8 +3,8 @@ import { defineConfig, loadEnv } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig(({ mode }) => {
-  // Load env file based on `mode` in the current working directory.
-  const env = loadEnv(mode, process.cwd(), '');
+  // Load env file from the root directory (parent of frontend-svelte)
+  const env = loadEnv(mode, '../', '');
   
   return {
     plugins: [
@@ -43,11 +43,11 @@ export default defineConfig(({ mode }) => {
       port: parseInt(env.FRONTEND_PORT) || 3000,
       proxy: {
         '/api': {
-          target: `http://${env.BACKEND_HOST || 'backend'}:${env.BACKEND_PORT || 8000}`,
+          target: process.env.NODE_ENV === 'production' ? 'http://backend:8000' : 'http://localhost:8000',
           changeOrigin: true
         },
         '/ws': {
-          target: `ws://${env.BACKEND_HOST || 'backend'}:${env.BACKEND_PORT || 8000}`,
+          target: process.env.NODE_ENV === 'production' ? 'ws://backend:8000' : 'ws://localhost:8000',
           ws: true,
           changeOrigin: true
         }

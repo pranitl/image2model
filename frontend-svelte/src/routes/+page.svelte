@@ -47,7 +47,7 @@
       </div>
       <div class="hero-stats animate-fade-in delay-600">
         <div class="stat-item">
-          <span class="stat-number gradient-text-blue">&lt;1min</span>
+          <span class="stat-number gradient-text-blue">{'<'}1min</span>
           <span class="stat-label">Processing Time</span>
         </div>
         <div class="stat-item">
@@ -72,7 +72,7 @@
     <div class="features-grid" use:staggerReveal>
       <div class="feature-card card card-hover" data-stagger>
         <div class="feature-icon gradient-blue-medium">
-          <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+          <svg width="40" height="40" fill="currentColor" viewBox="0 0 20 20">
             <path d="M13 7H7v6h6V7z"/>
             <path fill-rule="evenodd" d="M7 2a1 1 0 012 0v1h2V2a1 1 0 112 0v1h2a2 2 0 012 2v2h1a1 1 0 110 2h-1v2h1a1 1 0 110 2h-1v2a2 2 0 01-2 2h-2v1a1 1 0 11-2 0v-1H9v1a1 1 0 11-2 0v-1H5a2 2 0 01-2-2v-2H2a1 1 0 110-2h1V9H2a1 1 0 010-2h1V5a2 2 0 012-2h2V2z" clip-rule="evenodd"/>
           </svg>
@@ -83,7 +83,7 @@
 
       <div class="feature-card card card-hover" data-stagger>
         <div class="feature-icon gradient-blue-medium">
-          <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+          <svg width="40" height="40" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"/>
           </svg>
         </div>
@@ -93,7 +93,7 @@
 
       <div class="feature-card card card-hover" data-stagger>
         <div class="feature-icon gradient-blue-medium">
-          <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+          <svg width="40" height="40" fill="currentColor" viewBox="0 0 20 20">
             <path d="M4 4a2 2 0 00-2 2v1h16V6a2 2 0 00-2-2H4z"/>
             <path fill-rule="evenodd" d="M18 9H2v5a2 2 0 002 2h12a2 2 0 002-2V9zM4 13a1 1 0 011-1h1a1 1 0 110 2H5a1 1 0 01-1-1zm5-1a1 1 0 100 2h1a1 1 0 100-2H9z" clip-rule="evenodd"/>
           </svg>
@@ -104,7 +104,7 @@
 
       <div class="feature-card card card-hover" data-stagger>
         <div class="feature-icon gradient-blue-medium">
-          <svg width="32" height="32" fill="currentColor" viewBox="0 0 20 20">
+          <svg width="40" height="40" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
           </svg>
         </div>
@@ -128,7 +128,7 @@
     <div class="steps" use:staggerReveal>
       <div class="step card card-lift" data-stagger>
         <div class="step-icon gradient-blue-medium">
-          <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
+          <svg width="56" height="56" fill="currentColor" viewBox="0 0 20 20">
             <path d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z"/>
           </svg>
         </div>
@@ -138,7 +138,7 @@
       </div>
       <div class="step card card-lift" data-stagger>
         <div class="step-icon gradient-blue-medium animate-spin-slow">
-          <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
+          <svg width="56" height="56" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
           </svg>
         </div>
@@ -148,7 +148,7 @@
       </div>
       <div class="step card card-lift" data-stagger>
         <div class="step-icon gradient-blue-medium">
-          <svg width="48" height="48" fill="currentColor" viewBox="0 0 20 20">
+          <svg width="56" height="56" fill="currentColor" viewBox="0 0 20 20">
             <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/>
           </svg>
         </div>
