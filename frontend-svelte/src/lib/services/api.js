@@ -11,8 +11,13 @@ class APIService {
     // Default timeout for requests
     this.DEFAULT_TIMEOUT = 60000; // 60 seconds
     
-    // Development API key (in production, this should come from environment)
-    this.API_KEY = 'test-api-key-for-development';
+    // API key from environment variables
+    this.API_KEY = import.meta.env?.VITE_API_KEY || 'dev-api-key-123456';
+    
+    // Debug logging in development
+    if (import.meta.env.MODE === 'development') {
+      console.log('API Service initialized with key:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'NOT SET');
+    }
   }
 
   // Helper method to get common headers
@@ -29,38 +34,52 @@ class APIService {
       let errorData;
       try {
         errorData = await response.json();
+        console.error('API Error Response:', errorData);
       } catch (e) {
         errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
       }
-      throw new Error(errorData.message || errorData.error || `Request failed: ${response.statusText}`);
+      throw new Error(errorData.detail || errorData.message || errorData.error || `Request failed: ${response.statusText}`);
     }
     return response;
   }
 
   // Upload batch of files with face limit
-  async uploadBatch(files, faceLimit = 'auto') {
+  async uploadBatch(files, faceLimit = null) {
     const formData = new FormData();
     
     // Add files to form data
     files.forEach((fileObj) => {
       // Handle both File objects and our wrapped file objects
       const file = fileObj.file || fileObj;
+      console.log('Adding file:', file.name, 'Type:', file.type, 'Size:', file.size);
       formData.append('files', file);
     });
     
-    // Add face limit parameter
-    formData.append('face_limit', faceLimit.toString());
+    // Add face limit parameter (backend expects a number, not a string)
+    if (faceLimit !== null && faceLimit !== undefined && faceLimit !== 'auto') {
+      console.log('Adding face_limit:', faceLimit, 'Type:', typeof faceLimit);
+      formData.append('face_limit', faceLimit);
+    } else {
+      console.log('Not sending face_limit, value is:', faceLimit);
+    }
+    // If faceLimit is 'auto' or not provided, don't send it (backend will use default)
     
     try {
+      const headers = this.getHeaders();
+      console.log('Upload headers:', headers);
+      console.log('Upload URL:', `${this.API_BASE}/upload/`);
+      
       const response = await fetch(`${this.API_BASE}/upload/`, {
         method: 'POST',
         body: formData,
-        headers: this.getHeaders(),
+        headers: headers,
         signal: AbortSignal.timeout(this.DEFAULT_TIMEOUT)
       });
       
       await this.handleApiError(response);
       const data = await response.json();
+      
+      console.log('API Response:', data);
       
       return {
         success: true,
