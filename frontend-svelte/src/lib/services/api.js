@@ -30,6 +30,13 @@ class APIService {
 
   // Helper method to get common headers
   getHeaders(additionalHeaders = {}) {
+    if (!this.API_KEY) {
+      console.error('API key not set! Current value:', this.API_KEY);
+      throw new Error('API key is required but not set. Please ensure the application has loaded properly.');
+    }
+    
+    console.log('Creating headers with API key:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'NOT SET');
+    
     return {
       'Authorization': `Bearer ${this.API_KEY}`,
       ...additionalHeaders
@@ -53,6 +60,9 @@ class APIService {
 
   // Upload batch of files with face limit
   async uploadBatch(files, faceLimit = null) {
+    console.log('uploadBatch called with:', files.length, 'files, faceLimit:', faceLimit);
+    console.log('Current API key:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'NOT SET');
+    
     const formData = new FormData();
     
     // Add files to form data

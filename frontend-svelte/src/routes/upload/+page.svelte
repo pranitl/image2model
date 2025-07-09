@@ -5,6 +5,7 @@
   import { scrollReveal, staggerReveal } from '$lib/actions/animations.js';
   import { toast } from '$lib/stores/toast.js';
   import { page } from '$app/stores';
+  import { apiKey } from '$lib/stores/auth.js';
   import Navbar from '$lib/components/Navbar.svelte';
   import Footer from '$lib/components/Footer.svelte';
   import Button from '$lib/components/Button.svelte';
@@ -201,6 +202,13 @@
     
     if (!canGenerate || uploading) return;
     
+    // Check if API key is available
+    if (!$apiKey) {
+      console.error('API key not available yet');
+      toast.error('Application is still loading. Please try again in a moment.');
+      return;
+    }
+    
     uploading = true;
     
     try {
@@ -216,7 +224,10 @@
       // Use the API service with retry logic
       let result;
       try {
-        result = await api.uploadBatch(files, faceLimit);
+        // When in auto mode, pass null for face limit (backend will use default)
+        const faceLimitValue = isAuto ? null : faceLimit;
+        console.log('Uploading with face limit:', faceLimitValue, 'isAuto:', isAuto);
+        result = await api.uploadBatch(files, faceLimitValue);
         console.log('Direct upload result:', result);
       } catch (uploadError) {
         console.error('Direct upload error:', uploadError);
