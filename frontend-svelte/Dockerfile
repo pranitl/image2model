@@ -12,10 +12,7 @@ RUN npm ci
 # Copy source files
 COPY . .
 
-# Set build-time environment variables
-ARG API_KEY
-ENV API_KEY=${API_KEY}
-
+# Don't set API_KEY at build time since we're using dynamic env
 # Build the app
 RUN npm run build
 
@@ -38,6 +35,9 @@ EXPOSE 3000
 ENV NODE_ENV=production
 ENV HOST=0.0.0.0
 ENV PORT=3000
+
+# IMPORTANT: API_KEY will be provided at runtime via docker-compose or env
+# The app needs to read it from process.env at runtime, not build time
 
 # Run the app
 CMD ["node", "build"]

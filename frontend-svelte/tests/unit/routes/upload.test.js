@@ -43,6 +43,11 @@ vi.mock('$lib/stores/toast', () => ({
   }
 }));
 
+// Mock auth store with API key
+vi.mock('$lib/stores/auth', () => ({
+  apiKey: readable('test-api-key-123')
+}));
+
 describe('Upload Page', () => {
   beforeEach(() => {
     // Mock fetch for API calls
@@ -148,7 +153,7 @@ describe('Upload Page', () => {
     expect(api.default.uploadBatch).toHaveBeenCalled();
     expect(api.default.uploadBatch).toHaveBeenCalledWith(
       expect.arrayContaining([expect.objectContaining({ name: 'test.jpg' })]),
-      10000 // default face limit
+      null // auto mode sends null
     );
   });
 

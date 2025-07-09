@@ -13,7 +13,8 @@ describe('APIService', () => {
   let apiService;
 
   beforeEach(() => {
-    apiService = new APIService();
+    // Initialize with test API key
+    apiService = new APIService('test-api-key-123');
     vi.clearAllMocks();
   });
 
@@ -29,7 +30,7 @@ describe('APIService', () => {
 
     it('should use window origin when available', () => {
       global.window = { location: { origin: 'http://localhost:8000' } };
-      const service = new APIService();
+      const service = new APIService('test-api-key');
       expect(service.API_BASE).toBe('http://localhost:8000/api/v1');
       delete global.window;
     });
