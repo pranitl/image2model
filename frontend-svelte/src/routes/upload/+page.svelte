@@ -200,16 +200,33 @@
   async function handleSubmit(e) {
     e.preventDefault();
     
-    if (!canGenerate || uploading) return;
+    console.log('=== Upload Submit Started ===');
+    console.log('Can generate:', canGenerate);
+    console.log('Currently uploading:', uploading);
+    console.log('Number of files:', files.length);
+    console.log('API key from store:', $apiKey ? 'Available' : 'Not available');
+    console.log('API key in service:', api.API_KEY ? 'Set' : 'Not set');
+    
+    if (!canGenerate || uploading) {
+      console.log('Cannot proceed - canGenerate:', canGenerate, 'uploading:', uploading);
+      return;
+    }
     
     // Check if API key is available
     if (!$apiKey) {
-      console.error('API key not available yet');
+      console.error('API key not available from store');
       toast.error('Application is still loading. Please try again in a moment.');
       return;
     }
     
+    // Make sure API service has the key
+    if (!api.API_KEY || api.API_KEY !== $apiKey) {
+      console.log('Updating API service with key from store');
+      api.setApiKey($apiKey);
+    }
+    
     uploading = true;
+    console.log('Starting upload process...');
     
     try {
       // Store file info in session for processing page
@@ -227,10 +244,15 @@
         // When in auto mode, pass null for face limit (backend will use default)
         const faceLimitValue = isAuto ? null : faceLimit;
         console.log('Uploading with face limit:', faceLimitValue, 'isAuto:', isAuto);
+        console.log('API Base URL:', api.API_BASE);
+        console.log('Files to upload:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
+        
         result = await api.uploadBatch(files, faceLimitValue);
-        console.log('Direct upload result:', result);
+        console.log('Upload completed, result:', result);
       } catch (uploadError) {
-        console.error('Direct upload error:', uploadError);
+        console.error('Upload error details:', uploadError);
+        console.error('Error message:', uploadError.message);
+        console.error('Error stack:', uploadError.stack);
         throw uploadError;
       }
       
