@@ -14,28 +14,19 @@ class APIService {
     // API key from environment variables
     this.API_KEY = apiKey;
     
-    // Debug logging in development
-    if (import.meta.env.MODE === 'development') {
-      console.log('API Service initialized with key:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'NOT SET');
-    }
+    // API key initialized
   }
 
   // Set API key after initialization
   setApiKey(apiKey) {
     this.API_KEY = apiKey;
-    if (import.meta.env.MODE === 'development') {
-      console.log('API key updated:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'NOT SET');
-    }
   }
 
   // Helper method to get common headers
   getHeaders(additionalHeaders = {}) {
     if (!this.API_KEY) {
-      console.error('API key not set! Current value:', this.API_KEY);
       throw new Error('API key is required but not set. Please ensure the application has loaded properly.');
     }
-    
-    console.log('Creating headers with API key:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'NOT SET');
     
     return {
       'Authorization': `Bearer ${this.API_KEY}`,
@@ -49,7 +40,6 @@ class APIService {
       let errorData;
       try {
         errorData = await response.json();
-        console.error('API Error Response:', errorData);
       } catch (e) {
         errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
       }
@@ -60,8 +50,6 @@ class APIService {
 
   // Upload batch of files with face limit
   async uploadBatch(files, faceLimit = null) {
-    console.log('uploadBatch called with:', files.length, 'files, faceLimit:', faceLimit);
-    console.log('Current API key:', this.API_KEY ? `${this.API_KEY.substring(0, 10)}...` : 'NOT SET');
     
     const formData = new FormData();
     
@@ -69,23 +57,18 @@ class APIService {
     files.forEach((fileObj) => {
       // Handle both File objects and our wrapped file objects
       const file = fileObj.file || fileObj;
-      console.log('Adding file:', file.name, 'Type:', file.type, 'Size:', file.size);
+      // Add file to form data
       formData.append('files', file);
     });
     
     // Add face limit parameter (backend expects a number, not a string)
     if (faceLimit !== null && faceLimit !== undefined && faceLimit !== 'auto') {
-      console.log('Adding face_limit:', faceLimit, 'Type:', typeof faceLimit);
       formData.append('face_limit', faceLimit);
-    } else {
-      console.log('Not sending face_limit, value is:', faceLimit);
     }
     // If faceLimit is 'auto' or not provided, don't send it (backend will use default)
     
     try {
       const headers = this.getHeaders();
-      console.log('Upload headers:', headers);
-      console.log('Upload URL:', `${this.API_BASE}/upload/`);
       
       const response = await fetch(`${this.API_BASE}/upload/`, {
         method: 'POST',
@@ -97,7 +80,7 @@ class APIService {
       await this.handleApiError(response);
       const data = await response.json();
       
-      console.log('API Response:', data);
+      // Process response
       
       return {
         success: true,

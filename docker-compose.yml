@@ -52,9 +52,10 @@ services:
       - BACKEND_CORS_ORIGINS=http://localhost:3000,http://frontend:3000
       - ENVIRONMENT=development
       - LOG_LEVEL=debug
-      - FAL_API_KEY=e593280a-4735-4bb4-aa97-d16b985f10ac:312ea938c7a73ff88f8ba4a0b0d866cb
-      - API_KEY=dev-api-key-123456
-      - ADMIN_API_KEY=dev-admin-api-key-789012
+      # API keys should be set in .env file:
+      # - FAL_API_KEY=${FAL_API_KEY}
+      # - API_KEY=${API_KEY}
+      # - ADMIN_API_KEY=${ADMIN_API_KEY}
     env_file:
       - .env
     volumes:
@@ -90,8 +91,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - ENVIRONMENT=development
       - LOG_LEVEL=debug
-      - API_KEY=dev-api-key-123456
-      - ADMIN_API_KEY=dev-admin-api-key-789012
+      # API keys should be set in .env file
     env_file:
       - .env
     volumes:
@@ -127,8 +127,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - ENVIRONMENT=development
       - LOG_LEVEL=debug
-      - API_KEY=dev-api-key-123456
-      - ADMIN_API_KEY=dev-admin-api-key-789012
+      # API keys should be set in .env file
     env_file:
       - .env
     volumes:

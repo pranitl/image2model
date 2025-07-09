@@ -200,33 +200,24 @@
   async function handleSubmit(e) {
     e.preventDefault();
     
-    console.log('=== Upload Submit Started ===');
-    console.log('Can generate:', canGenerate);
-    console.log('Currently uploading:', uploading);
-    console.log('Number of files:', files.length);
-    console.log('API key from store:', $apiKey ? 'Available' : 'Not available');
-    console.log('API key in service:', api.API_KEY ? 'Set' : 'Not set');
+    // Validate upload state
     
     if (!canGenerate || uploading) {
-      console.log('Cannot proceed - canGenerate:', canGenerate, 'uploading:', uploading);
       return;
     }
     
     // Check if API key is available
     if (!$apiKey) {
-      console.error('API key not available from store');
       toast.error('Application is still loading. Please try again in a moment.');
       return;
     }
     
     // Make sure API service has the key
     if (!api.API_KEY || api.API_KEY !== $apiKey) {
-      console.log('Updating API service with key from store');
       api.setApiKey($apiKey);
     }
     
     uploading = true;
-    console.log('Starting upload process...');
     
     try {
       // Store file info in session for processing page
@@ -243,20 +234,13 @@
       try {
         // When in auto mode, pass null for face limit (backend will use default)
         const faceLimitValue = isAuto ? null : faceLimit;
-        console.log('Uploading with face limit:', faceLimitValue, 'isAuto:', isAuto);
-        console.log('API Base URL:', api.API_BASE);
-        console.log('Files to upload:', files.map(f => ({ name: f.name, size: f.size, type: f.type })));
         
         result = await api.uploadBatch(files, faceLimitValue);
-        console.log('Upload completed, result:', result);
       } catch (uploadError) {
-        console.error('Upload error details:', uploadError);
-        console.error('Error message:', uploadError.message);
-        console.error('Error stack:', uploadError.stack);
         throw uploadError;
       }
       
-      console.log('Upload result:', result);
+      // Process upload result
       
       if (result.success) {
         // Update session storage with task ID
@@ -270,20 +254,14 @@
         
         // Navigate to processing page
         const taskId = result.taskId || result.batchId || result.jobId;
-        console.log('Navigating to processing page with taskId:', taskId);
         
         if (taskId && browser) {
           await goto(`/processing?taskId=${taskId}`);
-        } else {
-          console.error('No taskId available or not in browser');
-          console.log('browser:', browser, 'taskId:', taskId);
         }
       } else {
         throw new Error(result.error || 'Upload failed');
       }
     } catch (error) {
-      console.error('Upload failed:', error);
-      console.error('Full error object:', error);
       toast.error(`Failed to upload files: ${error.message || error}`);
     } finally {
       uploading = false;
