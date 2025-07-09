@@ -24,13 +24,14 @@ describe('APIService', () => {
 
   describe('constructor', () => {
     it('should initialize with correct API base URL', () => {
-      // Without window defined, it should use the relative path
-      expect(apiService.API_BASE).toBe('/api/v1');
+      // Now always uses direct backend URL
+      expect(apiService.API_BASE).toBe('http://localhost:8000/api/v1');
     });
 
-    it('should use window origin when available', () => {
-      global.window = { location: { origin: 'http://localhost:8000' } };
+    it('should use direct backend URL regardless of window', () => {
+      global.window = { location: { origin: 'http://localhost:3000' } };
       const service = new APIService('test-api-key');
+      // Should still use backend URL, not window origin
       expect(service.API_BASE).toBe('http://localhost:8000/api/v1');
       delete global.window;
     });
@@ -190,7 +191,7 @@ describe('APIService', () => {
       const stream = apiService.createProgressStream('task-123', callbacks);
 
       // Verify EventSource was created with correct URL
-      expect(EventSource).toHaveBeenCalledWith('/api/v1/status/tasks/task-123/stream');
+      expect(EventSource).toHaveBeenCalledWith('http://localhost:8000/api/v1/status/tasks/task-123/stream');
 
       // Simulate progress event
       const progressHandler = mockEventSource.addEventListener.mock.calls
@@ -261,12 +262,12 @@ describe('APIService', () => {
     describe('getDownloadUrl', () => {
       it('should generate correct download URLs', () => {
         const url = apiService.getDownloadUrl('job-123', 'model.glb');
-        expect(url).toBe('/api/v1/download/job-123/model.glb');
+        expect(url).toBe('http://localhost:8000/api/v1/download/job-123/model.glb');
       });
 
       it('should encode filenames', () => {
         const url = apiService.getDownloadUrl('job-123', 'my file.glb');
-        expect(url).toBe('/api/v1/download/job-123/my%20file.glb');
+        expect(url).toBe('http://localhost:8000/api/v1/download/job-123/my%20file.glb');
       });
     });
   });

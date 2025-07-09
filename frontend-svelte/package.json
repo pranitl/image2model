@@ -29,6 +29,7 @@
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/svelte": "^4.1.0",
     "@vitest/ui": "^1.1.0",
+    "dotenv": "^17.1.0",
     "jsdom": "^23.0.1",
     "playwright": "^1.53.2",
     "rollup-plugin-visualizer": "^6.0.3",

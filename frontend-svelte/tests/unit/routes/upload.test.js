@@ -30,7 +30,10 @@ vi.mock('$app/environment', () => ({
 vi.mock('$lib/services/api', () => ({
   default: {
     uploadBatch: vi.fn(),
-    retryOperation: vi.fn((fn) => fn())
+    retryOperation: vi.fn((fn) => fn()),
+    setApiKey: vi.fn(),
+    API_KEY: null,
+    API_BASE: 'http://localhost:8000/api/v1'
   }
 }));
 
