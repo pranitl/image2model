@@ -169,6 +169,7 @@ services:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - FLOWER_BASIC_AUTH=${FLOWER_BASIC_AUTH}
+      - FAL_API_KEY=${FAL_API_KEY}
     depends_on:
       - redis
       - worker
