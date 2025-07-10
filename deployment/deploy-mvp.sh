@@ -33,8 +33,8 @@ fi
 
 # Quick rebuild and restart
 echo "🔄 Restarting services..."
-docker compose -f docker-compose.prod.yml down
-docker compose -f docker-compose.prod.yml up -d --build
+docker compose -f docker-compose.prod.yml --env-file .env.production down
+docker compose -f docker-compose.prod.yml --env-file .env.production up -d --build
 
 # Wait and check
 echo "⏳ Waiting for services..."
