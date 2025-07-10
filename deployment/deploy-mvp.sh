@@ -21,11 +21,8 @@ fi
 
 echo "🚀 Deploying to $DEPLOY_HOST..."
 
-ssh root@$DEPLOY_HOST << EOF
+ssh root@$DEPLOY_HOST "NO_CACHE_FLAG='$NO_CACHE_FLAG' bash -s" << 'EOF'
 set -e  # Exit on error
-
-# Pass the no-cache flag from local to remote
-NO_CACHE_FLAG="$NO_CACHE_FLAG"
 
 cd /opt/image2model
 
@@ -38,6 +35,19 @@ fi
 # Pull latest changes with rebase
 echo "📥 Pulling latest code with rebase..."
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+
+# Handle detached HEAD state - find the actual branch name
+if [ "$CURRENT_BRANCH" = "HEAD" ] || [ -z "$CURRENT_BRANCH" ]; then
+    echo "⚠️  Detached HEAD detected, finding actual branch..."
+    # Try to find the branch that contains the current commit
+    CURRENT_BRANCH=$(git branch -r --contains HEAD | grep -v HEAD | head -1 | sed 's/.*origin\///')
+    if [ -z "$CURRENT_BRANCH" ]; then
+        echo "❌ Could not determine current branch!"
+        exit 1
+    fi
+    echo "📌 Detected branch: $CURRENT_BRANCH"
+fi
+
 echo "Current branch: $CURRENT_BRANCH"
 git fetch origin $CURRENT_BRANCH
 git rebase origin/$CURRENT_BRANCH
@@ -62,7 +72,7 @@ export BUILDKIT_PROGRESS=plain
 # Down the services first
 docker compose -f docker-compose.prod.yml --env-file .env.production down
 
-if [ -n "\$NO_CACHE_FLAG" ]; then
+if [ -n "$NO_CACHE_FLAG" ]; then
     echo "🔨 Building with --no-cache (fresh build)..."
     docker compose -f docker-compose.prod.yml --env-file .env.production build --no-cache
     docker compose -f docker-compose.prod.yml --env-file .env.production up -d
