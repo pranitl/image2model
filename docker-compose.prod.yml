@@ -31,7 +31,7 @@ services:
       sh -c "
         mkdir -p /usr/local/etc/redis &&
         echo 'requirepass ${REDIS_PASSWORD}' > /usr/local/etc/redis/redis.conf &&
-        echo 'bind 127.0.0.1 ::1' >> /usr/local/etc/redis/redis.conf &&
+        echo 'bind 0.0.0.0 ::' >> /usr/local/etc/redis/redis.conf &&
         redis-server /usr/local/etc/redis/redis.conf
       "
     # No exposed ports for security
