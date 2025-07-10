@@ -29,6 +29,7 @@ services:
     container_name: image2model-redis
     command: >
       sh -c "
+        mkdir -p /usr/local/etc/redis &&
         echo 'requirepass ${REDIS_PASSWORD}' > /usr/local/etc/redis/redis.conf &&
         echo 'bind 127.0.0.1 ::1' >> /usr/local/etc/redis/redis.conf &&
         redis-server /usr/local/etc/redis/redis.conf
