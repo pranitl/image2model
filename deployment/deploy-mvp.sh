@@ -18,7 +18,9 @@ fi
 
 # Pull latest changes
 echo "📥 Pulling latest code..."
-git pull origin main
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo "Current branch: $CURRENT_BRANCH"
+git pull origin $CURRENT_BRANCH
 
 # Ensure environment file is up to date
 if [ -f ".env.production" ]; then
@@ -40,7 +42,15 @@ sleep 60
 
 # Health check
 if curl -f http://localhost/api/v1/health/; then
-    echo "✅ Deployment successful!"
+    echo "✅ Local health check passed!"
+    
+    # Test via Cloudflare
+    echo "🌐 Testing via Cloudflare..."
+    if curl -f https://image2model.pranitlab.com/api/v1/health/; then
+        echo "✅ Deployment successful! Site is live."
+    else
+        echo "⚠️  Warning: Cloudflare check failed (might need DNS propagation)"
+    fi
 else
     echo "❌ Health check failed!"
     docker logs image2model-backend --tail 20
