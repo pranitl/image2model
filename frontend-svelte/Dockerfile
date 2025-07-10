@@ -12,6 +12,12 @@ RUN npm ci
 # Copy source files
 COPY . .
 
+# Accept PUBLIC_API_URL as build argument
+ARG PUBLIC_API_URL
+
+# Set PUBLIC_API_URL environment variable for build process
+ENV PUBLIC_API_URL=$PUBLIC_API_URL
+
 # Don't set API_KEY at build time since we're using dynamic env
 # Build the app
 RUN npm run build

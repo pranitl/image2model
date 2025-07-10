@@ -224,6 +224,8 @@ services:
       context: ./frontend-svelte
       dockerfile: Dockerfile
       target: production
+      args:
+        - PUBLIC_API_URL=${PUBLIC_API_URL}
     container_name: image2model-frontend
     # Expose port 3000 internally
     expose:

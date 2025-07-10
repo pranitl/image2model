@@ -5,11 +5,10 @@ const config = {
   kit: {
     adapter: adapter({
       out: 'build',
-      precompress: false,
-      envPrefix: 'VITE_'
+      precompress: false
     }),
     csrf: {
-      checkOrigin: false
+      checkOrigin: true
     }
   }
 };
