@@ -31,7 +31,7 @@
       const formData = new FormData();
       formData.append('files', file);
       
-      const directResponse = await fetch('http://localhost:8000/api/v1/upload/', {
+      const directResponse = await fetch(`${api.API_BASE}/upload/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${api.API_KEY || $apiKey}`
