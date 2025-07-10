@@ -256,7 +256,7 @@ networks:
     name: image2model-frontend-network
   backend-network:
     driver: bridge
-    internal: true  # No external access
+    # internal: true  # Commented out to allow external DNS resolution for FAL.AI API access
     name: image2model-backend-network
 
 volumes:
