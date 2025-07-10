@@ -57,7 +57,9 @@ export default defineConfig(({ mode }) => {
     // Define environment variables that should be exposed to the client
     define: {
       __APP_VERSION__: JSON.stringify(process.env.npm_package_version),
-      __BUILD_TIME__: JSON.stringify(new Date().toISOString())
+      __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
+      // Explicitly pass PUBLIC_API_URL to the client-side code
+      'import.meta.env.PUBLIC_API_URL': JSON.stringify(process.env.PUBLIC_API_URL)
     }
   };
 });

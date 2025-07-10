@@ -19,8 +19,8 @@ ARG PUBLIC_API_URL
 ENV PUBLIC_API_URL=$PUBLIC_API_URL
 
 # Don't set API_KEY at build time since we're using dynamic env
-# Build the app
-RUN npm run build
+# Build the app - Pass PUBLIC_API_URL to Vite during build
+RUN PUBLIC_API_URL=$PUBLIC_API_URL npm run build
 
 # Production stage
 FROM node:20-alpine AS production
