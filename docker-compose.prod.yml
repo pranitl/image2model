@@ -58,6 +58,7 @@ services:
       - "8000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${CELERY_BROKER_URL}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
@@ -98,6 +99,7 @@ services:
     container_name: image2model-worker
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${CELERY_BROKER_URL}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - ENVIRONMENT=production
