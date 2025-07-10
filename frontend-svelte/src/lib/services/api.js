@@ -3,10 +3,8 @@
 
 class APIService {
   constructor(apiKey = null) {
-    // API base URL - direct to backend, matching vanilla frontend
-    this.API_BASE = typeof window !== 'undefined' 
-      ? 'http://localhost:8000/api/v1'
-      : 'http://localhost:8000/api/v1';
+    // API base URL - use PUBLIC_API_URL from environment or fallback to localhost
+    this.API_BASE = import.meta.env.PUBLIC_API_URL || 'http://localhost:8000/api/v1';
     
     // Default timeout for requests
     this.DEFAULT_TIMEOUT = 60000; // 60 seconds
