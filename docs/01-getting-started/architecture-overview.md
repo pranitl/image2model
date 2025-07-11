@@ -1,10 +1,10 @@
 # Architecture Overview
 
-> **Last Updated**: 2025-01-11  
+> **Last Updated**: 2025-07-11  
 > **Status**: Complete  
 > **Version**: 1.0  
 > **Changelog**:
-> - 1.0 (2025-01-11): Initial architecture documentation created from data flow
+> - 1.0 (2025-07-11): Initial architecture documentation created from data flow
 
 ## Overview
 
@@ -45,6 +45,7 @@ graph TB
     subgraph "Storage Layer"
         FileStore[File System]
         JobStore[Redis Job Store]
+        Database[PostgreSQL]
     end
     
     subgraph "External Services"
@@ -54,6 +55,7 @@ graph TB
     UI -->|HTTP/HTTPS| API
     UI -->|SSE| SSE
     API --> Queue
+    API --> Database
     Queue --> Worker
     Worker --> FAL
     Worker --> FileStore
@@ -121,6 +123,18 @@ graph TB
 - Content type validation
 
 **Technology**: Local filesystem (MVP), S3-compatible storage (future)
+
+### Database (PostgreSQL)
+
+**Purpose**: Persistent storage for application data
+
+**Key Features**:
+- Job metadata storage
+- User data (future)
+- Transactional integrity
+- Scalable data model
+
+**Technology**: PostgreSQL 15+
 
 ## Data Flow
 
@@ -308,8 +322,9 @@ data: {"job_id": "job_123456", "successful": 5, "failed": 0}
 
 ### Infrastructure
 - **Container**: Docker & Docker Compose
-- **Reverse Proxy**: Nginx
-- **Process Manager**: Supervisor (production)
+- **Database**: PostgreSQL 15
+- **Reverse Proxy**: Nginx (production)
+- **Monitoring**: Flower (Celery monitoring)
 
 ### External Services
 - **3D Generation**: FAL.AI Tripo3D API
@@ -340,15 +355,19 @@ data: {"job_id": "job_123456", "successful": 5, "failed": 0}
 ```yaml
 services:
   frontend:
-    - Port: 5173
+    - Port: 3000
     - Hot reload enabled
   backend:
     - Port: 8000
     - Auto-reload enabled
   redis:
-    - Port: 6379
+    - Port: 6379 (internal only)
+  postgres:
+    - Port: 5432 (internal only)
   celery:
-    - Concurrency: 4
+    - Multiple workers for different queues
+  flower:
+    - Port: 5555 (monitoring dashboard)
 ```
 
 ### Production Environment
@@ -421,5 +440,5 @@ services:
 
 - [Quick Start Guide](./quick-start.md) - Get up and running quickly
 - [Product Requirements](./3d-image-mvp-prd.md) - Business context
-- [API Reference](../03-backend/api-reference/) - Detailed endpoint docs
-- [Deployment Guide](../04-deployment/) - Production setup
+- [API Reference](../03-backend/api-reference/) - Detailed endpoint docs (coming soon)
+- [Deployment Guide](../04-deployment/) - Production setup (coming soon)

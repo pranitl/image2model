@@ -1,10 +1,10 @@
 # Product Requirements Document
 
-> **Last Updated**: 2025-01-11  
+> **Last Updated**: 2025-07-11  
 > **Status**: Complete  
 > **Version**: 1.4  
 > **Changelog**:
-> - 1.4 (2025-01-11): Added framework compliance and cross-references
+> - 1.4 (2025-07-11): Added framework compliance and cross-references
 > - 1.3 (2025-07-01): Initial PRD by Gemini
 
 ## AI 3D Model Generator - MVP
@@ -122,7 +122,7 @@ The scope of the MVP is strictly limited to the essential features required to d
 ### **7\. Technical Architecture & Stack**
 
 * **Frontend:** Single-Page Application (SPA).  
-  * **Recommendation:** **React with TypeScript**, bootstrapped with **Vite**. This provides a fast development experience, strong typing to reduce tech debt, and a robust ecosystem for future growth.  
+  * **Implementation:** **SvelteKit**, providing server-side rendering, excellent performance, and a modern developer experience with built-in routing and API capabilities.  
 * **Backend:** FastAPI (Python).  
 * **Background Task Processing:** Celery with Redis as the message broker.  
 * **Real-time Communication:** Server-Sent Events (SSE).  
@@ -212,4 +212,4 @@ print(result)
 - [Quick Start Guide](./quick-start.md) - Get started with development
 - [Architecture Overview](./architecture-overview.md) - Technical implementation details
 - [Technology Stack](./technology-stack.md) - Frameworks and tools used
-- [API Reference](../03-backend/api-reference/) - Complete API documentation
+- [API Reference](../03-backend/api-reference/) - Complete API documentation (coming soon)

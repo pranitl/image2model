@@ -1,6 +1,6 @@
 # image2model Documentation
 
-> **Last Updated**: 2025-01-11  
+> **Last Updated**: 2025-07-11  
 > **Status**: Active Development  
 > **Version**: 1.0
 
@@ -149,4 +149,4 @@ Legend: ✅ Active | 🚧 In Progress | 📋 Planned | ✓ Complete
 
 **Need Help?** Can't find what you're looking for? Check our [FAQ](./07-reference/troubleshooting/faq.md) or open an issue.
 
-*This documentation is actively maintained. Last full review: 2025-01-11*
+*This documentation is actively maintained. Last full review: 2025-07-11*

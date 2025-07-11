@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-> **Last Updated**: 2025-01-11  
+> **Last Updated**: 2025-07-11  
 > **Status**: Complete  
 > **Version**: 1.0
 
@@ -53,10 +53,10 @@ Edit `.env` and add your FAL.AI API key:
 
 ```env
 # FAL.AI Configuration
-FAL_KEY=your-fal-api-key-here
+FAL_API_KEY=your-fal-api-key-here
 
 # Application Settings
-IMAGE2MODEL_API_KEY=your-secure-api-key-here
+API_KEY=your-secure-api-key-here
 MAX_UPLOAD_SIZE_MB=10
 ```
 
@@ -70,7 +70,7 @@ Run this command to generate a secure API key:
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Copy the output and paste it as the value for `IMAGE2MODEL_API_KEY` in your `.env` file.
+Copy the output and paste it as the value for `API_KEY` in your `.env` file.
 
 ### Verify Docker Setup
 
@@ -101,7 +101,7 @@ This command will:
 
 Once all services are running, open your browser to:
 
-- **Frontend**: http://localhost:5173
+- **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
 
@@ -109,7 +109,7 @@ Once all services are running, open your browser to:
 
 ### 1. Quick Functionality Test
 
-1. Navigate to http://localhost:5173
+1. Navigate to http://localhost:3000
 2. Click "Upload Images" on the home page
 3. Select one or more test images (JPG/PNG)
 4. Set face limit to 10000 (default)
@@ -128,7 +128,7 @@ Expected response:
 ```json
 {
   "status": "healthy",
-  "timestamp": "2025-01-11T10:30:00Z"
+  "timestamp": "2025-07-11T10:30:00Z"
 }
 ```
 
@@ -138,10 +138,10 @@ Use the provided test images:
 
 ```bash
 # Frontend test images location
-ls frontend/tests/fixtures/
+ls frontend-svelte/tests/fixtures/
 
 # Backend test images location
-ls backend/tests/fixtures/
+ls tests/fixtures/
 ```
 
 ## Development Workflow
@@ -151,7 +151,7 @@ ls backend/tests/fixtures/
 For frontend-only development with hot reload:
 
 ```bash
-cd frontend
+cd frontend-svelte
 npm install
 npm run dev
 ```
@@ -170,13 +170,13 @@ uvicorn app.main:app --reload --port 8000
 
 ```bash
 # Frontend tests
-cd frontend && npm test
+cd frontend-svelte && npm test
 
 # Backend tests
 cd backend && pytest
 
 # E2E tests
-cd frontend && npm run test:e2e
+cd frontend-svelte && npm run test:e2e
 ```
 
 ## Common Commands
@@ -218,8 +218,8 @@ Now that you have image2model running:
 
 1. **Explore the Architecture**: Read the [Architecture Overview](./architecture-overview.md)
 2. **Understand the API**: Check out the [API Documentation](http://localhost:8000/docs)
-3. **Customize Settings**: See [Configuration Guide](../06-development/configuration/)
-4. **Deploy to Production**: Follow the [Deployment Guide](../04-deployment/)
+3. **Customize Settings**: See [Configuration Guide](../06-development/configuration/) (coming soon)
+4. **Deploy to Production**: Follow the [Deployment Guide](../04-deployment/) (coming soon)
 
 ## Troubleshooting
 
@@ -231,8 +231,8 @@ Now that you have image2model running:
 
 **Solution**: Check for conflicting services:
 ```bash
-# Find process using port 5173
-lsof -i :5173
+# Find process using port 3000
+lsof -i :3000
 
 # Find process using port 8000
 lsof -i :8000
@@ -255,7 +255,7 @@ lsof -i :8000
 ## Getting Help
 
 - Check the [Architecture Overview](./architecture-overview.md) for system details
-- Review [Common Errors](../07-reference/troubleshooting/common-errors.md)
+- Review [Common Errors](../07-reference/troubleshooting/common-errors.md) (coming soon)
 - Search existing [GitHub Issues](https://github.com/your-org/image2model/issues)
 - Ask in the development channel
 

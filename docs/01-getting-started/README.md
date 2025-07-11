@@ -1,11 +1,11 @@
 # Getting Started
 
-> **Last Updated**: 2025-01-11  
+> **Last Updated**: 2025-07-11  
 > **Status**: Complete  
 > **Version**: 1.1  
 > **Changelog**:
-> - 1.1 (2025-01-11): Added framework compliance, fixed broken links
-> - 1.0 (2025-01-11): Initial documentation
+> - 1.1 (2025-07-11): Added framework compliance, fixed broken links
+> - 1.0 (2025-07-11): Initial documentation
 
 Welcome to image2model! This section provides everything you need to understand the project and get up and running.
 

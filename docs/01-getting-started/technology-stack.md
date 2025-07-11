@@ -1,6 +1,6 @@
 # Technology Stack
 
-> **Last Updated**: 2025-01-11  
+> **Last Updated**: 2025-07-11  
 > **Status**: Complete  
 > **Version**: 1.0
 
@@ -35,19 +35,17 @@ This document provides a comprehensive overview of the technologies, frameworks,
 
 ### Language & Type Safety
 
-**TypeScript**
-- **Version**: 5.0+
-- **Configuration**: Strict mode enabled
+**JavaScript with JSDoc**
+- **Configuration**: Type checking via jsconfig.json
 - **Usage**: All components and utilities
-- **Benefits**: Type safety, better IDE support, self-documenting code
+- **Benefits**: Type hints without build complexity, better IDE support
 
 ### Styling
 
-**Tailwind CSS**
-- **Version**: 3.4+
-- **Configuration**: Custom color palette, responsive breakpoints
-- **Approach**: Utility-first CSS
-- **Benefits**: Rapid development, consistent styling, small bundle size
+**CSS Modules & Custom CSS**
+- **Approach**: Component-scoped styling
+- **Organization**: Modular CSS files per component
+- **Benefits**: No CSS conflicts, maintainable styles
 
 ### Build Tools
 
@@ -58,11 +56,10 @@ This document provides a comprehensive overview of the technologies, frameworks,
 
 ### Key Libraries
 
-| Library | Purpose | Version |
-|---------|---------|---------|
-| `@sveltejs/adapter-node` | Node.js deployment | 4.0+ |
-| `lucide-svelte` | Icon library | Latest |
-| `svelte-french-toast` | Toast notifications | Latest |
+| Library | Purpose |
+|---------|---------|
+| `@sveltejs/adapter-node` | Node.js deployment |
+| `form-data` | Multipart form handling |
 
 ## Backend Stack
 
@@ -86,15 +83,13 @@ This document provides a comprehensive overview of the technologies, frameworks,
 ### Task Queue
 
 **Celery**
-- **Version**: 5.3+
 - **Broker**: Redis
 - **Purpose**: Asynchronous task processing
-- **Configuration**: 4 concurrent workers (default)
+- **Configuration**: Multiple workers for different task queues
 
 ### Message Broker & Cache
 
 **Redis**
-- **Version**: 7.0+
 - **Usage**:
   - Celery message broker
   - Task result backend
@@ -110,14 +105,13 @@ This document provides a comprehensive overview of the technologies, frameworks,
 
 ### Key Libraries
 
-| Library | Purpose | Version |
-|---------|---------|---------|
-| `pydantic` | Data validation | 2.0+ |
-| `python-multipart` | File uploads | Latest |
-| `aiofiles` | Async file operations | Latest |
-| `httpx` | Async HTTP client | Latest |
-| `python-jose` | JWT tokens (future) | Latest |
-| `fal-client` | FAL.AI integration | Latest |
+| Library | Purpose |
+|---------|---------|
+| `pydantic` | Data validation and models |
+| `python-multipart` | File upload handling |
+| `httpx` | Async HTTP client |
+| `fal-client` | FAL.AI API integration |
+| `sqlalchemy` | Database ORM |
 
 ## Infrastructure & DevOps
 
@@ -129,12 +123,13 @@ This document provides a comprehensive overview of the technologies, frameworks,
 - **Benefits**: Consistent environments, easy deployment
 
 **Docker Compose**
-- **Version**: 3.8+
 - **Services**:
-  - frontend
+  - frontend-svelte
   - backend
-  - celery
+  - celery workers
   - redis
+  - postgres
+  - flower (monitoring)
 - **Features**: Health checks, restart policies, volume management
 
 ### Reverse Proxy (Production)
@@ -146,11 +141,11 @@ This document provides a comprehensive overview of the technologies, frameworks,
   - Gzip compression
   - Security headers
 
-### Process Management (Production)
+### Database
 
-**Supervisor**
-- **Purpose**: Process control for Celery workers
-- **Features**: Auto-restart, log rotation, resource limits
+**PostgreSQL**
+- **Purpose**: Primary data storage
+- **Features**: ACID compliance, JSON support, scalability
 
 ## External Services
 
@@ -182,13 +177,10 @@ This document provides a comprehensive overview of the technologies, frameworks,
 
 ### Code Quality
 
-**ESLint & Prettier (Frontend)**
-- **Configuration**: Svelte-specific rules
-- **Integration**: Pre-commit hooks
-
-**Ruff & Black (Backend)**
-- **Purpose**: Python linting and formatting
-- **Configuration**: PEP 8 compliant
+**Code Standards**
+- **Frontend**: JavaScript best practices
+- **Backend**: PEP 8 compliant Python
+- **Future**: Automated linting and formatting tools
 
 ### API Development
 
@@ -201,13 +193,9 @@ This document provides a comprehensive overview of the technologies, frameworks,
 
 ### Frontend Testing
 
-**Vitest**
-- **Purpose**: Unit testing
-- **Features**: Jest-compatible, fast execution
-
 **Playwright**
-- **Purpose**: E2E testing
-- **Configuration**: Cross-browser testing
+- **Purpose**: End-to-end testing
+- **Features**: Cross-browser testing, visual regression
 
 ### Backend Testing
 
@@ -226,10 +214,10 @@ This document provides a comprehensive overview of the technologies, frameworks,
 
 ### Why SvelteKit?
 
-1. **Performance**: Compiled framework with minimal runtime
-2. **Developer Experience**: Simple syntax, less boilerplate
-3. **Full-Stack**: API routes included, SSR out of the box
-4. **Modern**: Embraces web standards
+1. **Performance**: Compiled framework with minimal runtime overhead
+2. **Developer Experience**: Simple syntax, less boilerplate than React/Vue
+3. **Full-Stack**: Built-in API routes and SSR capabilities
+4. **Modern**: Embraces web platform standards
 
 ### Why FastAPI?
 
@@ -291,8 +279,8 @@ This document provides a comprehensive overview of the technologies, frameworks,
 
 - [Architecture Overview](./architecture-overview.md) - System design details
 - [Quick Start Guide](./quick-start.md) - Get started quickly
-- [Development Setup](../06-development/setup/) - Detailed setup instructions
-- [API Reference](../03-backend/api-reference/) - API documentation
+- [Development Setup](../06-development/setup/) - Detailed setup instructions (coming soon)
+- [API Reference](../03-backend/api-reference/) - API documentation (coming soon)
 
 ---
 
