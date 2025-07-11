@@ -11,8 +11,8 @@
 #   ./deploy-mvp.sh --no-cache   # Force fresh build without cache
 
 # Load deployment configuration from environment or defaults
-DEPLOY_HOST=${DEPLOY_HOST:-"66.228.60.251"}
-DEPLOY_USER=${DEPLOY_USER:-"root"}
+DEPLOY_HOST=${DEPLOY_HOST}
+DEPLOY_USER=${DEPLOY_USER}
 NO_CACHE_FLAG=""
 
 # Check for --no-cache argument

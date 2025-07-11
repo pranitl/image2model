@@ -6,10 +6,9 @@ set -e  # Exit on error
 
 # Configuration from environment variables
 PROJECT_NAME=${PROJECT_NAME:-"image2model"}
-DEPLOY_USER=${DEPLOY_USER:-"root"}
-DEPLOY_HOST=${DEPLOY_HOST:-"66.228.60.251"}
+DEPLOY_USER=${DEPLOY_USER}
+DEPLOY_HOST=${DEPLOY_HOST}
 ENVIRONMENT=${ENVIRONMENT:-"production"}
-SLACK_WEBHOOK=${SLACK_WEBHOOK:-""}  # Optional Slack notifications
 
 # Colors for output (may not work in all CI environments)
 RED='\033[0;31m'
