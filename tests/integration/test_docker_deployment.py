@@ -172,7 +172,7 @@ class TestDockerDeployment:
     @pytest.mark.slow
     def test_production_docker_compose_build(self, project_root):
         """Test production Docker Compose can build."""
-        cmd = ['docker', 'compose', '-f', 'docker compose.yml', '-f', 'docker compose.prod.yml', 'build']
+        cmd = ['docker', 'compose', '-f', 'docker-compose.yml', '-f', 'docker-compose.prod.yml', 'build']
         
         try:
             result = subprocess.run(
