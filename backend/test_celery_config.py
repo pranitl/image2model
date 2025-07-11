@@ -86,7 +86,9 @@ def test_task_registration():
         expected_tasks = [
             'app.workers.tasks.process_batch',
             'app.workers.tasks.generate_3d_model_task',
-            'app.workers.tasks.process_batch_task',
+            'app.workers.tasks.process_file_in_batch',
+            'app.workers.tasks.finalize_batch_results',
+            'app.workers.tasks.process_single_image_with_retry',
             'app.workers.tasks.cleanup_old_files',
             'app.workers.tasks.health_check_task'
         ]

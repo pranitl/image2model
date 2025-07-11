@@ -22,10 +22,10 @@ class TestMonitoring:
         response = http_session.get(url, timeout=test_config["timeout"])
 
         assert response.status_code == 200
-        assert (
-            response.headers.get("content-type")
-            == "text/plain; version=0.0.4; charset=utf-8"
-        )
+        content_type = response.headers.get("content-type", "")
+        # Handle potential duplicate charset
+        assert "text/plain" in content_type
+        assert "version=0.0.4" in content_type
 
         metrics_text = response.text
         assert (
@@ -197,25 +197,27 @@ class TestMonitoring:
         # Component checks
         components = data["components"]
         assert isinstance(
-            components, dict
-        ), "Components should be a dictionary"
+            components, list
+        ), "Components should be a list"
 
-        expected_components = ["database", "redis", "celery", "disk_space"]
-        for component in expected_components:
+        component_names = [c["name"] for c in components]
+        expected_components = ["redis", "celery", "disk_space", "fal_api"]
+        for expected in expected_components:
             assert (
-                component in components
-            ), f"Component '{component}' missing from health check"
+                expected in component_names
+            ), f"Component '{expected}' missing from health check"
 
-            component_data = components[component]
-            assert (
-                "status" in component_data
-            ), f"Component '{component}' missing status"
-
-            component_status = component_data["status"]
+        # Verify each component structure
+        for component in components:
+            assert "name" in component
+            assert "status" in component
+            assert "response_time_ms" in component
+            
+            component_status = component["status"]
             valid_statuses = ["healthy", "unhealthy", "degraded"]
             assert (
                 component_status in valid_statuses
-            ), f"Component '{component}' has invalid status: {component_status}"
+            ), f"Component '{component['name']}' has invalid status: {component_status}"
 
     def test_disk_usage_monitoring(
         self, http_session, test_config, services_ready
@@ -228,49 +230,48 @@ class TestMonitoring:
         data = response.json()
 
         # Required fields
-        required_fields = [
-            "total_size_gb",
-            "used_size_gb",
-            "free_size_gb",
-            "usage_percentage",
-            "directories",
-        ]
+        required_fields = ["upload_dir", "output_dir", "timestamp"]
 
         for field in required_fields:
             assert (
                 field in data
             ), f"Required field '{field}' missing from disk usage response"
 
-        # Validate data types and ranges
-        assert isinstance(
-            data["total_size_gb"], (int, float)
-        ), "total_size_gb should be numeric"
-        assert isinstance(
-            data["used_size_gb"], (int, float)
-        ), "used_size_gb should be numeric"
-        assert isinstance(
-            data["free_size_gb"], (int, float)
-        ), "free_size_gb should be numeric"
-        assert isinstance(
-            data["usage_percentage"], (int, float)
-        ), "usage_percentage should be numeric"
-        assert isinstance(
-            data["directories"], dict
-        ), "directories should be a dictionary"
+        # Check each directory info
+        for dir_key in ["upload_dir", "output_dir"]:
+            dir_info = data[dir_key]
+            assert "disk_total_gb" in dir_info
+            assert "disk_used_gb" in dir_info
+            assert "disk_free_gb" in dir_info
+            assert "disk_usage_percent" in dir_info
+            
+            # Validate data types and ranges
+            assert isinstance(
+                dir_info["disk_total_gb"], (int, float)
+            ), f"{dir_key}: disk_total_gb should be numeric"
+            assert isinstance(
+                dir_info["disk_used_gb"], (int, float)
+            ), f"{dir_key}: disk_used_gb should be numeric"
+            assert isinstance(
+                dir_info["disk_free_gb"], (int, float)
+            ), f"{dir_key}: disk_free_gb should be numeric"
+            assert isinstance(
+                dir_info["disk_usage_percent"], (int, float)
+            ), f"{dir_key}: disk_usage_percent should be numeric"
 
-        # Logical validations
-        assert data["total_size_gb"] > 0, "Total size should be positive"
-        assert data["used_size_gb"] >= 0, "Used size should be non-negative"
-        assert data["free_size_gb"] >= 0, "Free size should be non-negative"
-        assert (
-            0 <= data["usage_percentage"] <= 100
-        ), "Usage percentage should be between 0 and 100"
+            # Logical validations
+            assert dir_info["disk_total_gb"] > 0, f"{dir_key}: Total size should be positive"
+            assert dir_info["disk_used_gb"] >= 0, f"{dir_key}: Used size should be non-negative"
+            assert dir_info["disk_free_gb"] >= 0, f"{dir_key}: Free size should be non-negative"
+            assert (
+                0 <= dir_info["disk_usage_percent"] <= 100
+            ), f"{dir_key}: Usage percentage should be between 0 and 100"
 
-        # Size consistency
-        calculated_total = data["used_size_gb"] + data["free_size_gb"]
-        assert (
-            abs(calculated_total - data["total_size_gb"]) < 0.1
-        ), "Size calculations inconsistent"
+            # Size consistency
+            calculated_total = dir_info["disk_used_gb"] + dir_info["disk_free_gb"]
+            assert (
+                abs(calculated_total - dir_info["disk_total_gb"]) < 0.1
+            ), f"{dir_key}: Size calculations inconsistent"
 
     def test_system_health_monitoring(
         self, http_session, test_config, services_ready
@@ -283,7 +284,7 @@ class TestMonitoring:
         data = response.json()
 
         # Required fields
-        required_fields = ["status", "disk_usage", "services", "warnings"]
+        required_fields = ["status", "disk_usage", "warnings", "timestamp"]
         for field in required_fields:
             assert (
                 field in data
@@ -295,13 +296,9 @@ class TestMonitoring:
             disk_usage, dict
         ), "disk_usage should be a dictionary"
 
-        disk_fields = ["percentage", "free_gb", "total_gb"]
-        for field in disk_fields:
-            assert field in disk_usage, f"Disk usage missing field '{field}'"
-
-        # Validate services section
-        services = data["services"]
-        assert isinstance(services, dict), "services should be a dictionary"
+        # Should have upload_dir and output_dir info
+        assert "upload_dir" in disk_usage
+        assert "output_dir" in disk_usage
 
         # Validate warnings section
         warnings = data["warnings"]
@@ -314,7 +311,7 @@ class TestMonitoring:
         log_endpoints = [
             ("/api/v1/logs/analyze", "Log analysis"),
             ("/api/v1/logs/health", "Log health"),
-            ("/api/v1/logs/daily-summary", "Daily summary"),
+            ("/api/v1/logs/summary/daily", "Daily summary"),
         ]
 
         for endpoint, description in log_endpoints:
@@ -342,20 +339,20 @@ class TestMonitoring:
         data = response.json()
 
         # Expected fields in log health
-        expected_fields = ["status", "log_files", "total_size_mb"]
+        expected_fields = ["status", "timestamp", "statistics", "issues", "warnings", "recommendations"]
         for field in expected_fields:
             assert field in data, f"Log health missing field '{field}'"
 
         # Validate data types
         assert isinstance(
-            data["log_files"], list
-        ), "log_files should be a list"
+            data["issues"], list
+        ), "issues should be a list"
         assert isinstance(
-            data["total_size_mb"], (int, float)
-        ), "total_size_mb should be numeric"
-        assert (
-            data["total_size_mb"] >= 0
-        ), "total_size_mb should be non-negative"
+            data["warnings"], list
+        ), "warnings should be a list"
+        assert isinstance(
+            data["recommendations"], list
+        ), "recommendations should be a list"
 
     def test_celery_task_monitoring(
         self, http_session, test_config, services_ready

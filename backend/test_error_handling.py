@@ -29,7 +29,8 @@ from app.core.exceptions import (
 )
 from app.workers.tasks import (
     process_single_image_with_retry,
-    process_batch
+    process_batch,
+    process_file_in_batch
 )
 
 # Configure logging

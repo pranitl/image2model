@@ -278,7 +278,7 @@ class TestFalAIIntegration:
                     assert call_args.get('quad', False) is False  # No quad mesh (+$0.05)
                     assert call_args.get('texture') == 'standard'  # Not 'HD' texture
     
-    @patch('app.workers.tasks.process_single_image')
+    @patch('app.workers.tasks.process_single_image_with_retry')
     def test_celery_task_integration(self, mock_process, sample_image_path):
         """Test that Celery task properly integrates with FAL.AI client."""
         # Mock successful processing

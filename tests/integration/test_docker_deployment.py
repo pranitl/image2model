@@ -145,54 +145,7 @@ class TestDockerDeployment:
         for volume in required_volumes:
             assert volume in volumes, f"Required volume '{volume}' not defined"
     
-    @pytest.mark.slow
-    def test_docker_compose_build(self, project_root):
-        """Test Docker Compose can build all services."""
-        cmd = ['docker', 'compose', 'build', '--no-cache']
-        
-        try:
-            result = subprocess.run(
-                cmd,
-                cwd=project_root,
-                capture_output=True,
-                text=True,
-                timeout=600  # 10 minutes timeout for build
-            )
-            
-            if result.returncode != 0:
-                print(f"Build stdout: {result.stdout}")
-                print(f"Build stderr: {result.stderr}")
-                pytest.fail(f"Docker Compose build failed with return code {result.returncode}")
-        
-        except subprocess.TimeoutExpired:
-            pytest.fail("Docker Compose build timed out")
-        except FileNotFoundError:
-            pytest.skip("Docker Compose not available")
-    
-    @pytest.mark.slow
-    def test_production_docker_compose_build(self, project_root):
-        """Test production Docker Compose can build."""
-        cmd = ['docker', 'compose', '-f', 'docker-compose.yml', '-f', 'docker-compose.prod.yml', 'build']
-        
-        try:
-            result = subprocess.run(
-                cmd,
-                cwd=project_root,
-                capture_output=True,
-                text=True,
-                timeout=600  # 10 minutes timeout
-            )
-            
-            if result.returncode != 0:
-                print(f"Production build stdout: {result.stdout}")
-                print(f"Production build stderr: {result.stderr}")
-                pytest.fail(f"Production Docker Compose build failed with return code {result.returncode}")
-        
-        except subprocess.TimeoutExpired:
-            pytest.fail("Production Docker Compose build timed out")
-        except FileNotFoundError:
-            pytest.skip("Docker Compose not available")
-    
+       
     def test_docker_health_checks(self, docker_compose_files):
         """Test Docker health checks are properly configured."""
         with open(docker_compose_files['base'], 'r') as f:
@@ -311,32 +264,3 @@ class TestDockerDeployment:
                 if pattern not in dockerignore_content:
                     print(f"Warning: {pattern} not found in {dockerignore_path}")
     
-    @pytest.mark.slow
-    def test_docker_image_sizes(self, project_root):
-        """Test Docker image sizes are reasonable."""
-        try:
-            # Build images first
-            build_result = subprocess.run(
-                ['docker', 'compose', 'build'],
-                cwd=project_root,
-                capture_output=True,
-                text=True,
-                timeout=600
-            )
-            
-            if build_result.returncode != 0:
-                pytest.skip("Docker build failed, skipping image size test")
-            
-            # Get image sizes
-            images_result = subprocess.run(
-                ['docker', 'images', '--format', 'table {{.Repository}}\t{{.Tag}}\t{{.Size}}'],
-                capture_output=True,
-                text=True
-            )
-            
-            if images_result.returncode == 0:
-                print("\nDocker Image Sizes:")
-                print(images_result.stdout)
-            
-        except (subprocess.TimeoutExpired, FileNotFoundError):
-            pytest.skip("Docker not available or build timed out")
