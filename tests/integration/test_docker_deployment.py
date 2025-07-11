@@ -27,9 +27,9 @@ class TestDockerDeployment:
     def docker_compose_files(self, project_root) -> Dict[str, Path]:
         """Get Docker Compose file paths."""
         return {
-            'base': project_root / 'docker compose.yml',
-            'override': project_root / 'docker compose.override.yml',
-            'prod': project_root / 'docker compose.prod.yml'
+            'base': project_root / 'docker-compose.yml',
+            'override': project_root / 'docker-compose.override.yml',
+            'prod': project_root / 'docker-compose.prod.yml'
         }
     
     def test_docker_compose_file_validity(self, docker_compose_files):
