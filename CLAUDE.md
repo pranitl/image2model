@@ -1,17 +1,5 @@
 # Claude Guide
 
-
-### Standard Implementation Process
-
-1. `task-master show <id>` - Understand requirements
-2. Create feature branch for task
-3. `task-master set-status --id=<id> --status=in-progress`
-4. Implement code following task requirements
-5. Fix any issues found during testing
-6. Commit changes with descriptive message
-7. `task-master set-status --id=<id> --status=done` - Only after testing passes
-8. Merge to main when task complete
-
 ## Key Files
 
 - `.taskmaster/tasks/tasks.json` - Main task data (auto-managed)
