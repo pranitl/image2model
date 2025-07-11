@@ -1,8 +1,11 @@
 # Getting Started
 
 > **Last Updated**: 2025-01-11  
-> **Status**: Active  
-> **Version**: 1.0
+> **Status**: Complete  
+> **Version**: 1.1  
+> **Changelog**:
+> - 1.1 (2025-01-11): Added framework compliance, fixed broken links
+> - 1.0 (2025-01-11): Initial documentation
 
 Welcome to image2model! This section provides everything you need to understand the project and get up and running.
 
@@ -10,47 +13,55 @@ Welcome to image2model! This section provides everything you need to understand 
 
 ### Core Documentation
 
-- **[Product Requirements Document](./3d-image-prd.md)** - Complete PRD with vision, requirements, and technical specifications
-- **[Data Flow Architecture](./image2model-data-flow.md)** - Comprehensive system data flow from upload to download
+- **[Product Requirements Document](./3d-image-mvp-prd.md)** - Complete PRD with vision, requirements, and technical specifications
+- **[Architecture Overview](./architecture-overview.md)** - High-level system design and data flow from upload to download
+- **[Quick Start Guide](./quick-start.md)** - Get running in 5 minutes
+- **[Technology Stack](./technology-stack.md)** - Overview of frameworks and tools used
 
 ### Coming Soon
 
-- **Quick Start Guide** - Get running in 5 minutes
-- **Architecture Overview** - High-level system design and components
-- **Technology Stack** - Overview of frameworks and tools used
+- **API Integration Guide** - Advanced API usage and customization
+- **Performance Optimization** - Tips for scaling and optimization
+- **Security Best Practices** - Deployment security guidelines
 
-## 🎯 Quick Overview
+## 🎯 Key Concepts
 
-### What is image2model?
+**image2model**: An AI-powered web application that transforms 2D images into 3D models using advanced generative AI technology.
 
-image2model is an AI-powered web application that transforms 2D images into 3D models using advanced generative AI. Users simply upload photos, and our system processes them through the FAL.AI Tripo3D API to generate downloadable 3D models.
+**Batch Processing**: The capability to process up to 25 images simultaneously, optimizing workflow efficiency for bulk conversions.
 
-### Key Features
+**Face Limit**: A configuration parameter that controls the complexity and detail level of generated 3D models, affecting polygon count and file size.
 
-- **Batch Processing**: Upload up to 25 images at once
-- **Real-time Progress**: Live updates via Server-Sent Events
-- **Configurable Quality**: Control model detail with face limit settings
-- **Multiple Formats**: Download generated models in GLB format
-- **No Account Required**: Simple, anonymous usage for MVP
+**Server-Sent Events (SSE)**: Real-time communication protocol used to stream processing progress updates from server to client.
 
-### System Architecture
+**GLB Format**: Binary version of the glTF (GL Transmission Format) 2.0 file format that includes textures, making it ideal for 3D model distribution.
 
-```mermaid
-graph LR
-    A[Web Frontend] --> B[FastAPI Backend]
-    B --> C[Celery Workers]
-    C --> D[FAL.AI API]
-    B --> E[Redis Queue]
-    C --> F[File Storage]
+## File Structure
+
+```
+image2model/
+├── frontend/               # SvelteKit web application
+│   ├── src/
+│   │   ├── routes/        # Page components
+│   │   └── lib/          # Shared components & utilities
+│   └── static/           # Static assets
+├── backend/               # FastAPI application
+│   ├── app/
+│   │   ├── api/          # API endpoints
+│   │   ├── core/         # Core configuration
+│   │   └── services/     # Business logic
+│   └── workers/          # Celery background tasks
+├── docs/                  # Project documentation
+└── docker-compose.yml     # Container orchestration
 ```
 
 ## 🚀 Getting Started Path
 
 ### For Developers
 
-1. **Read the PRD** - Understand the vision and requirements
-2. **Review Data Flow** - See how the system works end-to-end
-3. **Set Up Locally** - Follow the [development setup guide](../06-development/setup/local-development.md)
+1. **Start with Quick Start** - Get running in 5 minutes with our [Quick Start Guide](./quick-start.md)
+2. **Understand the Architecture** - Review [Architecture Overview](./architecture-overview.md) for system design
+3. **Read the PRD** - Understand business requirements in the [Product Requirements](./3d-image-mvp-prd.md)
 4. **Choose Your Path**:
    - Frontend? Head to [Frontend Documentation](../02-frontend/)
    - Backend? Check out [Backend Documentation](../03-backend/)
@@ -58,7 +69,7 @@ graph LR
 
 ### For AI Agents
 
-- Start with the [Data Flow Architecture](./image2model-data-flow.md) to understand system interactions
+- Start with the [Architecture Overview](./architecture-overview.md) to understand system interactions
 - Review component-specific documentation in frontend/backend sections
 - Check [API Reference](../03-backend/api-reference/) for endpoint details
 
@@ -114,6 +125,15 @@ graph LR
 - Review the [FAQ](../07-reference/troubleshooting/faq.md)
 - Search existing documentation
 - Open an issue if you find bugs
+
+## Documentation Debt
+
+> ⚠️ **Documentation Needs**:
+>
+> - Example code snippets for common tasks
+> - Troubleshooting section for setup issues
+> - Video walkthrough of the upload-to-download flow
+> - Performance benchmarks and optimization tips
 
 ---
 
