@@ -127,11 +127,34 @@ deploy_to_server() {
     # Copy to server
     scp -o StrictHostKeyChecking=no deploy.tar.gz $DEPLOY_USER@$DEPLOY_HOST:/tmp/
     
-    # Execute deployment
+    # Execute deployment with error handling
     ssh -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST << 'ENDSSH'
 set -e
 
+# Simple error handler for CI/CD
+DEPLOY_BACKUP="/opt/image2model-backup-$(date +%s)"
+rollback() {
+    echo "🔄 Rolling back deployment..."
+    if [ -d "$DEPLOY_BACKUP" ]; then
+        cd /opt
+        docker compose -f image2model/docker-compose.prod.yml down || true
+        rm -rf image2model
+        mv "$DEPLOY_BACKUP" image2model
+        cd image2model
+        docker compose -f docker-compose.prod.yml up -d
+        echo "✓ Rollback completed"
+    fi
+    exit 1
+}
+trap rollback ERR
+
 echo "🚀 Starting deployment on server..."
+
+# Create backup if exists
+if [ -d "/opt/image2model" ]; then
+    echo "📦 Creating backup..."
+    cp -r /opt/image2model "$DEPLOY_BACKUP"
+fi
 
 # Navigate to project directory
 cd /opt/image2model || mkdir -p /opt/image2model && cd /opt/image2model
@@ -165,17 +188,31 @@ docker compose -f docker-compose.prod.yml down
 # Start new containers
 docker compose -f docker-compose.prod.yml up -d
 
-# Wait for health check
+# Wait for services to start
+echo "⏳ Waiting for services to start..."
 sleep 15
 
-# Verify deployment
-if curl -f http://localhost/api/v1/health/; then
-    echo "✓ Deployment successful!"
-else
-    echo "❌ Health check failed!"
-    docker logs image2model-backend --tail 50
-    exit 1
-fi
+# Health check with retries
+MAX_ATTEMPTS=5
+ATTEMPT=1
+while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+    echo "Health check attempt $ATTEMPT/$MAX_ATTEMPTS..."
+    if curl -f http://localhost/api/v1/health/ >/dev/null 2>&1; then
+        echo "✓ Deployment successful!"
+        # Clean up backup on success
+        rm -rf "$DEPLOY_BACKUP"
+        break
+    else
+        if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+            echo "❌ Health check failed after $MAX_ATTEMPTS attempts!"
+            docker logs image2model-backend --tail 50
+            exit 1
+        fi
+        echo "⏳ Waiting 15s before retry..."
+        sleep 15
+        ATTEMPT=$((ATTEMPT + 1))
+    fi
+done
 ENDSSH
     
     echo "✓ Deployment completed"
