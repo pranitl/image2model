@@ -27,18 +27,15 @@ services:
   redis:
     image: redis:7-alpine
     container_name: image2model-redis
-    command: >
-      sh -c "
-        mkdir -p /usr/local/etc/redis &&
-        echo 'requirepass ${REDIS_PASSWORD}' > /usr/local/etc/redis/redis.conf &&
-        echo 'bind 0.0.0.0 ::' >> /usr/local/etc/redis/redis.conf &&
-        redis-server /usr/local/etc/redis/redis.conf
-      "
-    # No exposed ports for security
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
     volumes:
+      - ./docker/redis/docker-entrypoint.sh:/usr/local/bin/docker-entrypoint.sh:ro
       - redis_data:/data
+    entrypoint: ["/usr/local/bin/docker-entrypoint.sh"]
+    # No exposed ports for security
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD", "sh", "-c", "redis-cli -a $${REDIS_PASSWORD} ping | grep -q PONG 2>/dev/null"]
       interval: 10s
       timeout: 5s
       retries: 5
