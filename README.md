@@ -218,8 +218,7 @@ BACKEND_URL=http://localhost:8000
 The API provides comprehensive endpoints for:
 
 ### ✅ Core Processing Endpoints
-- **File Upload (Single)**: `POST /api/v1/upload/image` - Upload single image for processing
-- **File Upload (Batch)**: `POST /api/v1/upload/batch` - Upload multiple images (max 25)
+- **File Upload**: `POST /api/v1/upload/` - Upload images for processing (1-25 files)
 - **Upload Status**: `GET /api/v1/upload/status/{upload_id}` - Check upload processing status
 - **Task Stream (SSE)**: `GET /api/status/tasks/{task_id}/stream` - Real-time progress via Server-Sent Events
 - **Task Status**: `GET /api/status/tasks/{task_id}/status` - One-time task status check
