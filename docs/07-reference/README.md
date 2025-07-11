@@ -1,6 +1,6 @@
 # Reference Documentation
 
-> **Last Updated**: 2025-01-11  
+> **Last Updated**: 2025-07-11  
 > **Status**: Planned  
 > **Version**: 0.1
 
@@ -298,4 +298,4 @@ celery -A app.core.celery_app inspect stats
 
 **Need Help?** Can't find what you're looking for? Check the [FAQ](./troubleshooting/faq.md) or [Common Errors](./troubleshooting/common-errors.md).
 
-*Reference documentation is continuously updated. Last review: 2025-01-11*
+*Reference documentation is continuously updated. Last review: 2025-07-11*

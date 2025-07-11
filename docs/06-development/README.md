@@ -1,6 +1,6 @@
 # Development Guide
 
-> **Last Updated**: 2025-01-11  
+> **Last Updated**: 2025-07-11  
 > **Status**: Active  
 > **Version**: 1.0
 
