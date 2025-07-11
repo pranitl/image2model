@@ -376,13 +376,13 @@ docs/
 Each document should track:
 
 ```markdown
-> **Last Updated**: 2025-01-11  
+> **Last Updated**: 2025-07-11  
 > **Status**: Complete  
 > **Version**: 1.2  
 > **Changelog**:
-> - 1.2 (2025-01-11): Added error handling section
-> - 1.1 (2025-01-05): Updated API examples
-> - 1.0 (2024-01-01): Initial documentation
+> - 1.2 (2025-07-11): Added error handling section
+> - 1.1 (2025-07-05): Updated API examples
+> - 1.0 (2024-07-01): Initial documentation
 ```
 
 ### 2. Review Schedule
@@ -399,7 +399,7 @@ Track documentation debt in docs:
 > ⚠️ **Documentation Debt**:
 > - Missing examples for advanced usage
 > - Needs performance considerations section
-> - Screenshots outdated (last updated: 2024-01-01)
+> - Screenshots outdated (last updated: 2024-07-01)
 ```
 
 ## Documentation Types
