@@ -38,4 +38,305 @@ class TestDockerDeployment:
             assert file_path.exists(), f"Docker Compose file missing: {name} ({file_path})"
             
             with open(file_path, 'r') as f:
-                try:\n                    compose_config = yaml.safe_load(f)\n                    assert isinstance(compose_config, dict), f\"Invalid YAML structure in {name}\"\n                    assert 'services' in compose_config, f\"No services defined in {name}\"\n                except yaml.YAMLError as e:\n                    pytest.fail(f\"Invalid YAML in {name}: {e}\")\n    \n    def test_docker_compose_service_definitions(self, docker_compose_files):\n        \"\"\"Test required services are defined in Docker Compose.\"\"\"\n        with open(docker_compose_files['base'], 'r') as f:\n            base_config = yaml.safe_load(f)\n        \n        services = base_config.get('services', {})\n        required_services = ['postgres', 'redis', 'backend', 'worker', 'frontend']\n        \n        for service in required_services:\n            assert service in services, f\"Required service '{service}' not found in docker compose.yml\"\n    \n    def test_production_docker_compose_configuration(self, docker_compose_files):\n        \"\"\"Test production Docker Compose configuration.\"\"\"\n        with open(docker_compose_files['prod'], 'r') as f:\n            prod_config = yaml.safe_load(f)\n        \n        services = prod_config.get('services', {})\n        \n        # Check production-specific configurations\n        if 'backend' in services:\n            backend = services['backend']\n            \n            # Should have resource limits in production\n            assert 'deploy' in backend, \"Backend should have deploy configuration in production\"\n            assert 'resources' in backend['deploy'], \"Backend should have resource limits\"\n            \n            # Should use production build target\n            if 'build' in backend:\n                assert backend['build'].get('target') == 'production', \"Backend should use production build target\"\n        \n        # Check that production uses appropriate restart policies\n        for service_name, service_config in services.items():\n            if 'restart' in service_config:\n                assert service_config['restart'] in ['always', 'unless-stopped'], f\"{service_name} should have production restart policy\"\n    \n    def test_environment_variable_configuration(self, docker_compose_files):\n        \"\"\"Test environment variable configuration.\"\"\"\n        with open(docker_compose_files['base'], 'r') as f:\n            base_config = yaml.safe_load(f)\n        \n        services = base_config.get('services', {})\n        \n        # Check backend environment variables\n        if 'backend' in services:\n            backend_env = services['backend'].get('environment', [])\n            \n            # Convert list format to dict if needed\n            if isinstance(backend_env, list):\n                env_dict = {}\n                for env_var in backend_env:\n                    if '=' in env_var:\n                        key, value = env_var.split('=', 1)\n                        env_dict[key] = value\n                backend_env = env_dict\n            \n            required_env_vars = [\n                'DATABASE_URL',\n                'CELERY_BROKER_URL',\n                'CELERY_RESULT_BACKEND'\n            ]\n            \n            for env_var in required_env_vars:\n                assert env_var in backend_env, f\"Required environment variable '{env_var}' not found in backend service\"\n    \n    def test_docker_networks_configuration(self, docker_compose_files):\n        \"\"\"Test Docker networks are properly configured.\"\"\"\n        with open(docker_compose_files['base'], 'r') as f:\n            base_config = yaml.safe_load(f)\n        \n        # Check networks are defined\n        assert 'networks' in base_config, \"No networks defined in docker compose.yml\"\n        \n        networks = base_config['networks']\n        assert 'image2model-network' in networks, \"Main network not defined\"\n        \n        # Check services use the network\n        services = base_config.get('services', {})\n        for service_name, service_config in services.items():\n            if 'networks' in service_config:\n                assert 'image2model-network' in service_config['networks'], f\"{service_name} not connected to main network\"\n    \n    def test_docker_volumes_configuration(self, docker_compose_files):\n        \"\"\"Test Docker volumes are properly configured.\"\"\"\n        with open(docker_compose_files['base'], 'r') as f:\n            base_config = yaml.safe_load(f)\n        \n        # Check volumes are defined\n        assert 'volumes' in base_config, \"No volumes defined in docker compose.yml\"\n        \n        volumes = base_config['volumes']\n        required_volumes = [\n            'postgres_data',\n            'redis_data',\n            'backend_uploads',\n            'backend_results'\n        ]\n        \n        for volume in required_volumes:\n            assert volume in volumes, f\"Required volume '{volume}' not defined\"\n    \n    @pytest.mark.slow\n    def test_docker_compose_build(self, project_root):\n        \"\"\"Test Docker Compose can build all services.\"\"\"\n        cmd = ['docker', 'compose', 'build', '--no-cache']\n        \n        try:\n            result = subprocess.run(\n                cmd,\n                cwd=project_root,\n                capture_output=True,\n                text=True,\n                timeout=600  # 10 minutes timeout for build\n            )\n            \n            if result.returncode != 0:\n                print(f\"Build stdout: {result.stdout}\")\n                print(f\"Build stderr: {result.stderr}\")\n                pytest.fail(f\"Docker Compose build failed with return code {result.returncode}\")\n        \n        except subprocess.TimeoutExpired:\n            pytest.fail(\"Docker Compose build timed out\")\n        except FileNotFoundError:\n            pytest.skip(\"Docker Compose not available\")\n    \n    @pytest.mark.slow\n    def test_production_docker_compose_build(self, project_root):\n        \"\"\"Test production Docker Compose can build.\"\"\"\n        cmd = ['docker', 'compose', '-f', 'docker compose.yml', '-f', 'docker compose.prod.yml', 'build']\n        \n        try:\n            result = subprocess.run(\n                cmd,\n                cwd=project_root,\n                capture_output=True,\n                text=True,\n                timeout=600  # 10 minutes timeout\n            )\n            \n            if result.returncode != 0:\n                print(f\"Production build stdout: {result.stdout}\")\n                print(f\"Production build stderr: {result.stderr}\")\n                pytest.fail(f\"Production Docker Compose build failed with return code {result.returncode}\")\n        \n        except subprocess.TimeoutExpired:\n            pytest.fail(\"Production Docker Compose build timed out\")\n        except FileNotFoundError:\n            pytest.skip(\"Docker Compose not available\")\n    \n    def test_docker_health_checks(self, docker_compose_files):\n        \"\"\"Test Docker health checks are properly configured.\"\"\"\n        with open(docker_compose_files['base'], 'r') as f:\n            base_config = yaml.safe_load(f)\n        \n        services = base_config.get('services', {})\n        \n        # Services that should have health checks\n        health_check_services = ['postgres', 'redis']\n        \n        for service_name in health_check_services:\n            if service_name in services:\n                service_config = services[service_name]\n                assert 'healthcheck' in service_config, f\"{service_name} should have health check configured\"\n                \n                healthcheck = service_config['healthcheck']\n                assert 'test' in healthcheck, f\"{service_name} health check missing test command\"\n                assert 'interval' in healthcheck, f\"{service_name} health check missing interval\"\n                assert 'timeout' in healthcheck, f\"{service_name} health check missing timeout\"\n                assert 'retries' in healthcheck, f\"{service_name} health check missing retries\"\n    \n    def test_docker_compose_override_structure(self, docker_compose_files):\n        \"\"\"Test Docker Compose override file structure.\"\"\"\n        if not docker_compose_files['override'].exists():\n            pytest.skip(\"Docker Compose override file not found\")\n        \n        with open(docker_compose_files['override'], 'r') as f:\n            override_config = yaml.safe_load(f)\n        \n        services = override_config.get('services', {})\n        \n        # Check development-specific overrides\n        if 'backend' in services:\n            backend = services['backend']\n            \n            # Should have development-specific configurations\n            if 'build' in backend:\n                assert backend['build'].get('target') == 'development', \"Override should use development build target\"\n            \n            # Should have volume mounts for development\n            if 'volumes' in backend:\n                volume_mounts = backend['volumes']\n                has_source_mount = any('./backend:/app' in str(mount) for mount in volume_mounts)\n                assert has_source_mount, \"Backend should have source code volume mount in development\"\n    \n    def test_makefile_docker_targets(self, project_root):\n        \"\"\"Test Makefile Docker targets exist.\"\"\"\n        makefile_path = project_root / 'Makefile'\n        \n        if not makefile_path.exists():\n            pytest.skip(\"Makefile not found\")\n        \n        with open(makefile_path, 'r') as f:\n            makefile_content = f.read()\n        \n        # Check for essential Docker targets\n        required_targets = [\n            'up',\n            'down',\n            'build',\n            'logs',\n            'clean'\n        ]\n        \n        for target in required_targets:\n            assert f\"{target}:\" in makefile_content, f\"Makefile target '{target}' not found\"\n    \n    def test_dockerfile_structure(self, project_root):\n        \"\"\"Test Dockerfile structure and best practices.\"\"\"\n        dockerfiles = [\n            project_root / 'backend' / 'Dockerfile',\n            project_root / 'frontend' / 'Dockerfile'\n        ]\n        \n        for dockerfile_path in dockerfiles:\n            if not dockerfile_path.exists():\n                continue\n            \n            with open(dockerfile_path, 'r') as f:\n                dockerfile_content = f.read()\n            \n            # Check for multi-stage build\n            assert 'FROM' in dockerfile_content, f\"No FROM instruction in {dockerfile_path}\"\n            \n            # Check for non-root user (security best practice)\n            has_user_instruction = 'USER' in dockerfile_content\n            has_non_root = any(user in dockerfile_content.lower() for user in ['user app', 'user node', 'user 1000'])\n            \n            # Should have some form of non-root user configuration\n            if has_user_instruction or has_non_root:\n                pass  # Good, has non-root user configuration\n            else:\n                print(f\"Warning: {dockerfile_path} may not have non-root user configuration\")\n    \n    def test_docker_ignore_files(self, project_root):\n        \"\"\"Test .dockerignore files exist and have proper content.\"\"\"\n        dockerignore_files = [\n            project_root / 'backend' / '.dockerignore',\n            project_root / 'frontend' / '.dockerignore'\n        ]\n        \n        for dockerignore_path in dockerignore_files:\n            if not dockerignore_path.exists():\n                continue\n            \n            with open(dockerignore_path, 'r') as f:\n                dockerignore_content = f.read()\n            \n            # Check for common ignore patterns\n            if 'backend' in str(dockerignore_path):\n                common_patterns = ['__pycache__', '*.pyc', '.pytest_cache', 'venv']\n            else:  # frontend\n                common_patterns = ['node_modules', 'dist', '.next']\n            \n            for pattern in common_patterns:\n                if pattern not in dockerignore_content:\n                    print(f\"Warning: {pattern} not found in {dockerignore_path}\")\n    \n    @pytest.mark.slow\n    def test_docker_image_sizes(self, project_root):\n        \"\"\"Test Docker image sizes are reasonable.\"\"\"\n        try:\n            # Build images first\n            build_result = subprocess.run(\n                ['docker', 'compose', 'build'],\n                cwd=project_root,\n                capture_output=True,\n                text=True,\n                timeout=600\n            )\n            \n            if build_result.returncode != 0:\n                pytest.skip(\"Docker build failed, skipping image size test\")\n            \n            # Get image sizes\n            images_result = subprocess.run(\n                ['docker', 'images', '--format', 'table {{.Repository}}\\t{{.Tag}}\\t{{.Size}}'],\n                capture_output=True,\n                text=True\n            )\n            \n            if images_result.returncode == 0:\n                print(\"\\nDocker Image Sizes:\")\n                print(images_result.stdout)\n            \n        except (subprocess.TimeoutExpired, FileNotFoundError):\n            pytest.skip(\"Docker not available or build timed out\")"
+                try:
+                    compose_config = yaml.safe_load(f)
+                    assert isinstance(compose_config, dict), f"Invalid YAML structure in {name}"
+                    assert 'services' in compose_config, f"No services defined in {name}"
+                except yaml.YAMLError as e:
+                    pytest.fail(f"Invalid YAML in {name}: {e}")
+    
+    def test_docker_compose_service_definitions(self, docker_compose_files):
+        """Test required services are defined in Docker Compose."""
+        with open(docker_compose_files['base'], 'r') as f:
+            base_config = yaml.safe_load(f)
+        
+        services = base_config.get('services', {})
+        required_services = ['postgres', 'redis', 'backend', 'worker', 'frontend']
+        
+        for service in required_services:
+            assert service in services, f"Required service '{service}' not found in docker compose.yml"
+    
+    def test_production_docker_compose_configuration(self, docker_compose_files):
+        """Test production Docker Compose configuration."""
+        with open(docker_compose_files['prod'], 'r') as f:
+            prod_config = yaml.safe_load(f)
+        
+        services = prod_config.get('services', {})
+        
+        # Check production-specific configurations
+        if 'backend' in services:
+            backend = services['backend']
+            
+            # Should have resource limits in production
+            assert 'deploy' in backend, "Backend should have deploy configuration in production"
+            assert 'resources' in backend['deploy'], "Backend should have resource limits"
+            
+            # Should use production build target
+            if 'build' in backend:
+                assert backend['build'].get('target') == 'production', "Backend should use production build target"
+        
+        # Check that production uses appropriate restart policies
+        for service_name, service_config in services.items():
+            if 'restart' in service_config:
+                assert service_config['restart'] in ['always', 'unless-stopped'], f"{service_name} should have production restart policy"
+    
+    def test_environment_variable_configuration(self, docker_compose_files):
+        """Test environment variable configuration."""
+        with open(docker_compose_files['base'], 'r') as f:
+            base_config = yaml.safe_load(f)
+        
+        services = base_config.get('services', {})
+        
+        # Check backend environment variables
+        if 'backend' in services:
+            backend_env = services['backend'].get('environment', [])
+            
+            # Convert list format to dict if needed
+            if isinstance(backend_env, list):
+                env_dict = {}
+                for env_var in backend_env:
+                    if '=' in env_var:
+                        key, value = env_var.split('=', 1)
+                        env_dict[key] = value
+                backend_env = env_dict
+            
+            required_env_vars = [
+                'DATABASE_URL',
+                'CELERY_BROKER_URL',
+                'CELERY_RESULT_BACKEND'
+            ]
+            
+            for env_var in required_env_vars:
+                assert env_var in backend_env, f"Required environment variable '{env_var}' not found in backend service"
+    
+    def test_docker_networks_configuration(self, docker_compose_files):
+        """Test Docker networks are properly configured."""
+        with open(docker_compose_files['base'], 'r') as f:
+            base_config = yaml.safe_load(f)
+        
+        # Check networks are defined
+        assert 'networks' in base_config, "No networks defined in docker compose.yml"
+        
+        networks = base_config['networks']
+        assert 'image2model-network' in networks, "Main network not defined"
+        
+        # Check services use the network
+        services = base_config.get('services', {})
+        for service_name, service_config in services.items():
+            if 'networks' in service_config:
+                assert 'image2model-network' in service_config['networks'], f"{service_name} not connected to main network"
+    
+    def test_docker_volumes_configuration(self, docker_compose_files):
+        """Test Docker volumes are properly configured."""
+        with open(docker_compose_files['base'], 'r') as f:
+            base_config = yaml.safe_load(f)
+        
+        # Check volumes are defined
+        assert 'volumes' in base_config, "No volumes defined in docker compose.yml"
+        
+        volumes = base_config['volumes']
+        required_volumes = [
+            'postgres_data',
+            'redis_data',
+            'backend_uploads',
+            'backend_results'
+        ]
+        
+        for volume in required_volumes:
+            assert volume in volumes, f"Required volume '{volume}' not defined"
+    
+    @pytest.mark.slow
+    def test_docker_compose_build(self, project_root):
+        """Test Docker Compose can build all services."""
+        cmd = ['docker', 'compose', 'build', '--no-cache']
+        
+        try:
+            result = subprocess.run(
+                cmd,
+                cwd=project_root,
+                capture_output=True,
+                text=True,
+                timeout=600  # 10 minutes timeout for build
+            )
+            
+            if result.returncode != 0:
+                print(f"Build stdout: {result.stdout}")
+                print(f"Build stderr: {result.stderr}")
+                pytest.fail(f"Docker Compose build failed with return code {result.returncode}")
+        
+        except subprocess.TimeoutExpired:
+            pytest.fail("Docker Compose build timed out")
+        except FileNotFoundError:
+            pytest.skip("Docker Compose not available")
+    
+    @pytest.mark.slow
+    def test_production_docker_compose_build(self, project_root):
+        """Test production Docker Compose can build."""
+        cmd = ['docker', 'compose', '-f', 'docker compose.yml', '-f', 'docker compose.prod.yml', 'build']
+        
+        try:
+            result = subprocess.run(
+                cmd,
+                cwd=project_root,
+                capture_output=True,
+                text=True,
+                timeout=600  # 10 minutes timeout
+            )
+            
+            if result.returncode != 0:
+                print(f"Production build stdout: {result.stdout}")
+                print(f"Production build stderr: {result.stderr}")
+                pytest.fail(f"Production Docker Compose build failed with return code {result.returncode}")
+        
+        except subprocess.TimeoutExpired:
+            pytest.fail("Production Docker Compose build timed out")
+        except FileNotFoundError:
+            pytest.skip("Docker Compose not available")
+    
+    def test_docker_health_checks(self, docker_compose_files):
+        """Test Docker health checks are properly configured."""
+        with open(docker_compose_files['base'], 'r') as f:
+            base_config = yaml.safe_load(f)
+        
+        services = base_config.get('services', {})
+        
+        # Services that should have health checks
+        health_check_services = ['postgres', 'redis']
+        
+        for service_name in health_check_services:
+            if service_name in services:
+                service_config = services[service_name]
+                assert 'healthcheck' in service_config, f"{service_name} should have health check configured"
+                
+                healthcheck = service_config['healthcheck']
+                assert 'test' in healthcheck, f"{service_name} health check missing test command"
+                assert 'interval' in healthcheck, f"{service_name} health check missing interval"
+                assert 'timeout' in healthcheck, f"{service_name} health check missing timeout"
+                assert 'retries' in healthcheck, f"{service_name} health check missing retries"
+    
+    def test_docker_compose_override_structure(self, docker_compose_files):
+        """Test Docker Compose override file structure."""
+        if not docker_compose_files['override'].exists():
+            pytest.skip("Docker Compose override file not found")
+        
+        with open(docker_compose_files['override'], 'r') as f:
+            override_config = yaml.safe_load(f)
+        
+        services = override_config.get('services', {})
+        
+        # Check development-specific overrides
+        if 'backend' in services:
+            backend = services['backend']
+            
+            # Should have development-specific configurations
+            if 'build' in backend:
+                assert backend['build'].get('target') == 'development', "Override should use development build target"
+            
+            # Should have volume mounts for development
+            if 'volumes' in backend:
+                volume_mounts = backend['volumes']
+                has_source_mount = any('./backend:/app' in str(mount) for mount in volume_mounts)
+                assert has_source_mount, "Backend should have source code volume mount in development"
+    
+    def test_makefile_docker_targets(self, project_root):
+        """Test Makefile Docker targets exist."""
+        makefile_path = project_root / 'Makefile'
+        
+        if not makefile_path.exists():
+            pytest.skip("Makefile not found")
+        
+        with open(makefile_path, 'r') as f:
+            makefile_content = f.read()
+        
+        # Check for essential Docker targets
+        required_targets = [
+            'up',
+            'down',
+            'build',
+            'logs',
+            'clean'
+        ]
+        
+        for target in required_targets:
+            assert f"{target}:" in makefile_content, f"Makefile target '{target}' not found"
+    
+    def test_dockerfile_structure(self, project_root):
+        """Test Dockerfile structure and best practices."""
+        dockerfiles = [
+            project_root / 'backend' / 'Dockerfile',
+            project_root / 'frontend' / 'Dockerfile'
+        ]
+        
+        for dockerfile_path in dockerfiles:
+            if not dockerfile_path.exists():
+                continue
+            
+            with open(dockerfile_path, 'r') as f:
+                dockerfile_content = f.read()
+            
+            # Check for multi-stage build
+            assert 'FROM' in dockerfile_content, f"No FROM instruction in {dockerfile_path}"
+            
+            # Check for non-root user (security best practice)
+            has_user_instruction = 'USER' in dockerfile_content
+            has_non_root = any(user in dockerfile_content.lower() for user in ['user app', 'user node', 'user 1000'])
+            
+            # Should have some form of non-root user configuration
+            if has_user_instruction or has_non_root:
+                pass  # Good, has non-root user configuration
+            else:
+                print(f"Warning: {dockerfile_path} may not have non-root user configuration")
+    
+    def test_docker_ignore_files(self, project_root):
+        """Test .dockerignore files exist and have proper content."""
+        dockerignore_files = [
+            project_root / 'backend' / '.dockerignore',
+            project_root / 'frontend' / '.dockerignore'
+        ]
+        
+        for dockerignore_path in dockerignore_files:
+            if not dockerignore_path.exists():
+                continue
+            
+            with open(dockerignore_path, 'r') as f:
+                dockerignore_content = f.read()
+            
+            # Check for common ignore patterns
+            if 'backend' in str(dockerignore_path):
+                common_patterns = ['__pycache__', '*.pyc', '.pytest_cache', 'venv']
+            else:  # frontend
+                common_patterns = ['node_modules', 'dist', '.next']
+            
+            for pattern in common_patterns:
+                if pattern not in dockerignore_content:
+                    print(f"Warning: {pattern} not found in {dockerignore_path}")
+    
+    @pytest.mark.slow
+    def test_docker_image_sizes(self, project_root):
+        """Test Docker image sizes are reasonable."""
+        try:
+            # Build images first
+            build_result = subprocess.run(
+                ['docker', 'compose', 'build'],
+                cwd=project_root,
+                capture_output=True,
+                text=True,
+                timeout=600
+            )
+            
+            if build_result.returncode != 0:
+                pytest.skip("Docker build failed, skipping image size test")
+            
+            # Get image sizes
+            images_result = subprocess.run(
+                ['docker', 'images', '--format', 'table {{.Repository}}\t{{.Tag}}\t{{.Size}}'],
+                capture_output=True,
+                text=True
+            )
+            
+            if images_result.returncode == 0:
+                print("\nDocker Image Sizes:")
+                print(images_result.stdout)
+            
+        except (subprocess.TimeoutExpired, FileNotFoundError):
+            pytest.skip("Docker not available or build timed out")

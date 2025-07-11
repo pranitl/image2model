@@ -15,7 +15,7 @@ from typing import Dict, Any
 
 import fal_client as fal
 from app.workers.fal_client import FalAIClient, FalAIError, FalAIAuthenticationError, FalAIAPIError
-from app.workers.tasks import generate_3d_model_task, process_single_image
+from app.workers.tasks import generate_3d_model_task, process_single_image_with_retry
 from app.core.config import settings
 
 

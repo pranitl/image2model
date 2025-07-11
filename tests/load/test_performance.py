@@ -70,7 +70,7 @@ class TestPerformance:
         requests_per_second = len(results) / total_duration
         
         # Print performance metrics
-        print(f\"Load Test Results (Health Endpoint):\")
+        print(f"Load Test Results (Health Endpoint):")
         print(f\"Total requests: {len(results)}\")
         print(f\"Successful: {len(successful_requests)} ({success_rate:.2%})\")
         print(f\"Failed: {len(failed_requests)}\")
