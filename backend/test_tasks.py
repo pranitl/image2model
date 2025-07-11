@@ -14,12 +14,12 @@ from unittest.mock import Mock, patch
 app_dir = Path(__file__).parent
 sys.path.insert(0, str(app_dir))
 
-def test_process_single_image():
-    """Test the process_single_image function."""
-    print("Testing process_single_image function...")
+def test_process_file_in_batch():
+    """Test the process_file_in_batch function."""
+    print("Testing process_file_in_batch function...")
     
     try:
-        from app.workers.tasks import process_single_image
+        from app.workers.tasks import process_file_in_batch
         
         # Create a temporary test file
         with tempfile.NamedTemporaryFile(mode='w', suffix='.jpg', delete=False) as f:
@@ -27,20 +27,26 @@ def test_process_single_image():
             f.write("test image content")
         
         try:
-            # Test the function
-            result = process_single_image(test_file, face_limit=500)
+            # Test the function (simulating a single file batch)
+            result = process_file_in_batch(
+                file_path=test_file,
+                job_id="test-job-123",
+                face_limit=500,
+                file_index=0,
+                total_files=1
+            )
             
             # Verify result structure
+            assert 'file_path' in result, "Result missing 'file_path' field"
             assert 'status' in result, "Result missing 'status' field"
-            assert 'input' in result, "Result missing 'input' field"
             
-            if result['status'] == 'success':
-                assert 'output' in result, "Successful result missing 'output' field"
+            if result['status'] == 'completed':
+                assert 'result_path' in result or 'download_url' in result, "Successful result missing output path"
                 assert 'model_format' in result, "Successful result missing 'model_format' field"
-                print(f"✅ process_single_image successful: {result}")
+                print(f"✅ process_file_in_batch successful: {result}")
             else:
                 assert 'error' in result, "Failed result missing 'error' field"
-                print(f"❌ process_single_image failed: {result}")
+                print(f"❌ process_file_in_batch failed: {result}")
             
         finally:
             # Clean up
@@ -50,7 +56,7 @@ def test_process_single_image():
         return True
         
     except Exception as e:
-        print(f"❌ process_single_image test failed: {e}")
+        print(f"❌ process_file_in_batch test failed: {e}")
         return False
 
 def test_health_check_task():
@@ -184,7 +190,7 @@ def main():
     print("=" * 40)
     
     tests = [
-        ("Process Single Image", test_process_single_image),
+        ("Process File in Batch", test_process_file_in_batch),
         ("Health Check Task", test_health_check_task),
         ("Task Retry Mechanism", test_task_retry_mechanism),
         ("Task Metadata", test_task_metadata),

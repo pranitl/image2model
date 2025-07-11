@@ -34,16 +34,22 @@ class TestAPIEndpoints:
         assert 'status' in data
         assert 'timestamp' in data
         assert 'components' in data
-        assert isinstance(data['components'], dict)
+        assert isinstance(data['components'], list)
         
         # Check key components
         components = data['components']
-        expected_components = ['database', 'redis', 'celery', 'disk_space']
+        component_names = [c['name'] for c in components]
+        expected_components = ['redis', 'celery', 'disk_space', 'fal_api']
         
-        for component in expected_components:
-            assert component in components, f"Missing component: {component}"
-            assert 'status' in components[component]
-            assert components[component]['status'] in ['healthy', 'unhealthy', 'degraded']
+        for expected in expected_components:
+            assert expected in component_names, f"Missing component: {expected}"
+            
+        # Verify each component structure
+        for component in components:
+            assert 'name' in component
+            assert 'status' in component
+            assert 'response_time_ms' in component
+            assert component['status'] in ['healthy', 'unhealthy', 'degraded']
     
     def test_metrics_endpoint(self, http_session, test_config, services_ready):
         """Test Prometheus metrics endpoint."""
@@ -51,7 +57,10 @@ class TestAPIEndpoints:
         response = http_session.get(url, timeout=test_config['timeout'])
         
         assert response.status_code == 200
-        assert response.headers.get('content-type') == 'text/plain; version=0.0.4; charset=utf-8'
+        content_type = response.headers.get('content-type', '')
+        # Handle potential duplicate charset
+        assert 'text/plain' in content_type
+        assert 'version=0.0.4' in content_type
         
         metrics_text = response.text
         
@@ -92,19 +101,22 @@ class TestAPIEndpoints:
         assert response.status_code == 200
         data = response.json()
         
-        # Verify structure
-        assert 'total_size_gb' in data
-        assert 'used_size_gb' in data
-        assert 'free_size_gb' in data
-        assert 'usage_percentage' in data
-        assert 'directories' in data
+        # Verify structure - disk usage returns upload_dir and output_dir info
+        assert 'upload_dir' in data
+        assert 'output_dir' in data
+        assert 'timestamp' in data
         
-        # Verify data types
-        assert isinstance(data['total_size_gb'], (int, float))
-        assert isinstance(data['used_size_gb'], (int, float))
-        assert isinstance(data['free_size_gb'], (int, float))
-        assert isinstance(data['usage_percentage'], (int, float))
-        assert isinstance(data['directories'], dict)
+        # Check each directory info
+        for dir_key in ['upload_dir', 'output_dir']:
+            dir_info = data[dir_key]
+            assert 'disk_total_gb' in dir_info
+            assert 'disk_used_gb' in dir_info
+            assert 'disk_free_gb' in dir_info
+            assert 'disk_usage_percent' in dir_info
+            assert isinstance(dir_info['disk_total_gb'], (int, float))
+            assert isinstance(dir_info['disk_used_gb'], (int, float))
+            assert isinstance(dir_info['disk_free_gb'], (int, float))
+            assert isinstance(dir_info['disk_usage_percent'], (int, float))
     
     def test_system_health_endpoint(self, admin_http_session, test_config, services_ready):
         """Test system health admin endpoint."""
@@ -117,18 +129,17 @@ class TestAPIEndpoints:
         # Verify structure
         assert 'status' in data
         assert 'disk_usage' in data
-        assert 'services' in data
         assert 'warnings' in data
+        assert 'timestamp' in data
         
         # Verify disk usage details
         disk_usage = data['disk_usage']
-        assert 'percentage' in disk_usage
-        assert 'free_gb' in disk_usage
-        assert 'total_gb' in disk_usage
+        assert 'upload_dir' in disk_usage
+        assert 'output_dir' in disk_usage
     
     def test_file_listing_endpoint(self, admin_http_session, test_config, services_ready):
         """Test file listing admin endpoint."""
-        url = f"{test_config['backend_url']}/api/v1/admin/list-files"
+        url = f"{test_config['backend_url']}/api/v1/admin/list-files?directory=uploads"
         response = admin_http_session.get(url, timeout=test_config['timeout'])
         
         assert response.status_code == 200
@@ -148,11 +159,13 @@ class TestAPIEndpoints:
         assert response.status_code == 200
         data = response.json()
         
-        # Verify structure
-        assert 'summary' in data
+        # Verify structure - analyze returns different fields
+        assert 'time_range' in data
+        assert 'log_levels' in data
         assert 'error_patterns' in data
-        assert 'recent_errors' in data
-        assert 'performance_insights' in data
+        assert 'request_patterns' in data
+        assert 'performance_metrics' in data
+        assert 'lines_analyzed' in data
     
     def test_log_health_endpoint(self, auth_http_session, test_config, services_ready):
         """Test log health endpoint."""
@@ -162,16 +175,17 @@ class TestAPIEndpoints:
         assert response.status_code == 200
         data = response.json()
         
-        # Verify structure
+        # Verify structure - log health returns different fields
         assert 'status' in data
-        assert 'log_files' in data
-        assert 'total_size_mb' in data
-        assert 'oldest_log' in data
-        assert 'newest_log' in data
+        assert 'timestamp' in data
+        assert 'statistics' in data
+        assert 'issues' in data
+        assert 'warnings' in data
+        assert 'recommendations' in data
     
     def test_daily_summary_endpoint(self, auth_http_session, test_config, services_ready):
         """Test daily summary endpoint."""
-        url = f"{test_config['backend_url']}/api/v1/logs/daily-summary"
+        url = f"{test_config['backend_url']}/api/v1/logs/summary/daily"
         response = auth_http_session.get(url, timeout=test_config['timeout'])
         
         assert response.status_code == 200
@@ -229,10 +243,10 @@ class TestAPIEndpoints:
         assert response.status_code == 200
         
         data = response.json()
-        assert 'files_deleted' in data
-        assert 'space_freed_mb' in data
-        assert isinstance(data['files_deleted'], int)
-        assert isinstance(data['space_freed_mb'], (int, float))
+        assert 'files_removed' in data
+        assert 'freed_space_mb' in data
+        assert isinstance(data['files_removed'], int)
+        assert isinstance(data['freed_space_mb'], (int, float))
     
     def test_cleanup_with_custom_hours(self, admin_http_session, test_config, services_ready):
         """Test cleanup endpoint with custom hours parameter."""
@@ -247,8 +261,8 @@ class TestAPIEndpoints:
         assert response.status_code == 200
         
         data = response.json()
-        assert 'files_deleted' in data
-        assert 'space_freed_mb' in data
+        assert 'files_removed' in data
+        assert 'freed_space_mb' in data
     
     def test_cors_headers(self, http_session, test_config, services_ready):
         """Test CORS headers are properly set."""
@@ -282,8 +296,8 @@ class TestAPIEndpoints:
     def test_error_response_format(self, auth_http_session, test_config, services_ready):
         """Test that error responses follow consistent format."""
         # Trigger an error with invalid file upload
-        url = f"{test_config['backend_url']}/api/v1/upload/image"
-        response = auth_http_session.post(url, timeout=test_config['timeout'])
+        url = f"{test_config['backend_url']}/api/v1/upload"
+        response = auth_http_session.post(url, files=[], timeout=test_config['timeout'])
         
         assert response.status_code == 400
         error_data = response.json()

@@ -15,7 +15,7 @@ from typing import Dict, Any
 
 import fal_client as fal
 from app.workers.fal_client import FalAIClient, FalAIError, FalAIAuthenticationError, FalAIAPIError
-from app.workers.tasks import generate_3d_model_task, process_single_image
+from app.workers.tasks import generate_3d_model_task, process_single_image_with_retry
 from app.core.config import settings
 
 
@@ -278,7 +278,7 @@ class TestFalAIIntegration:
                     assert call_args.get('quad', False) is False  # No quad mesh (+$0.05)
                     assert call_args.get('texture') == 'standard'  # Not 'HD' texture
     
-    @patch('app.workers.tasks.process_single_image')
+    @patch('app.workers.tasks.process_single_image_with_retry')
     def test_celery_task_integration(self, mock_process, sample_image_path):
         """Test that Celery task properly integrates with FAL.AI client."""
         # Mock successful processing

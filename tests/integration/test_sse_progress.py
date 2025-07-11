@@ -79,13 +79,13 @@ class TestSSEProgress:
                         else:
                             progress_events.append(('message', data))
                     
-                    # Check for chord detection
-                    if data.get('chord_task_id'):
-                        chord_detected = True
-                        # After chord detection, file count should be included
-                        assert data.get('total_files') == expected_files or data.get('total') == expected_files, \
-                            f"File count missing after chord detection: {data}"
-                        file_count_seen = True
+                        # Check for chord detection
+                        if data.get('chord_task_id'):
+                            chord_detected = True
+                            # After chord detection, file count should be included
+                            assert data.get('total_files') == expected_files or data.get('total') == expected_files, \
+                                f"File count missing after chord detection: {data}"
+                            file_count_seen = True
                     
                         # Check progress events have file information
                         if event_type == 'task_progress' and data.get('status') == 'processing':

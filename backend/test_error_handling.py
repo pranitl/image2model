@@ -29,7 +29,8 @@ from app.core.exceptions import (
 )
 from app.workers.tasks import (
     process_single_image_with_retry,
-    process_batch_with_enhanced_retry
+    process_batch,
+    process_file_in_batch
 )
 
 # Configure logging
@@ -238,8 +239,8 @@ class ErrorHandlingTester:
         # Test invalid file upload
         try:
             response = requests.post(
-                f"{self.base_url}/api/v1/upload/image",
-                files={"file": ("test.txt", "invalid content", "text/plain")},
+                f"{self.base_url}/api/v1/upload",
+                files=[("files", ("test.txt", "invalid content", "text/plain"))],
                 timeout=10
             )
             

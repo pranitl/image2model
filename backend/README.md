@@ -50,7 +50,7 @@ FastAPI backend service for generating 3D models from images using AI/ML models.
 - `GET /api/v1/health/detailed` - Detailed system health
 
 ### File Upload
-- `POST /api/v1/upload/image` - Upload image for processing
+- `POST /api/v1/upload/` - Upload images for processing (1-25 files)
 - `GET /api/v1/upload/status/{file_id}` - Get upload status
 
 ### 3D Model Generation

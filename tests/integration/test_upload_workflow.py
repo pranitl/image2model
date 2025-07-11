@@ -16,23 +16,23 @@ class TestUploadWorkflow:
     """Test complete upload workflow integration."""
     
     def test_single_image_upload_success(self, auth_http_session, test_config, sample_image_file, services_ready):
-        """Test successful single image upload (using single file endpoint)."""
-        url = f"{test_config['backend_url']}/api/v1/upload/image"
+        """Test successful single image upload (using batch endpoint with single file)."""
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
         with open(sample_image_file, 'rb') as f:
-            files = {'file': (sample_image_file.name, f, 'image/jpeg')}
+            files = [('files', (sample_image_file.name, f, 'image/jpeg'))]
             response = auth_http_session.post(url, files=files, timeout=test_config['timeout'])
         
         assert response.status_code == 200, f"Upload failed: {response.text}"
         
         data = response.json()
-        # Single file upload returns file_id (not job_id/task_id)
-        assert 'file_id' in data
-        assert 'filename' in data
-        assert 'file_size' in data
-        assert 'content_type' in data
-        assert 'status' in data
-        assert data['status'] == 'uploaded'
+        # Batch upload returns job_id and task_id
+        assert 'job_id' in data
+        assert 'task_id' in data
+        assert 'batch_id' in data
+        assert 'uploaded_files' in data
+        assert len(data['uploaded_files']) == 1
+        assert data['uploaded_files'][0]['status'] == 'uploaded'
     
     def test_batch_upload_success(self, auth_http_session, test_config, multiple_image_files, services_ready):
         """Test successful batch upload."""
@@ -70,10 +70,10 @@ class TestUploadWorkflow:
     
     def test_upload_file_validation_errors(self, auth_http_session, test_config, invalid_file, services_ready):
         """Test file validation error handling."""
-        url = f"{test_config['backend_url']}/api/v1/upload/image"
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
         with open(invalid_file, 'rb') as f:
-            files = {'file': (invalid_file.name, f, 'text/plain')}
+            files = [('files', (invalid_file.name, f, 'text/plain'))]
             response = auth_http_session.post(url, files=files, timeout=test_config['timeout'])
         
         assert response.status_code == 400
@@ -85,10 +85,10 @@ class TestUploadWorkflow:
     
     def test_upload_large_file_handling(self, auth_http_session, test_config, large_image_file, services_ready):
         """Test handling of large files."""
-        url = f"{test_config['backend_url']}/api/v1/upload/image"
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
         with open(large_image_file, 'rb') as f:
-            files = {'file': (large_image_file.name, f, 'image/jpeg')}
+            files = [('files', (large_image_file.name, f, 'image/jpeg'))]
             
             # This might succeed or fail depending on file size limits
             # We're testing that it handles the large file gracefully
@@ -114,10 +114,10 @@ class TestUploadWorkflow:
     
     def test_upload_missing_file(self, auth_http_session, test_config, services_ready):
         """Test upload with missing file parameter."""
-        url = f"{test_config['backend_url']}/api/v1/upload/image"
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
-        # Send request without file
-        response = auth_http_session.post(url, timeout=test_config['timeout'])
+        # Send request without files
+        response = auth_http_session.post(url, files=[], timeout=test_config['timeout'])
         
         assert response.status_code == 400
         error_data = response.json()
@@ -125,14 +125,14 @@ class TestUploadWorkflow:
     
     def test_upload_empty_file(self, auth_http_session, test_config, temp_dir, services_ready):
         """Test upload with empty file."""
-        url = f"{test_config['backend_url']}/api/v1/upload/image"
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
         # Create empty file
         empty_file = temp_dir / "empty.jpg"
         empty_file.touch()
         
         with open(empty_file, 'rb') as f:
-            files = {'file': (empty_file.name, f, 'image/jpeg')}
+            files = [('files', (empty_file.name, f, 'image/jpeg'))]
             response = auth_http_session.post(url, files=files, timeout=test_config['timeout'])
         
         assert response.status_code == 400

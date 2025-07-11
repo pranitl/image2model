@@ -46,7 +46,7 @@ class TestProductionValidation:
         """Test error handling consistency across endpoints."""
         # Test various error scenarios
         error_scenarios = [
-            ('POST', '/api/v1/upload/image', {}, 'Missing file upload'),
+            ('POST', '/api/v1/upload', {}, 'Missing file upload'),
             ('GET', '/api/v1/status/tasks/invalid-id/status', {}, 'Invalid task ID'),
             ('GET', '/api/v1/download/nonexistent/all', {}, 'Nonexistent download'),
             ('POST', '/api/v1/admin/cleanup-job', {'job_id': 'nonexistent'}, 'Nonexistent job cleanup')
@@ -126,11 +126,11 @@ class TestProductionSmokeTest:
     
     def test_upload_endpoint_basic_functionality(self, auth_http_session, test_config, services_ready):
         """Test upload endpoint basic functionality (error handling)."""
-        url = f"{test_config['backend_url']}/api/v1/upload/image"
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
-        # Should return 422 for missing file (validation error) when authenticated
-        response = auth_http_session.post(url, timeout=5)
-        assert response.status_code == 422
+        # Should return 400 for missing files (validation error) when authenticated
+        response = auth_http_session.post(url, files=[], timeout=5)
+        assert response.status_code == 400
         
         error_data = response.json()
         assert error_data.get('error') is True

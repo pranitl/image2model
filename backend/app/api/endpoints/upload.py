@@ -25,7 +25,7 @@ from app.core.error_handlers import (
     handle_file_validation_error,
     safe_file_operation
 )
-from app.workers.tasks import process_batch, generate_3d_model_task
+from app.workers.tasks import process_batch
 
 logger = logging.getLogger(__name__)
 
@@ -60,114 +60,6 @@ class ValidationError(BaseModel):
     error: str
 
 
-@router.post("/image", response_model=UploadResponse, dependencies=[RequireAuth])
-@upload_rate_limit
-async def upload_image(request: Request, file: UploadFile = File(...)):
-    """
-    Upload an image file for 3D model generation.
-    
-    Args:
-        file: The image file to upload
-        
-    Returns:
-        Upload response with file details
-        
-    Raises:
-        FileValidationException: If file validation fails
-        DatabaseException: If file saving fails
-    """
-    try:
-        # Validate file presence
-        if not file.filename:
-            raise handle_file_validation_error("", "No filename provided")
-        
-        # Validate file type
-        if not file.content_type or not file.content_type.startswith("image/"):
-            raise handle_file_validation_error(file.filename, "Only image files are allowed")
-        
-        # Check file extension
-        file_extension = os.path.splitext(file.filename)[1].lower()
-        if file_extension not in settings.ALLOWED_EXTENSIONS:
-            raise handle_file_validation_error(
-                file.filename,
-                f"File extension {file_extension} not allowed. "
-                f"Allowed extensions: {', '.join(settings.ALLOWED_EXTENSIONS)}"
-            )
-        
-        # Read file content and check size
-        try:
-            content = await file.read()
-        except Exception as e:
-            raise handle_file_validation_error(file.filename, f"Failed to read file: {str(e)}")
-        
-        if len(content) == 0:
-            raise handle_file_validation_error(file.filename, "File is empty")
-        
-        if len(content) > settings.MAX_FILE_SIZE:
-            raise handle_file_validation_error(
-                file.filename,
-                f"File too large ({len(content)} bytes). Maximum size: {settings.MAX_FILE_SIZE} bytes"
-            )
-        
-        # Generate unique file ID and prepare directories
-        file_id = str(uuid.uuid4())
-        upload_dir = settings.UPLOAD_DIR
-        
-        # Create upload directory with proper error handling
-        def create_upload_dir():
-            os.makedirs(upload_dir, exist_ok=True)
-        
-        safe_file_operation(create_upload_dir)
-        
-        file_path = os.path.join(upload_dir, f"{file_id}{file_extension}")
-        
-        # Save file with proper error handling
-        def save_file():
-            with open(file_path, "wb") as f:
-                f.write(content)
-        
-        safe_file_operation(save_file)
-        
-        logger.info(f"Successfully uploaded file: {file.filename} (ID: {file_id})")
-        
-        # Automatically start 3D model generation for single file uploads
-        task_id = None
-        try:
-            task_result = generate_3d_model_task.delay(
-                file_id=file_id,
-                file_path=file_path,
-                job_id=str(uuid.uuid4()),
-                quality="medium",
-                texture_enabled=True
-            )
-            task_id = task_result.id
-            logger.info(f"Started automatic 3D model generation task {task_id} for file {file_id}")
-        except Exception as e:
-            logger.error(f"Failed to start automatic processing for file {file_id}: {str(e)}")
-            # Don't fail the upload if task creation fails
-        
-        return UploadResponse(
-            file_id=file_id,
-            filename=file.filename,
-            file_size=len(content),
-            content_type=file.content_type,
-            status="uploaded",
-            task_id=task_id
-        )
-        
-    except FileValidationException:
-        # Re-raise file validation exceptions as-is
-        raise
-    except DatabaseException:
-        # Re-raise database exceptions as-is
-        raise
-    except Exception as e:
-        # Handle any unexpected errors
-        log_exception(e, f"upload_image for {file.filename if file else 'unknown'}")
-        raise DatabaseException(
-            message=f"Unexpected error during file upload: {str(e)}",
-            details=f"operation=upload_image, filename={file.filename if file else None}"
-        )
 
 
 @router.get("/status/{file_id}")

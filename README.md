@@ -1,6 +1,6 @@
 # AI 3D Model Generator
 
-An AI-powered platform that converts 2D images into 3D models using advanced machine learning algorithms. Built with a vanilla JavaScript frontend and FastAPI/Python backend in a containerized monorepo architecture.
+An AI-powered platform that converts 2D images into 3D models using advanced machine learning algorithms. Built with a modern SvelteKit frontend and FastAPI/Python backend in a containerized monorepo architecture.
 
 ## 🚀 Quick Start
 
@@ -31,8 +31,7 @@ An AI-powered platform that converts 2D images into 3D models using advanced mac
    ```
 
 3. **Access the application**
-   - **Frontend (Vanilla JS)**: http://localhost:3000
-   - **Frontend (SvelteKit)**: http://localhost:3001 - *New modern UI*
+   - **Frontend**: http://localhost:3000 (SvelteKit)
    - **Backend API**: http://localhost:8000 (FastAPI)
    - **API Documentation**: http://localhost:8000/docs (Swagger UI)
    - **Database Admin**: http://localhost:5050 (PgAdmin) - *Development only*
@@ -44,24 +43,22 @@ An AI-powered platform that converts 2D images into 3D models using advanced mac
 ### Project Structure
 ```
 image2model/
-├── frontend-simple/       # Vanilla JavaScript frontend
-│   ├── css/               # Stylesheets
-│   ├── js/                # JavaScript modules
-│   │   ├── api.js         # API client
-│   │   ├── upload.js      # Upload functionality
-│   │   ├── processing.js  # Progress tracking
-│   │   └── results.js     # Results display
-│   ├── assets/            # Static assets
-│   └── *.html             # HTML pages
-├── frontend-svelte/       # SvelteKit frontend (modern UI)
+├── frontend-svelte/       # SvelteKit frontend application
 │   ├── src/
-│   │   ├── lib/           # Reusable components
-│   │   │   ├── components/ # UI components
-│   │   │   └── services/  # API services
-│   │   └── routes/        # Page routes
-│   │       ├── upload/    # Upload page
-│   │       ├── processing/ # Processing page
-│   │       └── dev/       # Developer tools
+│   │   ├── lib/           # Reusable components and services
+│   │   │   ├── components/ # UI components (buttons, cards, etc.)
+│   │   │   ├── services/  # API services and utilities
+│   │   │   └── stores/    # State management stores
+│   │   ├── routes/        # Page routes
+│   │   │   ├── +page.svelte    # Home/upload page
+│   │   │   ├── processing/     # Processing status page
+│   │   │   ├── results/        # Results display page
+│   │   │   └── dev/            # Developer tools and component gallery
+│   │   └── app.html       # Application template
+│   ├── tests/             # E2E and unit tests
+│   │   ├── e2e/           # Playwright E2E tests
+│   │   └── unit/          # Vitest unit tests
+│   └── playwright.config.ts # Playwright configuration
 ├── backend/               # FastAPI/Python application
 │   ├── app/
 │   │   ├── api/           # API endpoints
@@ -78,23 +75,18 @@ image2model/
 
 ### Technology Stack
 
-**Frontend (Vanilla JS):**
-- Vanilla JavaScript (ES6+) with modular architecture
-- Native HTML5 APIs for drag-and-drop file uploads
-- Server-Sent Events (SSE) for real-time progress updates
-- Fetch API for backend communication
-- Model Viewer library for 3D model preview
-- Responsive CSS with modern design patterns
-- No build step required - direct browser execution
-
 **Frontend (SvelteKit):**
-- SvelteKit with server-side rendering
+- SvelteKit with server-side rendering (SSR)
 - Component-based architecture with reusable UI components
+- Reactive state management with Svelte stores
 - Grid-based image display with overlay states
 - Developer mode for testing various UI states
-- TypeScript support (optional)
-- Vite for fast development and building
-- Responsive design with modern CSS
+- TypeScript support throughout the codebase
+- Vite for fast development and HMR (Hot Module Replacement)
+- Playwright for E2E testing
+- Vitest for unit testing
+- Responsive design with modern CSS and Tailwind utilities
+- Server-Sent Events (SSE) for real-time progress updates
 
 **Backend:**
 - FastAPI 0.104+ with async/await support
@@ -148,19 +140,11 @@ make db-reset        # Reset database (destructive)
 
 ### Running Without Docker
 
-**Frontend (Vanilla JS):**
-```bash
-cd frontend-simple
-# No installation needed - open index.html in browser
-# Or use a simple HTTP server:
-python -m http.server 3000
-```
-
-**Frontend (SvelteKit):**
+**Frontend:**
 ```bash
 cd frontend-svelte
 npm install
-npm run dev  # Runs on http://localhost:3001
+npm run dev  # Runs on http://localhost:3000
 ```
 
 **Backend:**
@@ -170,11 +154,11 @@ pip install -r requirements.txt
 uvicorn app.main:app --reload
 ```
 
-### SvelteKit Developer Mode
+### Developer Mode
 
 The SvelteKit frontend includes a comprehensive developer dashboard for testing various UI states:
 
-**Access Dev Dashboard:** http://localhost:3001/dev
+**Access Dev Dashboard:** http://localhost:3000/dev
 
 **Available Test Scenarios:**
 
@@ -234,8 +218,7 @@ BACKEND_URL=http://localhost:8000
 The API provides comprehensive endpoints for:
 
 ### ✅ Core Processing Endpoints
-- **File Upload (Single)**: `POST /api/v1/upload/image` - Upload single image for processing
-- **File Upload (Batch)**: `POST /api/v1/upload/batch` - Upload multiple images (max 25)
+- **File Upload**: `POST /api/v1/upload/` - Upload images for processing (1-25 files)
 - **Upload Status**: `GET /api/v1/upload/status/{upload_id}` - Check upload processing status
 - **Task Stream (SSE)**: `GET /api/status/tasks/{task_id}/stream` - Real-time progress via Server-Sent Events
 - **Task Status**: `GET /api/status/tasks/{task_id}/status` - One-time task status check
@@ -318,10 +301,10 @@ The API provides comprehensive endpoints for:
 
 Interactive API documentation is available at http://localhost:8000/docs when running.
 
-## 🔄 Current Workflow (Tasks 1-6 Complete)
+## 🔄 Current Workflow
 
 ### ✅ Implemented Features
-1. **Upload Interface**: Vanilla JS drag-and-drop file upload with validation
+1. **Upload Interface**: SvelteKit drag-and-drop file upload with validation
 2. **File Validation**: Comprehensive client and server-side validation
 3. **Batch Processing**: Support for multiple file uploads (max 25 images)
 4. **Background Tasks**: Celery worker infrastructure with Redis message broker
@@ -339,8 +322,8 @@ Interactive API documentation is available at http://localhost:8000/docs when ru
 14. ✅ **Monitoring & Logging**: Enterprise-grade observability and metrics
 
 ### Technical Flow
-1. **Frontend Upload**: Users drag/drop images in vanilla JS interface
-2. **Client Validation**: File type, size, and count validation
+1. **Frontend Upload**: Users drag/drop images in SvelteKit interface
+2. **Client Validation**: File type, size, and count validation with reactive UI feedback
 3. **API Upload**: Multipart form data sent to FastAPI backend
 4. **Server Validation**: Additional security and format validation
 5. **Celery Queue**: Background tasks queued for parallel processing
@@ -394,13 +377,18 @@ python tests/run_tests.py all --html --verbose
 
 See `tests/README.md` for comprehensive testing documentation.
 
-### Legacy Test Commands
+### Frontend Testing
 
 ```bash
-# Run all tests
-make test
+# Run E2E tests with Playwright
+cd frontend-svelte
+npm run test:e2e
 
-# Frontend tests (vanilla JS - no test framework)
+# Run unit tests with Vitest
+npm run test:unit
+
+# Run all tests
+npm test
 
 # Backend tests
 cd backend && python -m pytest
@@ -459,7 +447,7 @@ docker compose -f docker-compose.prod.yml up -d
 - **Redis**: Redis Commander at http://localhost:8081
 - **Health Checks**: Built-in endpoint monitoring at `/api/v1/health`
 - **Metrics**: Prometheus metrics at `/api/v1/health/metrics`
-- **File Management**: Admin dashboard at http://localhost:3000/admin.html
+- **File Management**: Admin dashboard at http://localhost:3000/admin
 - **Log Analytics**: Real-time log analysis at `/api/v1/logs/analyze`
 
 ### Performance Metrics
@@ -498,7 +486,7 @@ The application includes comprehensive monitoring and metrics collection:
 
 ### Code Style
 
-- **Frontend**: ESLint + Prettier configuration
+- **Frontend**: ESLint + Prettier + Svelte-specific linting
 - **Backend**: Black + isort + mypy
 - **Commits**: Follow conventional commit format
 
@@ -557,9 +545,10 @@ make up     # Restart fresh
 make db-reset  # Reset database
 ```
 
-**Frontend/Backend not hot reloading:**
-- Ensure volume mounts are working in docker compose.override.yml
-- Check file permissions on mounted volumes
+**Frontend not hot reloading:**
+- Ensure volume mounts are working in docker-compose.override.yml
+- Check that Vite HMR port is properly exposed
+- Verify file permissions on mounted volumes
 
 See `DOCKER.md` for comprehensive troubleshooting guide.
 
@@ -576,10 +565,11 @@ See `DOCKER.md` for comprehensive troubleshooting guide.
 
 ---
 
-**Last Updated**: 2025-07-04  
 **Recent Changes**: 
-- Migrated from React to vanilla JavaScript frontend for simplicity
-- Enhanced parallel processing with file-level progress tracking
-- Improved container security by removing unnecessary port exposures
-- Fixed Flower monitoring container authentication issues
+- Complete migration from vanilla JavaScript to SvelteKit frontend
+- Enhanced component-based architecture with reactive state management
+- Added comprehensive E2E testing with Playwright
+- Improved developer experience with hot module replacement (HMR)
+- Added developer mode with component gallery and test scenarios
+- Enhanced deployment infrastructure with Cloudflare CDN support
 
