@@ -10,7 +10,9 @@
 #   ./deploy-mvp.sh              # Normal deployment (uses cache)
 #   ./deploy-mvp.sh --no-cache   # Force fresh build without cache
 
-DEPLOY_HOST="66.228.60.251"
+# Load deployment configuration from environment or defaults
+DEPLOY_HOST=${DEPLOY_HOST:-"66.228.60.251"}
+DEPLOY_USER=${DEPLOY_USER:-"root"}
 NO_CACHE_FLAG=""
 
 # Check for --no-cache argument
@@ -21,7 +23,7 @@ fi
 
 echo "🚀 Deploying to $DEPLOY_HOST..."
 
-ssh root@$DEPLOY_HOST "NO_CACHE_FLAG='$NO_CACHE_FLAG' bash -s" << 'EOF'
+ssh $DEPLOY_USER@$DEPLOY_HOST "NO_CACHE_FLAG='$NO_CACHE_FLAG' bash -s" << 'EOF'
 set -e  # Exit on error
 
 cd /opt/image2model
