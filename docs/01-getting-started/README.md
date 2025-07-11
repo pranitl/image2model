@@ -2,8 +2,9 @@
 
 > **Last Updated**: 2025-07-11  
 > **Status**: Complete  
-> **Version**: 1.1  
+> **Version**: 1.2  
 > **Changelog**:
+> - 1.2 (2025-07-11): Updated directory structure, added "coming soon" labels, included PostgreSQL
 > - 1.1 (2025-07-11): Added framework compliance, fixed broken links
 > - 1.0 (2025-07-11): Initial documentation
 
@@ -40,7 +41,7 @@ Welcome to image2model! This section provides everything you need to understand 
 
 ```
 image2model/
-├── frontend/               # SvelteKit web application
+├── frontend-svelte/        # SvelteKit web application
 │   ├── src/
 │   │   ├── routes/        # Page components
 │   │   └── lib/          # Shared components & utilities
@@ -65,13 +66,13 @@ image2model/
 4. **Choose Your Path**:
    - Frontend? Head to [Frontend Documentation](../02-frontend/)
    - Backend? Check out [Backend Documentation](../03-backend/)
-   - DevOps? Visit [Deployment Guide](../04-deployment/)
+   - DevOps? Visit [Deployment Guide](../04-deployment/) (coming soon)
 
 ### For AI Agents
 
 - Start with the [Architecture Overview](./architecture-overview.md) to understand system interactions
 - Review component-specific documentation in frontend/backend sections
-- Check [API Reference](../03-backend/api-reference/) for endpoint details
+- Check [API Reference](../03-backend/api-reference/) for endpoint details (coming soon)
 
 ## 📊 Project Status
 
@@ -94,9 +95,9 @@ image2model/
 
 ### Internal Documentation
 
-- [Frontend Architecture](../02-frontend/architecture/)
-- [Backend API Reference](../03-backend/api-reference/)
-- [Deployment Guide](../04-deployment/)
+- [Frontend Architecture](../02-frontend/architecture/) (coming soon)
+- [Backend API Reference](../03-backend/api-reference/) (coming soon)
+- [Deployment Guide](../04-deployment/) (coming soon)
 
 ### External Resources
 
@@ -117,12 +118,12 @@ image2model/
 - API keys must be configured in `.env`
 - File size limits are enforced (10MB per file)
 - SSE connections require proper CORS configuration
-- Redis must be running for background tasks
+- Redis and PostgreSQL must be running for the application to work
 
 ## 🤝 Getting Help
 
-- Check the [Troubleshooting Guide](../07-reference/troubleshooting/common-errors.md)
-- Review the [FAQ](../07-reference/troubleshooting/faq.md)
+- Check the [Troubleshooting Guide](../07-reference/troubleshooting/common-errors.md) (coming soon)
+- Review the [FAQ](../07-reference/troubleshooting/faq.md) (coming soon)
 - Search existing documentation
 - Open an issue if you find bugs
 
