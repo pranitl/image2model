@@ -45,12 +45,6 @@ brand/
 - Vibrant Red (#E74C3C) - Errors and alerts only
 - Golden Yellow (#F39C12) - Small accents only
 
-### Dark Mode Support
-Our brand includes a sophisticated dark mode color palette:
-- Deep Charcoal backgrounds (#1a1f24, #141719, #0f1113)
-- High-contrast text colors for accessibility
-- Optimized accent colors for dark backgrounds
-- See `guidelines/color-usage.md` for detailed dark mode guidelines
 
 ## 📋 Usage Guidelines
 
@@ -88,13 +82,15 @@ Our brand includes a sophisticated dark mode color palette:
 
 ### Logo Implementation
 ```html
-<!-- Standard logo -->
-<img src="brand/assets/logo-original.png" alt="image2model" class="logo">
+<!-- Standard logo (as implemented in frontend) -->
+<img src="/assets/logo-cropped.png" alt="image2model" class="logo">
 
 <!-- With proper spacing -->
 <div class="logo-container" style="padding: 24px;">
-  <img src="brand/assets/logo-original.png" alt="image2model">
+  <img src="/assets/logo-cropped.png" alt="image2model">
 </div>
+
+<!-- Note: Frontend uses logo-cropped.png from static/assets/ -->
 ```
 
 ## ✅ Compliance Checklist
@@ -113,6 +109,11 @@ For brand-related questions or special use cases not covered in these guidelines
 
 ## 🔄 Version History
 
+- **v1.1** (2025) - Updated to match frontend implementation
+  - Removed unimplemented dark mode documentation
+  - Updated button styles to match blue gradient implementation
+  - Removed deprecated gradient classes
+  - Aligned logo paths with frontend usage
 - **v1.0** (2025) - Initial brand guidelines release
   - Complete color system
   - Logo usage guidelines

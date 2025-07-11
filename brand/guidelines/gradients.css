@@ -1,16 +1,9 @@
 /* image2model Brand Gradients */
+/* Note: Primary implementation uses gradient-cool-ocean and gradient-text-blue classes */
 
 /* Primary Gradients */
-.gradient-warm-sunset {
-  background: linear-gradient(135deg, #F39C12 0%, #E74C3C 100%);
-}
-
 .gradient-cool-ocean {
   background: linear-gradient(135deg, #1a2332 0%, #2c3e50 100%);
-}
-
-.gradient-mountain-mist {
-  background: linear-gradient(45deg, #ECF0F1 0%, #BDC3C7 100%);
 }
 
 /* Blue Theme Gradients - Primary Design System */
@@ -30,51 +23,6 @@
   background: linear-gradient(135deg, #2874A6 0%, #1B4F72 100%);
 }
 
-/* Extended Gradient Patterns */
-.gradient-tech-fusion {
-  background: linear-gradient(90deg, #3498DB 0%, #5DADE2 50%, #3A424A 100%);
-}
-
-.gradient-creative-burst {
-  background: linear-gradient(135deg, #F39C12 0%, #E67E22 33%, #E74C3C 66%, #3498DB 100%);
-}
-
-.gradient-subtle-depth {
-  background: linear-gradient(180deg, #FFFFFF 0%, #ECF0F1 50%, #BDC3C7 100%);
-}
-
-/* Radial Gradients */
-.gradient-radial-glow {
-  background: radial-gradient(circle at center, #F39C12 0%, #E67E22 50%, #E74C3C 100%);
-}
-
-.gradient-radial-cool {
-  background: radial-gradient(ellipse at top, #5DADE2 0%, #3498DB 50%, #3A424A 100%);
-}
-
-/* Mesh Gradients (Modern) */
-.gradient-mesh-vibrant {
-  background: 
-    radial-gradient(at 40% 20%, #F39C12 0px, transparent 50%),
-    radial-gradient(at 80% 0%, #E74C3C 0px, transparent 50%),
-    radial-gradient(at 0% 50%, #3498DB 0px, transparent 50%),
-    radial-gradient(at 80% 50%, #5DADE2 0px, transparent 50%),
-    radial-gradient(at 0% 100%, #E67E22 0px, transparent 50%),
-    #3A424A;
-}
-
-/* Animated Gradients */
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.gradient-animated {
-  background: linear-gradient(-45deg, #E74C3C, #E67E22, #F39C12, #3498DB);
-  background-size: 400% 400%;
-  animation: gradient-shift 15s ease infinite;
-}
 
 /* Overlay Gradients */
 .gradient-overlay-dark {
@@ -86,8 +34,8 @@
 }
 
 /* Text Gradients */
-.gradient-text {
-  background: linear-gradient(135deg, #F39C12 0%, #E74C3C 100%);
+.gradient-text-blue {
+  background: linear-gradient(135deg, #5DADE2 0%, #3498DB 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -109,8 +57,9 @@
   bottom: 0;
   border-radius: inherit;
   padding: 2px;
-  background: linear-gradient(135deg, #F39C12, #E74C3C, #3498DB);
+  background: linear-gradient(135deg, #5DADE2, #3498DB);
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask-composite: exclude;
 }

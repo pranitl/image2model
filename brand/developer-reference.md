@@ -24,15 +24,6 @@
 --warning: #F39C12;
 --error: #E74C3C;
 --info: #3498DB;
-
-/* Dark Mode Colors */
---dark-bg-primary: #1a1f24;    /* Deep charcoal background */
---dark-bg-secondary: #141719;  /* Elevated surfaces */
---dark-bg-tertiary: #0f1113;   /* Recessed areas */
---dark-text-primary: #ECF0F1;  /* Main text */
---dark-text-secondary: #BDC3C7; /* Supporting text */
---dark-accent-primary: #5DADE2; /* Bright cyan accent */
---dark-accent-secondary: #3498DB; /* Sky blue accent */
 ```
 
 ## Gradients
@@ -151,8 +142,8 @@ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica N
 }
 
 .btn-primary {
-  background: #5DADE2;  /* Bright Cyan */
-  color: #1a2332;      /* Dark text for contrast */
+  background: linear-gradient(135deg, #3498db 0%, #2874a6 100%);  /* Blue gradient (actual implementation) */
+  color: #FFFFFF;
 }
 
 .btn-secondary {

@@ -46,9 +46,9 @@
         "text": "#FFFFFF"
       },
       "buttons": {
-        "primaryBg": "#5DADE2",
-        "primaryText": "#1a2332",
-        "primaryHover": "#3498DB",
+        "primaryBg": "linear-gradient(135deg, #3498db 0%, #2874a6 100%)",
+        "primaryText": "#FFFFFF",
+        "primaryHover": "#2874a6",
         "secondaryBg": "#34495e",
         "secondaryText": "#FFFFFF",
         "secondaryHover": "#2c3e50"

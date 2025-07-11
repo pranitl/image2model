@@ -81,15 +81,6 @@ All color combinations must meet WCAG 2.1 standards:
     --border-color: #000000;
   }
 }
-
-/* Dark mode considerations */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text-primary: #ECF0F1;
-    --bg-primary: #3A424A;
-    --link-color: #5DADE2;
-  }
-}
 ```
 
 ### Testing Checklist
