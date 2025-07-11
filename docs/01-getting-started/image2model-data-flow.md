@@ -26,7 +26,6 @@ flowchart TB
 
     subgraph "Backend API Endpoints"
         UploadAPI["POST /api/v1/upload/"]
-        UploadImageAPI["POST /api/v1/upload/image"]
         StatusSSE["GET /api/v1/status/tasks/{task_id}/stream"]
         StatusAPI["GET /api/v1/status/tasks/{task_id}"]
         JobProgress["GET /api/v1/status/jobs/{job_id}/progress"]
@@ -171,7 +170,6 @@ flowchart TB
 
 ### Upload Endpoints
 - `POST /api/v1/upload/` - Batch upload (up to 25 files)
-- `POST /api/v1/upload/image` - Single file upload
 
 ### Status Endpoints
 - `GET /api/v1/status/tasks/{task_id}/stream` - SSE stream for real-time updates
