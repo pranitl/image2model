@@ -10,10 +10,34 @@
 #   ./deploy-mvp.sh              # Normal deployment (uses cache)
 #   ./deploy-mvp.sh --no-cache   # Force fresh build without cache
 
-# Load deployment configuration from environment or defaults
+# Load deployment configuration from environment or .env.production file
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+
+# Load .env.production if it exists
+if [ -f "$PROJECT_ROOT/.env.production" ]; then
+    export $(grep -E '^(DEPLOY_HOST|DEPLOY_USER)=' "$PROJECT_ROOT/.env.production" | xargs)
+fi
+
 DEPLOY_HOST=${DEPLOY_HOST}
 DEPLOY_USER=${DEPLOY_USER}
 NO_CACHE_FLAG=""
+
+# Validate required variables
+if [ -z "$DEPLOY_HOST" ] || [ -z "$DEPLOY_USER" ]; then
+    echo "❌ Error: DEPLOY_HOST and DEPLOY_USER must be set!"
+    echo "   Either export them or ensure they're in .env.production"
+    exit 1
+fi
+
+# Get the current local branch
+LOCAL_BRANCH=$(git branch --show-current)
+if [ -z "$LOCAL_BRANCH" ]; then
+    echo "❌ Error: Could not determine current branch!"
+    exit 1
+fi
+
+echo "📌 Current local branch: $LOCAL_BRANCH"
 
 # Check for --no-cache argument
 if [ "$1" = "--no-cache" ]; then
@@ -21,9 +45,9 @@ if [ "$1" = "--no-cache" ]; then
     echo "🔨 No-cache mode enabled - will rebuild everything from scratch"
 fi
 
-echo "🚀 Deploying to $DEPLOY_HOST..."
+echo "🚀 Deploying branch '$LOCAL_BRANCH' to $DEPLOY_HOST..."
 
-ssh $DEPLOY_USER@$DEPLOY_HOST "NO_CACHE_FLAG='$NO_CACHE_FLAG' bash -s" << 'EOF'
+ssh $DEPLOY_USER@$DEPLOY_HOST "NO_CACHE_FLAG='$NO_CACHE_FLAG' LOCAL_BRANCH='$LOCAL_BRANCH' bash -s" << 'EOF'
 set -e  # Exit on error
 
 # Source deployment functions
@@ -49,23 +73,30 @@ fi
 # Pull latest changes with rebase
 mark_stage "git_pull"
 echo "📥 Pulling latest code with rebase..."
-CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD)
 
-# Handle detached HEAD state - find the actual branch name
-if [ "$CURRENT_BRANCH" = "HEAD" ] || [ -z "$CURRENT_BRANCH" ]; then
-    echo "⚠️  Detached HEAD detected, finding actual branch..."
-    # Try to find the branch that contains the current commit
-    CURRENT_BRANCH=$(git branch -r --contains HEAD | grep -v HEAD | head -1 | sed 's/.*origin\///')
-    if [ -z "$CURRENT_BRANCH" ]; then
-        echo "❌ Could not determine current branch!"
-        exit 1
+# First, fetch all branches to ensure we have the latest
+git fetch origin
+
+# Check current branch on server
+SERVER_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+echo "📍 Server is currently on branch: $SERVER_BRANCH"
+echo "🎯 Target branch from local: $LOCAL_BRANCH"
+
+# If branches don't match, switch to the correct branch
+if [ "$SERVER_BRANCH" != "$LOCAL_BRANCH" ]; then
+    echo "🔄 Switching from '$SERVER_BRANCH' to '$LOCAL_BRANCH'..."
+    # Check if branch exists locally
+    if git show-ref --verify --quiet refs/heads/$LOCAL_BRANCH; then
+        git checkout $LOCAL_BRANCH
+    else
+        # Create and checkout the branch, tracking the remote
+        git checkout -b $LOCAL_BRANCH origin/$LOCAL_BRANCH
     fi
-    echo "📌 Detected branch: $CURRENT_BRANCH"
 fi
 
-echo "Current branch: $CURRENT_BRANCH"
-git fetch origin $CURRENT_BRANCH
-git rebase origin/$CURRENT_BRANCH
+# Now pull with rebase
+echo "📥 Rebasing $LOCAL_BRANCH with origin/$LOCAL_BRANCH..."
+git pull --rebase origin $LOCAL_BRANCH
 
 # Ensure environment file is up to date
 if [ -f ".env.production" ]; then
