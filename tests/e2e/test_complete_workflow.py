@@ -184,20 +184,19 @@ class TestCompleteWorkflow:
     async def test_real_time_progress_monitoring(self, test_config, sample_image_file, services_ready):
         """Test real-time progress monitoring via Server-Sent Events."""
         # Upload image first
-        upload_url = f"{test_config['backend_url']}/api/v1/upload/image"
+        upload_url = f"{test_config['backend_url']}/api/v1/upload"
         
         with open(sample_image_file, 'rb') as f:
-            files = {'file': (sample_image_file.name, f, 'image/jpeg')}
             headers = {'Authorization': f'Bearer {test_config["api_key"]}'}
             async with aiohttp.ClientSession() as session:
                 data = aiohttp.FormData()
-                data.add_field('file', f, filename=sample_image_file.name, content_type='image/jpeg')
+                data.add_field('files', f, filename=sample_image_file.name, content_type='image/jpeg')
                 
                 async with session.post(upload_url, data=data, headers=headers) as response:
                     assert response.status == 200
                     upload_data = await response.json()
         
-        task_id = upload_data['task_id']
+        task_id = upload_data.get('task_id') or upload_data.get('job_id')
         
         # Monitor via SSE
         sse_url = f"{test_config['backend_url']}/api/status/tasks/{task_id}/stream"
@@ -260,10 +259,10 @@ class TestCompleteWorkflow:
     def test_error_recovery_workflow(self, auth_http_session, http_session, test_config, invalid_file, services_ready):
         """Test system recovery from error conditions."""
         # Step 1: Trigger an error with invalid file
-        upload_url = f"{test_config['backend_url']}/api/v1/upload/image"
+        upload_url = f"{test_config['backend_url']}/api/v1/upload"
         
         with open(invalid_file, 'rb') as f:
-            files = {'file': (invalid_file.name, f, 'text/plain')}
+            files = [('files', (invalid_file.name, f, 'text/plain'))]
             error_response = auth_http_session.post(upload_url, files=files, timeout=test_config['timeout'])
         
         assert error_response.status_code == 400
@@ -291,14 +290,14 @@ class TestCompleteWorkflow:
         import threading
         from concurrent.futures import ThreadPoolExecutor, as_completed
         
-        upload_url = f"{test_config['backend_url']}/api/v1/upload/image"
+        upload_url = f"{test_config['backend_url']}/api/v1/upload"
         results = []
         
         def upload_file(img_file: Path) -> Dict[str, Any]:
             """Upload a single file and return result."""
             try:
                 with open(img_file, 'rb') as f:
-                    files = {'file': (img_file.name, f, 'image/jpeg')}
+                    files = [('files', (img_file.name, f, 'image/jpeg'))]
                     response = auth_http_session.post(upload_url, files=files, timeout=test_config['timeout'])
                 
                 return {

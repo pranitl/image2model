@@ -282,8 +282,8 @@ class TestAPIEndpoints:
     def test_error_response_format(self, auth_http_session, test_config, services_ready):
         """Test that error responses follow consistent format."""
         # Trigger an error with invalid file upload
-        url = f"{test_config['backend_url']}/api/v1/upload/image"
-        response = auth_http_session.post(url, timeout=test_config['timeout'])
+        url = f"{test_config['backend_url']}/api/v1/upload"
+        response = auth_http_session.post(url, files=[], timeout=test_config['timeout'])
         
         assert response.status_code == 400
         error_data = response.json()
