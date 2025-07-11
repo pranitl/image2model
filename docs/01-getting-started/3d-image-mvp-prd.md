@@ -120,11 +120,12 @@ The scope of the MVP is strictly limited to the essential features required to d
 
 ### **9\. Future Considerations (Post-MVP)**
 
-* Integration of user authentication and job history.  
-* Migration to cloud storage (e.g., S3) for scalability and persistence.  
-* Allowing users to configure **all relevant model parameters** (e.g., style, pbr, texture).  
+* Integration of user authentication via Clerk and job history.  
+* Migration to cloud storage (e.g., S3) for scalability and persistence instead of relying on 7 day limits by fal.ai.
+* Allowing users to configure **all relevant model parameters** (e.g., style, pbr, texture, file output format).  
 * Implementing **server-side file conversion** to offer multiple download formats (OBJ, STL, etc.).  
-* Implementing a credit or payment system for API usage.  
+* Implementing model selection so you are able to select a high quality model (Tripo 2.5) or a standard quality model (Tripo SR, Hunyuan 2.1 3D, etc.) to manage costs
+* Implementing a credit or payment system via Stripe for API usage via a "credits system".  
 * Adding a 3D viewer (e.g., \<model-viewer\>) to preview the generated models directly in the browser.
 
 ### **10\. API Interaction Examples**
