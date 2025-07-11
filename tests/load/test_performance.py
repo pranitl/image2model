@@ -71,22 +71,22 @@ class TestPerformance:
         
         # Print performance metrics
         print(f"Load Test Results (Health Endpoint):")
-        print(f\"Total requests: {len(results)}\")
-        print(f\"Successful: {len(successful_requests)} ({success_rate:.2%})\")
-        print(f\"Failed: {len(failed_requests)}\")
-        print(f\"Requests/second: {requests_per_second:.2f}\")
-        print(f\"Average response time: {avg_duration:.3f}s\")
-        print(f\"Min response time: {min_duration:.3f}s\")
-        print(f\"Max response time: {max_duration:.3f}s\")
+        print(f"Total requests: {len(results)}")
+        print(f"Successful: {len(successful_requests)} ({success_rate:.2%})")
+        print(f"Failed: {len(failed_requests)}")
+        print(f"Requests/second: {requests_per_second:.2f}")
+        print(f"Average response time: {avg_duration:.3f}s")
+        print(f"Min response time: {min_duration:.3f}s")
+        print(f"Max response time: {max_duration:.3f}s")
         
         # Performance assertions
-        assert success_rate >= 0.95, f\"Success rate too low: {success_rate:.2%}\"
-        assert avg_duration < 1.0, f\"Average response time too high: {avg_duration:.3f}s\"
-        assert requests_per_second > 10, f\"Request rate too low: {requests_per_second:.2f} req/s\"
+        assert success_rate >= 0.95, f"Success rate too low: {success_rate:.2%}"
+        assert avg_duration < 1.0, f"Average response time too high: {avg_duration:.3f}s"
+        assert requests_per_second > 10, f"Request rate too low: {requests_per_second:.2f} req/s"
     
     def test_upload_endpoint_load(self, http_session, test_config, sample_image_file, services_ready):
-        \"\"\"Test upload endpoint under moderate load.\"\"\"
-        url = f\"{test_config['backend_url']}/api/v1/upload\"
+        """Test upload endpoint under moderate load."""
+        url = f"{test_config['backend_url']}/api/v1/upload"
         
         # Smaller load for upload tests (more resource intensive)
         concurrent_requests = 5
@@ -141,25 +141,24 @@ class TestPerformance:
         uploads_per_second = len(results) / total_duration
         
         # Print performance metrics
-        print(f\"\
-Load Test Results (Upload Endpoint):\")
-        print(f\"Total uploads: {len(results)}\")
-        print(f\"Successful: {len(successful_uploads)} ({success_rate:.2%})\")
-        print(f\"Failed: {len(failed_uploads)}\")
-        print(f\"Uploads/second: {uploads_per_second:.2f}\")
-        print(f\"Average upload time: {avg_duration:.3f}s\")
+        print(f"Load Test Results (Upload Endpoint):")
+        print(f"Total uploads: {len(results)}")
+        print(f"Successful: {len(successful_uploads)} ({success_rate:.2%})")
+        print(f"Failed: {len(failed_uploads)}")
+        print(f"Uploads/second: {uploads_per_second:.2f}")
+        print(f"Average upload time: {avg_duration:.3f}s")
         
         # Performance assertions (more lenient for uploads)
-        assert success_rate >= 0.8, f\"Success rate too low: {success_rate:.2%}\"
-        assert avg_duration < 30.0, f\"Average upload time too high: {avg_duration:.3f}s\"
+        assert success_rate >= 0.8, f"Success rate too low: {success_rate:.2%}"
+        assert avg_duration < 30.0, f"Average upload time too high: {avg_duration:.3f}s"
     
     def test_mixed_load_scenario(self, http_session, test_config, sample_image_file, services_ready):
-        \"\"\"Test mixed load scenario with different endpoints.\"\"\"
+        """Test mixed load scenario with different endpoints."""
         
         def health_check() -> Dict[str, Any]:
             start_time = time.time()
             try:
-                response = http_session.get(f\"{test_config['backend_url']}/health\", timeout=10)
+                response = http_session.get(f"{test_config['backend_url']}/health", timeout=10)
                 return {
                     'endpoint': 'health',
                     'success': response.status_code == 200,
@@ -176,7 +175,7 @@ Load Test Results (Upload Endpoint):\")
         def metrics_check() -> Dict[str, Any]:
             start_time = time.time()
             try:
-                response = http_session.get(f\"{test_config['backend_url']}/api/v1/health/metrics\", timeout=10)
+                response = http_session.get(f"{test_config['backend_url']}/api/v1/health/metrics", timeout=10)
                 return {
                     'endpoint': 'metrics',
                     'success': response.status_code == 200,
@@ -193,7 +192,7 @@ Load Test Results (Upload Endpoint):\")
         def disk_usage_check() -> Dict[str, Any]:
             start_time = time.time()
             try:
-                response = http_session.get(f\"{test_config['backend_url']}/api/v1/admin/disk-usage\", timeout=10)
+                response = http_session.get(f"{test_config['backend_url']}/api/v1/admin/disk-usage", timeout=10)
                 return {
                     'endpoint': 'disk-usage',
                     'success': response.status_code == 200,
@@ -238,23 +237,22 @@ Load Test Results (Upload Endpoint):\")
                 endpoint_stats[endpoint]['successful'] += 1
                 endpoint_stats[endpoint]['durations'].append(result['duration'])
         
-        print(f\"\
-Mixed Load Test Results:\")
-        print(f\"Total duration: {total_duration:.2f}s\")
-        print(f\"Overall requests/second: {len(results) / total_duration:.2f}\")
+        print(f"Mixed Load Test Results:")
+        print(f"Total duration: {total_duration:.2f}s")
+        print(f"Overall requests/second: {len(results) / total_duration:.2f}")
         
         for endpoint, stats in endpoint_stats.items():
             success_rate = stats['successful'] / stats['total']
             avg_duration = statistics.mean(stats['durations']) if stats['durations'] else 0
             
-            print(f\"  {endpoint}: {stats['successful']}/{stats['total']} ({success_rate:.2%}) avg: {avg_duration:.3f}s\")
+            print(f"  {endpoint}: {stats['successful']}/{stats['total']} ({success_rate:.2%}) avg: {avg_duration:.3f}s")
             
             # Each endpoint should have reasonable performance
-            assert success_rate >= 0.9, f\"{endpoint} success rate too low: {success_rate:.2%}\"
+            assert success_rate >= 0.9, f"{endpoint} success rate too low: {success_rate:.2%}"
     
     def test_sustained_load(self, http_session, test_config, services_ready):
-        \"\"\"Test sustained load over a longer period.\"\"\"
-        url = f\"{test_config['backend_url']}/health\"
+        """Test sustained load over a longer period."""
+        url = f"{test_config['backend_url']}/health"
         
         duration_seconds = 60  # 1 minute sustained load
         requests_per_second = 5
@@ -305,23 +303,22 @@ Mixed Load Test Results:\")
         actual_rps = len(results) / total_duration
         avg_response_time = statistics.mean([r['duration'] for r in successful_requests]) if successful_requests else 0
         
-        print(f\"\
-Sustained Load Test Results:\")
-        print(f\"Duration: {total_duration:.1f}s\")
-        print(f\"Total requests: {len(results)}\")
-        print(f\"Success rate: {success_rate:.2%}\")
-        print(f\"Actual RPS: {actual_rps:.2f}\")
-        print(f\"Average response time: {avg_response_time:.3f}s\")
+        print(f"Sustained Load Test Results:")
+        print(f"Duration: {total_duration:.1f}s")
+        print(f"Total requests: {len(results)}")
+        print(f"Success rate: {success_rate:.2%}")
+        print(f"Actual RPS: {actual_rps:.2f}")
+        print(f"Average response time: {avg_response_time:.3f}s")
         
         # Performance assertions for sustained load
-        assert success_rate >= 0.95, f\"Success rate degraded under sustained load: {success_rate:.2%}\"
-        assert avg_response_time < 2.0, f\"Response time degraded under sustained load: {avg_response_time:.3f}s\"
-        assert actual_rps >= requests_per_second * 0.8, f\"Request rate too low: {actual_rps:.2f} vs target {requests_per_second}\"
+        assert success_rate >= 0.95, f"Success rate degraded under sustained load: {success_rate:.2%}"
+        assert avg_response_time < 2.0, f"Response time degraded under sustained load: {avg_response_time:.3f}s"
+        assert actual_rps >= requests_per_second * 0.8, f"Request rate too low: {actual_rps:.2f} vs target {requests_per_second}"
     
     def test_memory_usage_stability(self, http_session, test_config, services_ready):
-        \"\"\"Test memory usage stability during load.\"\"\"
-        metrics_url = f\"{test_config['backend_url']}/api/v1/health/metrics\"
-        health_url = f\"{test_config['backend_url']}/health\"
+        """Test memory usage stability during load."""
+        metrics_url = f"{test_config['backend_url']}/api/v1/health/metrics"
+        health_url = f"{test_config['backend_url']}/health"
         
         # Collect baseline memory
         try:
@@ -331,7 +328,7 @@ Sustained Load Test Results:\")
             baseline_metrics = response.text
             baseline_memory = self._extract_memory_metric(baseline_metrics)
         except Exception:
-            pytest.skip(\"Memory metrics not available\")
+            pytest.skip("Memory metrics not available")
         
         # Generate load for 30 seconds
         load_duration = 30
@@ -359,22 +356,20 @@ Sustained Load Test Results:\")
             memory_increase = final_memory - baseline_memory
             memory_increase_percent = (memory_increase / baseline_memory) * 100
             
-            print(f\"\
-Memory Stability Test:\")
-            print(f\"Requests made: {request_count}\")
-            print(f\"Baseline memory: {baseline_memory:.1f}%\")
-            print(f\"Final memory: {final_memory:.1f}%\")
-            print(f\"Memory increase: {memory_increase_percent:.1f}%\")
+            print(f"Memory Stability Test:")
+            print(f"Requests made: {request_count}")
+            print(f"Baseline memory: {baseline_memory:.1f}%")
+            print(f"Final memory: {final_memory:.1f}%")
+            print(f"Memory increase: {memory_increase_percent:.1f}%")
             
             # Memory increase should be reasonable
-            assert memory_increase_percent < 20, f\"Memory usage increased too much: {memory_increase_percent:.1f}%\"
+            assert memory_increase_percent < 20, f"Memory usage increased too much: {memory_increase_percent:.1f}%"
         else:
-            print(\"Memory metrics not available, skipping memory stability check\")
+            print("Memory metrics not available, skipping memory stability check")
     
     def _extract_memory_metric(self, metrics_text: str) -> float:
-        \"\"\"Extract memory usage percentage from Prometheus metrics.\"\"\"
-        for line in metrics_text.split('\
-'):
+        """Extract memory usage percentage from Prometheus metrics."""
+        for line in metrics_text.split('\n'):
             if line.startswith('system_memory_usage_percent '):
                 try:
                     return float(line.split(' ')[1])
