@@ -238,8 +238,8 @@ class ErrorHandlingTester:
         # Test invalid file upload
         try:
             response = requests.post(
-                f"{self.base_url}/api/v1/upload/image",
-                files={"file": ("test.txt", "invalid content", "text/plain")},
+                f"{self.base_url}/api/v1/upload",
+                files=[("files", ("test.txt", "invalid content", "text/plain"))],
                 timeout=10
             )
             
