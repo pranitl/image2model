@@ -12,9 +12,15 @@ RUN npm ci
 # Copy source files
 COPY . .
 
+# Accept PUBLIC_API_URL as build argument
+ARG PUBLIC_API_URL
+
+# Set PUBLIC_API_URL environment variable for build process
+ENV PUBLIC_API_URL=$PUBLIC_API_URL
+
 # Don't set API_KEY at build time since we're using dynamic env
-# Build the app
-RUN npm run build
+# Build the app - Pass PUBLIC_API_URL to Vite during build
+RUN PUBLIC_API_URL=$PUBLIC_API_URL npm run build
 
 # Production stage
 FROM node:20-alpine AS production

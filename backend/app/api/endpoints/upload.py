@@ -25,7 +25,7 @@ from app.core.error_handlers import (
     handle_file_validation_error,
     safe_file_operation
 )
-from app.workers.tasks import process_batch
+from app.workers.tasks import process_batch, generate_3d_model_task
 
 logger = logging.getLogger(__name__)
 

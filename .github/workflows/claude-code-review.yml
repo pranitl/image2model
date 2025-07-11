@@ -49,7 +49,7 @@ jobs:
             - Security concerns
             - Test coverage
             
-            Be constructive and helpful in your feedback.
+            Be constructive and helpful in your feedback and at the end with providing High/Critical, Medium, and Low priority suggestions.
           
           # Optional: Customize review based on file types
           # direct_prompt: |
@@ -66,7 +66,7 @@ jobs:
           #   'Please provide a thorough code review focusing on our coding standards and best practices.' }}
           
           # Optional: Add specific tools for running tests or linting
-          # allowed_tools: "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
+          allowed_tools: "Bash(npm run test),Bash(npm run lint),Bash(npm run typecheck)"
           
           # Optional: Skip review for certain conditions
           # if: |

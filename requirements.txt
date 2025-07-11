@@ -1,30 +1,31 @@
 # FastAPI and core dependencies
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
+gunicorn==21.2.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
 # Database and ORM
-sqlalchemy==2.0.23
-alembic==1.13.1
+# sqlalchemy==2.0.23
+# alembic==1.13.1
 
 # Async and HTTP
 httpx==0.25.2
-aiofiles==23.2.0
+# aiofiles==23.2.0
 
 # CORS and middleware
 python-multipart==0.0.6
 slowapi==0.1.9
 
 # Image processing and ML
-pillow==10.1.0
-numpy==1.24.3
-opencv-python==4.8.1.78
+# pillow==10.1.0
+# numpy==1.24.3
+# opencv-python==4.8.1.78
 
 # AI/ML model integration
-torch==2.1.1
-torchvision==0.16.1
-transformers==4.36.0
+# torch==2.1.1
+# torchvision==0.16.1
+# transformers==4.36.0
 
 # File handling and utilities
 python-jose[cryptography]==3.3.0

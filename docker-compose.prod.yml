@@ -29,8 +29,9 @@ services:
     container_name: image2model-redis
     command: >
       sh -c "
+        mkdir -p /usr/local/etc/redis &&
         echo 'requirepass ${REDIS_PASSWORD}' > /usr/local/etc/redis/redis.conf &&
-        echo 'bind 127.0.0.1 ::1' >> /usr/local/etc/redis/redis.conf &&
+        echo 'bind 0.0.0.0 ::' >> /usr/local/etc/redis/redis.conf &&
         redis-server /usr/local/etc/redis/redis.conf
       "
     # No exposed ports for security
@@ -57,6 +58,7 @@ services:
       - "8000"
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${CELERY_BROKER_URL}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - BACKEND_CORS_ORIGINS=${BACKEND_CORS_ORIGINS}
@@ -97,6 +99,7 @@ services:
     container_name: image2model-worker
     environment:
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=${CELERY_BROKER_URL}
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - ENVIRONMENT=production
@@ -115,6 +118,11 @@ services:
     networks:
       - backend-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.core.celery_app inspect ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     deploy:
       resources:
         limits:
@@ -148,6 +156,11 @@ services:
     networks:
       - backend-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.core.celery_app inspect ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
     deploy:
       resources:
         limits:
@@ -168,6 +181,7 @@ services:
       - CELERY_BROKER_URL=${CELERY_BROKER_URL}
       - CELERY_RESULT_BACKEND=${CELERY_RESULT_BACKEND}
       - FLOWER_BASIC_AUTH=${FLOWER_BASIC_AUTH}
+      - FAL_API_KEY=${FAL_API_KEY}
     depends_on:
       - redis
       - worker
@@ -176,6 +190,12 @@ services:
       - backend-network
       - frontend-network
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "celery -A app.core.celery_app inspect ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   # Nginx reverse proxy
   nginx:
@@ -187,7 +207,6 @@ services:
     volumes:
       - ./docker/nginx/nginx.prod.conf:/etc/nginx/nginx.conf:ro
       - ./docker/nginx/ssl:/etc/nginx/ssl:ro
-      - ./frontend-simple:/usr/share/nginx/html:ro
       - nginx_logs:/var/log/nginx
     depends_on:
       - backend
@@ -196,34 +215,40 @@ services:
       - frontend-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      test: ["CMD", "nginx", "-t"]
       interval: 30s
       timeout: 10s
       retries: 3
 
-  # Frontend (served by nginx)
+  # Frontend (SvelteKit application)
   frontend:
     build:
-      context: ./frontend-simple
+      context: ./frontend-svelte
       dockerfile: Dockerfile
+      target: production
+      args:
+        - PUBLIC_API_URL=${PUBLIC_API_URL}
     container_name: image2model-frontend
-    # Only expose to nginx
+    # Expose port 3000 internally
     expose:
-      - "80"
+      - "3000"
     environment:
-      - NGINX_HOST=${ALLOWED_HOSTS}
-      - NGINX_PORT=80
-    volumes:
-      - ./frontend-simple:/usr/share/nginx/html:ro
-      - ./frontend-simple/docker/nginx-simple.conf:/etc/nginx/conf.d/default.conf:ro
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3000
+      - ORIGIN=https://image2model.pranitlab.com
+      - API_KEY=${API_KEY}
+      - PUBLIC_API_URL=https://image2model.pranitlab.com/api/v1
     networks:
       - frontend-network
     restart: unless-stopped
+    command: node build
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/health"]
+      test: ["CMD-SHELL", "wget --quiet --tries=1 --spider http://127.0.0.1:3000 || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
+      start_period: 60s
 
 networks:
   frontend-network:
@@ -231,7 +256,7 @@ networks:
     name: image2model-frontend-network
   backend-network:
     driver: bridge
-    internal: true  # No external access
+    # internal: true  # Commented out to allow external DNS resolution for FAL.AI API access
     name: image2model-backend-network
 
 volumes:
