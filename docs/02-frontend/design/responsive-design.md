@@ -65,36 +65,29 @@ graph LR
 ### Breakpoint Variables
 
 ```css
-/* Responsive Breakpoints from brand/developer-reference.md */
-:root {
-  /* Screen sizes */
-  --screen-xs: 480px;
-  --screen-sm: 640px;
-  --screen-md: 768px;
-  --screen-lg: 1024px;
-  --screen-xl: 1280px;
-  --screen-2xl: 1536px;
-  
-  /* Container max widths */
-  --container-sm: 640px;
-  --container-md: 768px;
-  --container-lg: 1024px;
-  --container-xl: 1200px;
-}
+/* Responsive Breakpoints - Direct values used in CSS */
+/* Note: No CSS variables defined for breakpoints in the actual implementation */
 
-/* Media Query Mixins (PostCSS) */
-@custom-media --xs-up (min-width: 480px);
-@custom-media --sm-up (min-width: 640px);
-@custom-media --md-up (min-width: 768px);
-@custom-media --lg-up (min-width: 1024px);
-@custom-media --xl-up (min-width: 1280px);
-@custom-media --2xl-up (min-width: 1536px);
+/* Standard breakpoints used throughout the codebase: */
+/* Mobile: < 640px */
+/* Tablet: 640px - 1024px */ 
+/* Desktop: 1024px - 1280px */
+/* Wide: > 1280px */
 
 /* Media Query Usage */
+@media (min-width: 480px) { /* xs */ }
 @media (min-width: 640px) { /* sm */ }
 @media (min-width: 768px) { /* md */ }
 @media (min-width: 1024px) { /* lg */ }
 @media (min-width: 1280px) { /* xl */ }
+@media (min-width: 1536px) { /* 2xl */ }
+
+/* Container max width from style.css */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
 ```
 
 ### Container System
@@ -149,18 +142,23 @@ graph LR
 ### Fluid Typography
 
 ```css
-/* Responsive Type Scale */
+/* Responsive Type Scale from typography.css */
+/* Note: The actual implementation uses fixed sizes, not fluid clamp() */
 :root {
-  /* Fluid font sizes using clamp() */
-  --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
-  --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
-  --text-base: clamp(1rem, 0.9rem + 0.5vw, 1.125rem);
-  --text-lg: clamp(1.125rem, 1rem + 0.625vw, 1.25rem);
-  --text-xl: clamp(1.25rem, 1.1rem + 0.75vw, 1.5rem);
-  --text-2xl: clamp(1.5rem, 1.3rem + 1vw, 2rem);
-  --text-3xl: clamp(1.875rem, 1.5rem + 1.875vw, 2.5rem);
-  --text-4xl: clamp(2.25rem, 1.75rem + 2.5vw, 3.5rem);
-  --text-5xl: clamp(3rem, 2rem + 5vw, 4.5rem);
+  --text-xs: 0.75rem;      /* 12px */
+  --text-sm: 0.875rem;     /* 14px */
+  --text-base: 1rem;       /* 16px */
+  --text-lg: 1.125rem;     /* 18px */
+  --text-xl: 1.25rem;      /* 20px */
+  --text-2xl: 1.5rem;      /* 24px */
+  --text-3xl: 1.875rem;    /* 30px */
+  --text-4xl: 2.25rem;     /* 36px */
+  --text-5xl: 3rem;        /* 48px */
+  
+  /* Responsive sizing achieved through clamp() in heading variables */
+  --h1-font-size: clamp(2rem, 5vw, 3rem);
+  --h2-font-size: clamp(1.5rem, 4vw, 2.25rem);
+  --h3-font-size: clamp(1.25rem, 3vw, 1.75rem);
 }
 
 /* Heading Responsive Sizes */
@@ -249,38 +247,38 @@ graph LR
 ```css
 /* Mobile-first spacing utilities */
 .p-responsive {
-  padding: 1rem;
+  padding: var(--spacing-md);  /* 1rem */
 }
 
 @media (min-width: 768px) {
   .p-responsive {
-    padding: 1.5rem;
+    padding: var(--spacing-lg);  /* 1.5rem */
   }
 }
 
 @media (min-width: 1024px) {
   .p-responsive {
-    padding: 2rem;
+    padding: var(--spacing-xl);  /* 2rem */
   }
 }
 
 /* Responsive margins */
 .section-spacing {
-  margin-top: 2rem;
-  margin-bottom: 2rem;
+  margin-top: var(--spacing-xl);     /* 2rem */
+  margin-bottom: var(--spacing-xl);
 }
 
 @media (min-width: 768px) {
   .section-spacing {
-    margin-top: 3rem;
-    margin-bottom: 3rem;
+    margin-top: var(--spacing-2xl);    /* 3rem */
+    margin-bottom: var(--spacing-2xl);
   }
 }
 
 @media (min-width: 1024px) {
   .section-spacing {
-    margin-top: 4rem;
-    margin-bottom: 4rem;
+    margin-top: calc(var(--spacing-2xl) * 1.33);    /* ~4rem */
+    margin-bottom: calc(var(--spacing-2xl) * 1.33);
   }
 }
 ```

@@ -204,20 +204,20 @@ Icons reflect the polygonal, faceted style of the logo:
 .icon:hover { transform: scale(1.1); }
 .icon:active { transform: scale(0.95); }
 
-/* Icon colors */
+/* Icon colors - Using CSS variables */
 .icon-default {
-  stroke: #3A424A; /* Dark Charcoal */
+  stroke: var(--brand-dark-charcoal); /* #3A424A */
   fill: none;
 }
 
 .icon-hover {
-  stroke: #3498DB; /* Sky Blue */
+  stroke: var(--brand-sky-blue); /* #3498DB */
   fill: rgba(52, 152, 219, 0.1);
 }
 
 .icon-active {
-  stroke: #E74C3C; /* Vibrant Red */
-  fill: rgba(231, 76, 60, 0.15);
+  stroke: var(--brand-bright-cyan); /* #5DADE2 - Primary color */
+  fill: rgba(93, 173, 226, 0.15);
 }
 ```
 

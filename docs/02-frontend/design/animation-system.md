@@ -56,12 +56,16 @@ graph TD
 ```
 frontend-svelte/static/css/
 ├── animation-utilities.css    # Utility classes for common animations
-├── animations.css            # Core animation keyframes
+├── animations.css            # Core animation keyframes and timing functions
 ├── loading-animations.css    # Loading and progress animations
 ├── button-animations.css     # Button interaction animations
 ├── card-animations.css       # Card hover and reveal effects
 ├── form-animations.css       # Form field interactions
 └── special-effects.css       # Advanced visual effects
+
+Note: Animation timing variables are split between:
+- variables.css: Basic transition properties
+- animations.css: Advanced timing functions and durations
 ```
 
 ## Implementation
@@ -69,42 +73,51 @@ frontend-svelte/static/css/
 ### Animation Timing Variables
 
 ```css
-/* Transition Durations */
---transition-fast: 150ms;      /* Quick interactions */
---transition-base: 300ms;      /* Standard transitions */
---transition-slow: 500ms;      /* Deliberate animations */
---transition-slower: 1000ms;   /* Long sequences */
+/* From variables.css */
+--transition-fast: 150ms ease-in-out;
+--transition-normal: 300ms ease-in-out;
+--transition-slow: 500ms ease-in-out;
 
-/* Easing Functions */
---ease-in: cubic-bezier(0.4, 0, 1, 1);
---ease-out: cubic-bezier(0, 0, 0.2, 1);
---ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+/* From animations.css - Timing Functions */
+--ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
+--ease-in-out-cubic: cubic-bezier(0.65, 0, 0.35, 1);
+--ease-spring: cubic-bezier(0.5, 1.5, 0.5, 1);
 --ease-bounce: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+--ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+/* Animation Durations */
+--duration-micro: 100ms;
+--duration-short: 200ms;
+--duration-medium: 300ms;
+--duration-long: 500ms;
+--duration-xl: 800ms;
 ```
 
 ### Core Animation Keyframes
 
 ```css
-/* Spin Animation */
-@keyframes spin {
+/* Rotation Animation (was 'spin') */
+@keyframes rotate {
+  from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
 }
 
-/* Pulse Animation */
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: .5; }
+/* Scale Pulse Animation */
+@keyframes scalePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 /* Bounce Animation */
 @keyframes bounce {
-  0%, 100% { 
-    transform: translateY(-25%);
-    animation-timing-function: cubic-bezier(0.8, 0, 1, 1);
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
   }
-  50% { 
-    transform: none;
-    animation-timing-function: cubic-bezier(0, 0, 0.2, 1);
+  40% {
+    transform: translateY(-30px);
+  }
+  60% {
+    transform: translateY(-15px);
   }
 }
 
@@ -153,27 +166,31 @@ frontend-svelte/static/css/
 ### Loading Animations
 
 ```css
-/* Spinning Loader */
-.animate-spin {
-  animation: spin 1s linear infinite;
+/* Rotating Loader */
+.animate-rotate {
+  animation: rotate 1s linear infinite;
 }
 
-/* Pulsing Loader */
-.animate-pulse {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+/* Scale Pulse Effect */
+.animate-scale-pulse {
+  animation: scalePulse 2s ease-in-out infinite;
 }
 
-/* Bouncing Dots */
-.loading-dots span {
-  animation: bounce 1.4s infinite ease-in-out both;
+/* Low Poly Spinner */
+.low-poly-spinner {
+  animation: lowPolySpinner 2s ease-in-out infinite;
 }
 
-.loading-dots span:nth-child(1) {
-  animation-delay: -0.32s;
-}
-
-.loading-dots span:nth-child(2) {
-  animation-delay: -0.16s;
+/* Pulsing Dots */
+@keyframes pulsingDots {
+  0%, 80%, 100% {
+    opacity: 0;
+    transform: scale(0);
+  }
+  40% {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 /* Progress Bar */
@@ -211,7 +228,7 @@ frontend-svelte/static/css/
 ```css
 /* Scale on Hover */
 .btn-scale {
-  transition: transform var(--transition-fast) var(--ease-out);
+  transition: transform var(--duration-short) var(--ease-smooth);
 }
 
 .btn-scale:hover {
@@ -224,7 +241,7 @@ frontend-svelte/static/css/
 
 /* Lift Effect */
 .btn-lift {
-  transition: all var(--transition-base) var(--ease-out);
+  transition: all var(--transition-normal);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -363,53 +380,98 @@ frontend-svelte/static/css/
 ### Special Effects
 
 ```css
-/* Glitch Effect */
-@keyframes glitch {
+/* Special Effects - Brand Colors */
+@keyframes glitchText {
   0%, 100% {
     text-shadow: 
-      0.05em 0 0 rgba(255, 0, 0, 0.75),
-      -0.05em -0.025em 0 rgba(0, 255, 0, 0.75),
-      0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
-  }
-  14% {
-    text-shadow: 
-      0.05em 0 0 rgba(255, 0, 0, 0.75),
-      -0.05em -0.025em 0 rgba(0, 255, 0, 0.75),
-      0.025em 0.05em 0 rgba(0, 0, 255, 0.75);
-  }
-  15% {
-    text-shadow: 
-      -0.05em -0.025em 0 rgba(255, 0, 0, 0.75),
-      0.025em 0.025em 0 rgba(0, 255, 0, 0.75),
-      -0.05em -0.05em 0 rgba(0, 0, 255, 0.75);
-  }
-}
-
-/* Particle Float */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0) translateX(0) rotate(0deg);
+      0 0 0 var(--brand-vibrant-red),
+      0 0 0 var(--brand-bright-cyan);
   }
   33% {
-    transform: translateY(-100px) translateX(-50px) rotate(120deg);
+    text-shadow: 
+      2px 0 0 var(--brand-vibrant-red),
+      -2px 0 0 var(--brand-bright-cyan);
   }
   66% {
-    transform: translateY(-50px) translateX(50px) rotate(240deg);
+    text-shadow: 
+      -2px 0 0 var(--brand-vibrant-red),
+      2px 0 0 var(--brand-bright-cyan);
   }
 }
 
-/* Morphing Shape */
-@keyframes morph {
+/* Gradient Animations */
+@keyframes gradientShift {
   0% {
-    border-radius: 5px;
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes gradientRotate {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* Parallax and 3D Effects */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes tilt {
+  0%, 100% {
+    transform: perspective(400px) rotateY(0deg);
+  }
+  50% {
+    transform: perspective(400px) rotateY(10deg);
+  }
+}
+
+/* Morphing Shapes - Geometric Transitions */
+@keyframes morphTriangle {
+  0% {
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+  50% {
+    clip-path: polygon(50% 15%, 15% 85%, 85% 85%);
+  }
+  100% {
+    clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+  }
+}
+
+@keyframes morphSquare {
+  0% {
+    border-radius: 0;
     transform: rotate(0deg);
+  }
+  25% {
+    border-radius: 10%;
+    transform: rotate(90deg);
   }
   50% {
     border-radius: 50%;
-    transform: rotate(180deg) scale(1.5);
+    transform: rotate(180deg);
+  }
+  75% {
+    border-radius: 10%;
+    transform: rotate(270deg);
   }
   100% {
-    border-radius: 5px;
+    border-radius: 0;
     transform: rotate(360deg);
   }
 }
@@ -470,13 +532,14 @@ frontend-svelte/static/css/
 ### Animation Utility Classes
 
 #### Basic Animations
-- `.animate-spin` - Continuous rotation
-- `.animate-pulse` - Pulsing opacity
+- `.animate-rotate` - Continuous rotation
+- `.animate-scale-pulse` - Pulsing scale effect
 - `.animate-bounce` - Bouncing motion
-- `.animate-fadeIn` - Fade in from transparent
+- `.animate-fadeIn` - Fade in from transparent (fadeIn keyframe)
 - `.animate-slideInUp` - Slide in from bottom
 - `.animate-slideInDown` - Slide in from top
 - `.animate-scaleIn` - Scale in from smaller size
+- `.low-poly-spinner` - Geometric spinner animation
 
 #### Hover Animations
 - `.animate-scale-on-hover` - Scale up on hover

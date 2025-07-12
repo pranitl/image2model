@@ -1,8 +1,9 @@
 # API Integration Documentation
 
-> **Last Updated**: 2025-07-11  
+> **Last Updated**: 2025-07-12  
 > **Status**: Complete  
-> **Version**: 1.0
+> **Version**: 1.1  
+> **Implementation Status**: Fully implemented - API service is operational in `/frontend-svelte/src/lib/services/api.js`
 
 ## Overview
 
@@ -35,7 +36,9 @@ This directory contains comprehensive documentation for the API integration laye
 ### Basic API Usage
 
 ```javascript
+// File: frontend-svelte/src/lib/services/api.js 
 import api from '$lib/services/api';
+import { get } from 'svelte/store';
 import { apiKey } from '$lib/stores/auth';
 
 // Set API key
@@ -54,6 +57,7 @@ const stream = api.createProgressStream(taskId, {
 ### Error Handling Pattern
 
 ```javascript
+// File: frontend-svelte/src/lib/stores/toast.js 
 import { toast } from '$lib/stores/toast';
 
 try {
@@ -242,7 +246,7 @@ it('should handle upload failure', async () => {
 
 ## Related Documentation
 
-- [Frontend Architecture](../architecture/README.md) - Overall frontend structure
-- [Component Documentation](../components/README.md) - UI component reference
-- [Backend API Reference](../../03-backend/api-reference/README.md) - Server API documentation
-- [Testing Guide](../../05-testing/frontend-testing/README.md) - Frontend testing strategies
+- [Frontend Architecture](../architecture/svelte-structure.md) - Overall frontend structure
+- [Component Documentation](../components/component-library.md) - UI component reference
+- [Backend API Reference](../../03-backend/api-reference/README.md) - Server API documentation (planned)
+- [Testing Guide](../../05-testing/frontend-testing/README.md) - Frontend testing strategies (planned)

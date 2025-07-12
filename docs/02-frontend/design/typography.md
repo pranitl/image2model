@@ -622,3 +622,7 @@ h1, h2, h3 {
 - [Responsive Design](./responsive-design.md) - Responsive typography
 - [Accessibility](../../accessibility.md) - Text accessibility
 - [Brand Voice](./visual-style-guide.md) - Writing guidelines
+
+## Important Note
+
+All typography variables and styles are defined in `/frontend-svelte/static/css/typography.css`, not in variables.css. This includes font families, sizes, weights, line heights, and letter spacing values.

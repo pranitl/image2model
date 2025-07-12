@@ -1,8 +1,8 @@
 # SSE Handling
 
-> **Last Updated**: 2025-07-11  
+> **Last Updated**: 2025-07-12  
 > **Status**: Complete  
-> **Version**: 1.0
+> **Version**: 1.1
 
 ## Overview
 
@@ -107,7 +107,7 @@ SSE connections in image2model use these settings:
 ### Basic Usage
 
 ```javascript
-// File: src/routes/processing/+page.svelte
+// File: frontend-svelte/src/routes/processing/+page.svelte
 import api from '$lib/services/api';
 import { onDestroy } from 'svelte';
 
@@ -144,7 +144,7 @@ onDestroy(() => {
 ### Advanced Usage
 
 ```javascript
-// File: src/lib/components/ProcessingTracker.svelte
+// File: frontend-svelte/src/lib/components/ProcessingTracker.svelte
 import api from '$lib/services/api';
 import { toast } from '$lib/stores/toast';
 
@@ -241,7 +241,7 @@ function handleTaskUpdate(type, data) {
 ### Error Recovery Example
 
 ```javascript
-// File: src/lib/services/sse-manager.js
+// File: frontend-svelte/src/lib/services/sse-manager.js
 class SSEManager {
   constructor() {
     this.connections = new Map();

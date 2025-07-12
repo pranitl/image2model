@@ -363,17 +363,24 @@ graph TD
   opacity: 0.1;
 }
 
-/* Using gradients for buttons */
-.btn-gradient {
+/* Button implementation from style.css */
+.btn-primary {
+  /* Variables define solid color but style.css overrides with gradient */
   background: linear-gradient(135deg, #3498db 0%, #2874a6 100%);
-  color: white;
+  color: var(--brand-white);
+  /* Additional properties from style.css */
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
+  font-weight: var(--font-medium);
+  transition: all var(--transition-normal);
   position: relative;
   overflow: hidden;
 }
 
-.btn-gradient:hover {
-  background: linear-gradient(135deg, #2874a6 0%, #1b4f72 100%);
-}
+/* Note on Dark Mode: 
+   Dark mode infrastructure exists in variables.css with .dark-mode 
+   and .light-mode classes, but the actual dark color variables 
+   (--dark-bg-primary, etc.) are referenced but not yet defined. */
 ```
 
 ## API Reference

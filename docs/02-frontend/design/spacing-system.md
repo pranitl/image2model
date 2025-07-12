@@ -70,65 +70,39 @@ graph TD
 ### Spacing Scale Variables
 
 ```css
-/* Spacing Scale from brand/developer-reference.md */
+/* Spacing Scale from variables.css */
 :root {
-  --space-0: 0;
-  --space-1: 0.25rem;    /* 4px */
-  --space-2: 0.5rem;     /* 8px */
-  --space-3: 0.75rem;    /* 12px */
-  --space-4: 1rem;       /* 16px */
-  --space-5: 1.25rem;    /* 20px */
-  --space-6: 1.5rem;     /* 24px */
-  --space-8: 2rem;       /* 32px */
-  --space-10: 2.5rem;    /* 40px */
-  --space-12: 3rem;      /* 48px */
-  --space-16: 4rem;      /* 64px */
-  --space-20: 5rem;      /* 80px */
-  --space-24: 6rem;      /* 96px */
-  --space-32: 8rem;      /* 128px */
-  --space-40: 10rem;     /* 160px */
-  --space-48: 12rem;     /* 192px */
-  --space-56: 14rem;     /* 224px */
-  --space-64: 16rem;     /* 256px */
-  
-  /* Negative spacing */
-  --space-n1: -0.25rem;
-  --space-n2: -0.5rem;
-  --space-n3: -0.75rem;
-  --space-n4: -1rem;
-  --space-n5: -1.25rem;
-  --space-n6: -1.5rem;
-  --space-n8: -2rem;
-  --space-n10: -2.5rem;
-  --space-n12: -3rem;
+  --spacing-xs: 0.25rem;  /* 4px */
+  --spacing-sm: 0.5rem;   /* 8px */
+  --spacing-md: 1rem;     /* 16px */
+  --spacing-lg: 1.5rem;   /* 24px */
+  --spacing-xl: 2rem;     /* 32px */
+  --spacing-2xl: 3rem;    /* 48px */
 }
+
+/* Note: The actual implementation uses a simpler 6-level spacing scale
+   rather than the extensive 0-64 scale. This provides sufficient 
+   flexibility while maintaining simplicity. */
 ```
 
 ### Padding Utilities
 
 ```css
-/* All sides */
-.p-0 { padding: var(--space-0); }
-.p-1 { padding: var(--space-1); }
-.p-2 { padding: var(--space-2); }
-.p-3 { padding: var(--space-3); }
-.p-4 { padding: var(--space-4); }
-.p-5 { padding: var(--space-5); }
-.p-6 { padding: var(--space-6); }
-.p-8 { padding: var(--space-8); }
-.p-10 { padding: var(--space-10); }
-.p-12 { padding: var(--space-12); }
-.p-16 { padding: var(--space-16); }
+/* All sides - Using actual spacing variables */
+.p-xs { padding: var(--spacing-xs); }    /* 4px */
+.p-sm { padding: var(--spacing-sm); }    /* 8px */
+.p-md { padding: var(--spacing-md); }    /* 16px */
+.p-lg { padding: var(--spacing-lg); }    /* 24px */
+.p-xl { padding: var(--spacing-xl); }    /* 32px */
+.p-2xl { padding: var(--spacing-2xl); }  /* 48px */
 
 /* Horizontal padding */
-.px-0 { padding-left: var(--space-0); padding-right: var(--space-0); }
-.px-1 { padding-left: var(--space-1); padding-right: var(--space-1); }
-.px-2 { padding-left: var(--space-2); padding-right: var(--space-2); }
-.px-3 { padding-left: var(--space-3); padding-right: var(--space-3); }
-.px-4 { padding-left: var(--space-4); padding-right: var(--space-4); }
-.px-5 { padding-left: var(--space-5); padding-right: var(--space-5); }
-.px-6 { padding-left: var(--space-6); padding-right: var(--space-6); }
-.px-8 { padding-left: var(--space-8); padding-right: var(--space-8); }
+.px-xs { padding-left: var(--spacing-xs); padding-right: var(--spacing-xs); }
+.px-sm { padding-left: var(--spacing-sm); padding-right: var(--spacing-sm); }
+.px-md { padding-left: var(--spacing-md); padding-right: var(--spacing-md); }
+.px-lg { padding-left: var(--spacing-lg); padding-right: var(--spacing-lg); }
+.px-xl { padding-left: var(--spacing-xl); padding-right: var(--spacing-xl); }
+.px-2xl { padding-left: var(--spacing-2xl); padding-right: var(--spacing-2xl); }
 
 /* Vertical padding */
 .py-0 { padding-top: var(--space-0); padding-bottom: var(--space-0); }
@@ -233,41 +207,41 @@ graph TD
 ```css
 /* Section spacing */
 .section {
-  padding-top: var(--space-16);
-  padding-bottom: var(--space-16);
+  padding-top: var(--spacing-xl);
+  padding-bottom: var(--spacing-xl);
 }
 
 @media (min-width: 768px) {
   .section {
-    padding-top: var(--space-20);
-    padding-bottom: var(--space-20);
+    padding-top: var(--spacing-2xl);
+    padding-bottom: var(--spacing-2xl);
   }
 }
 
 @media (min-width: 1024px) {
   .section {
-    padding-top: var(--space-24);
-    padding-bottom: var(--space-24);
+    padding-top: calc(var(--spacing-2xl) * 1.5);
+    padding-bottom: calc(var(--spacing-2xl) * 1.5);
   }
 }
 
 /* Container spacing */
 .container {
-  padding-left: var(--space-4);
-  padding-right: var(--space-4);
+  padding-left: var(--spacing-md);
+  padding-right: var(--spacing-md);
 }
 
 @media (min-width: 768px) {
   .container {
-    padding-left: var(--space-6);
-    padding-right: var(--space-6);
+    padding-left: var(--spacing-lg);
+    padding-right: var(--spacing-lg);
   }
 }
 
 @media (min-width: 1024px) {
   .container {
-    padding-left: var(--space-8);
-    padding-right: var(--space-8);
+    padding-left: var(--spacing-xl);
+    padding-right: var(--spacing-xl);
   }
 }
 
@@ -474,13 +448,13 @@ graph TD
 ### Spacing Utilities
 
 #### Padding Classes
-- `.p-{0-64}` - All sides
-- `.px-{0-64}` - Horizontal (left & right)
-- `.py-{0-64}` - Vertical (top & bottom)
-- `.pt-{0-64}` - Top only
-- `.pr-{0-64}` - Right only
-- `.pb-{0-64}` - Bottom only
-- `.pl-{0-64}` - Left only
+- `.p-{xs|sm|md|lg|xl|2xl}` - All sides
+- `.px-{xs|sm|md|lg|xl|2xl}` - Horizontal (left & right)
+- `.py-{xs|sm|md|lg|xl|2xl}` - Vertical (top & bottom)
+- `.pt-{xs|sm|md|lg|xl|2xl}` - Top only
+- `.pr-{xs|sm|md|lg|xl|2xl}` - Right only
+- `.pb-{xs|sm|md|lg|xl|2xl}` - Bottom only
+- `.pl-{xs|sm|md|lg|xl|2xl}` - Left only
 
 #### Margin Classes
 - `.m-{0-64}` - All sides

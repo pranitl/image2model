@@ -87,44 +87,54 @@ frontend-svelte/static/css/
 
 #### 1. CSS Loading Order
 
-The CSS files are loaded in a specific order to ensure proper cascade and specificity:
+The CSS files are imported via app.css and app-core.css:
 
-```html
-<!-- Base layer -->
-<link rel="stylesheet" href="/css/variables.css">
-<link rel="stylesheet" href="/css/style.css">
-<link rel="stylesheet" href="/css/typography.css">
-
-<!-- Utility layer -->
-<link rel="stylesheet" href="/css/color-utilities.css">
-<link rel="stylesheet" href="/css/animation-utilities.css">
-
-<!-- Component layer -->
-<link rel="stylesheet" href="/css/components.css">
-<link rel="stylesheet" href="/css/shared-components.css">
-
-<!-- Animation layer -->
-<link rel="stylesheet" href="/css/animations.css">
-<link rel="stylesheet" href="/css/loading-animations.css">
-<link rel="stylesheet" href="/css/button-animations.css">
-<link rel="stylesheet" href="/css/card-animations.css">
-<link rel="stylesheet" href="/css/form-animations.css">
-<link rel="stylesheet" href="/css/special-effects.css">
-
-<!-- Page-specific styles (loaded on demand) -->
-<link rel="stylesheet" href="/css/landing-page.css">
+```css
+/* From app.css - All styles loaded in order */
+@import '/css/variables.css';          /* Design tokens */
+@import '/css/style.css';              /* Base styles and resets */
+@import '/css/components.css';         /* Component styles */
+@import '/css/shared-components.css';  /* Shared patterns */
+@import '/css/typography.css';         /* Font system */
+@import '/css/animations.css';         /* Core animations */
+@import '/css/animation-utilities.css'; /* Animation utilities */
+@import '/css/button-animations.css';  /* Button effects */
+@import '/css/card-animations.css';    /* Card effects */
+@import '/css/color-utilities.css';    /* Color utilities */
+@import '/css/form-animations.css';    /* Form effects */
+@import '/css/loading-animations.css'; /* Loading states */
+@import '/css/special-effects.css';    /* Advanced effects */
+@import '/css/landing-page.css';       /* Landing page */
+@import '/css/upload-page.css';        /* Upload page */
+@import '/css/processing-page.css';    /* Processing page */
+@import '/css/results-page.css';       /* Results page */
 ```
 
 #### 2. CSS Custom Properties Strategy
 
-All design tokens are defined as CSS custom properties in `variables.css`:
+Design tokens are split across multiple files:
 
+**variables.css**:
 - **Brand Colors**: Direct mapping from brand guidelines
-- **Semantic Colors**: Purpose-based color assignments
-- **Spacing Scale**: Consistent spacing system
-- **Typography Scale**: Font sizes and line heights
-- **Animation Timings**: Transition durations and easings
-- **Breakpoints**: Responsive design breakpoints
+- **Semantic Colors**: Purpose-based color assignments  
+- **Basic Spacing**: Simple 6-level system (xs to 2xl)
+- **Shadows**: Box shadow definitions
+- **Border Radius**: Radius scale
+- **Transitions**: Basic transition timings
+
+**typography.css**:
+- **Font Families**: System and mono font stacks
+- **Font Weights**: Light to black (300-900)
+- **Font Sizes**: xs to 9xl scale
+- **Line Heights**: Leading scale
+- **Letter Spacing**: Tracking scale
+
+**animations.css**:
+- **Timing Functions**: Advanced easing curves
+- **Animation Durations**: Micro to xl timings
+- **Keyframes**: All animation definitions
+
+Note: Responsive breakpoints are hard-coded values, not CSS variables
 
 #### 3. Naming Conventions
 
@@ -140,13 +150,14 @@ All design tokens are defined as CSS custom properties in `variables.css`:
 
 ### Configuration
 
-| File | Purpose | Key Variables |
+| File | Purpose | Key Contents |
 |------|---------|---------------|
-| `variables.css` | Design tokens | `--brand-*`, `--color-*`, `--space-*` |
-| `style.css` | Base styles | Reset, box-sizing, body defaults |
-| `typography.css` | Text styles | `.h1` to `.h6`, `.text-*` |
-| `color-utilities.css` | Color classes | `.text-*`, `.bg-*`, `.border-*` |
-| `animation-utilities.css` | Motion classes | `.animate-*`, `.transition-*` |
+| `variables.css` | Design tokens | `--brand-*`, `--color-*`, `--spacing-*`, `--transition-*` |
+| `style.css` | Base styles | Reset, imports, component overrides |
+| `typography.css` | Font system | `--font-*`, `--text-*`, heading styles |
+| `color-utilities.css` | Color classes | `.text-*`, `.bg-*`, `.border-*` utilities |
+| `animation-utilities.css` | Motion classes | `.animate-*` utility classes |
+| `animations.css` | Keyframes | `@keyframes`, timing functions |
 
 ## Usage Examples
 
@@ -204,7 +215,10 @@ All design tokens are defined as CSS custom properties in `variables.css`:
 - `.bg-{color}`: Apply background color
 - `.border-{color}`: Apply border color
 
-**Available colors**: primary, secondary, success, warning, error, info, white, black, gray-{100-900}, blue-{100-900}, red-{100-900}
+**Theme colors**: primary, secondary, muted (use semantic variables)
+**Brand colors**: brand-primary, brand-secondary, etc.
+**Status colors**: success, warning, error, info
+**Shades**: blue-{100-900}, red-{100-900}, yellow-{100-900}, orange-{100-900}, gray-{100-900}
 
 **Example**:
 ```html
@@ -221,9 +235,10 @@ All design tokens are defined as CSS custom properties in `variables.css`:
 - `.animate-glow-on-hover`: Add glow effect on hover
 
 **Loading Animations**:
-- `.animate-spin`: Continuous rotation
-- `.animate-pulse`: Pulsing opacity
+- `.animate-rotate`: Continuous rotation
+- `.animate-scale-pulse`: Pulsing scale effect
 - `.animate-bounce`: Bouncing motion
+- `.low-poly-spinner`: Geometric spinner
 
 **Example**:
 ```html

@@ -1,8 +1,8 @@
 # Error Handling
 
-> **Last Updated**: 2025-07-11  
+> **Last Updated**: 2025-07-12  
 > **Status**: Complete  
-> **Version**: 1.0
+> **Version**: 1.1
 
 ## Overview
 
@@ -113,7 +113,7 @@ Error handling is implemented at multiple levels:
 ### Basic Usage
 
 ```javascript
-// File: src/routes/upload/+page.svelte
+// File: frontend-svelte/src/routes/upload/+page.svelte
 import api from '$lib/services/api';
 import { toast } from '$lib/stores/toast';
 
@@ -140,7 +140,7 @@ async function uploadFiles(files) {
 ### Advanced Usage
 
 ```javascript
-// File: src/lib/services/error-handler.js
+// File: frontend-svelte/src/lib/services/error-handler.js
 class ErrorHandler {
   constructor() {
     this.errorCounts = new Map();
@@ -246,7 +246,7 @@ export default new ErrorHandler();
 ### File Validation Example
 
 ```javascript
-// File: src/lib/utils/file-validator.js
+// File: frontend-svelte/src/lib/utils/file-validator.js
 import { toast } from '$lib/stores/toast';
 
 export class FileValidator {
@@ -330,7 +330,7 @@ export class FileValidator {
 ### SSE Error Handling Example
 
 ```javascript
-// File: src/lib/components/ProgressTracker.svelte
+// File: frontend-svelte/src/lib/components/ProgressTracker.svelte
 <script>
 import api from '$lib/services/api';
 import { toast } from '$lib/stores/toast';

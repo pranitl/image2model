@@ -1,8 +1,12 @@
 # API Service
 
-> **Last Updated**: 2025-07-11  
+> **Last Updated**: 2025-07-12  
 > **Status**: Complete  
-> **Version**: 1.0
+> **Version**: 1.1  
+> **Implementation Status**: Fully implemented - API service is operational in `/frontend-svelte/src/lib/services/api.js`  
+> **Changelog**:
+> - 1.1 (2025-07-12): Updated to reflect actual implementation
+> - 1.0 (2025-07-11): Initial documentation created
 
 ## Overview
 
@@ -65,7 +69,7 @@ graph TD
 ```
 frontend-svelte/src/lib/
 ├── services/
-│   └── api.js          # Main API service implementation
+│   └── api.js          # Main API service implementation (implemented)
 └── stores/
     ├── auth.js         # API key management
     └── toast.js        # User notifications
@@ -75,7 +79,7 @@ frontend-svelte/src/lib/
 
 ### Technical Details
 
-The API service is implemented as a JavaScript class with the following key features:
+The API service is implemented as a JavaScript class in `/frontend-svelte/src/lib/services/api.js` with the following key features:
 
 1. **Singleton Pattern**: A single instance is created and exported for use across the application
 2. **Environment Configuration**: Uses environment variables for API base URL with localhost fallback
@@ -87,16 +91,16 @@ The API service is implemented as a JavaScript class with the following key feat
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| `API_BASE` | string | `http://localhost:8000/api/v1` | Base URL for API endpoints |
-| `DEFAULT_TIMEOUT` | number | `60000` | Request timeout in milliseconds |
-| `API_KEY` | string | `null` | Authentication token set via environment or auth store |
+| `PUBLIC_API_URL` | string | `http://localhost:8000/api/v1` | Base URL from environment (import.meta.env) |
+| `DEFAULT_TIMEOUT` | number | `60000` | Request timeout in milliseconds (60 seconds) |
+| `API_KEY` | string | `null` | Authentication token set via setApiKey() method |
 
 ## Usage Examples
 
 ### Basic Usage
 
 ```javascript
-// File: src/routes/upload/+page.svelte
+// File: frontend-svelte/src/routes/upload/+page.svelte
 import api from '$lib/services/api';
 import { apiKey } from '$lib/stores/auth';
 
@@ -116,8 +120,9 @@ if (result.success) {
 ### Advanced Usage
 
 ```javascript
-// File: src/routes/processing/+page.svelte
+// File: frontend-svelte/src/routes/processing/+page.svelte
 import api from '$lib/services/api';
+import { onDestroy } from 'svelte';
 
 // Create SSE connection for real-time updates
 const stream = api.createProgressStream(taskId, {
@@ -146,7 +151,7 @@ onDestroy(() => {
 ### Retry Logic Example
 
 ```javascript
-// File: src/lib/services/api-utils.js
+// File: frontend-svelte/src/lib/services/api.js
 // Using the built-in retry mechanism
 const result = await api.retryOperation(
   async () => api.uploadBatch(files, faceLimit),
@@ -189,6 +194,17 @@ const apiService = new APIService('your-api-key');
 ```javascript
 api.setApiKey(newApiKey);
 ```
+
+#### `getHeaders(additionalHeaders = {})`
+
+**Description**: Internal method that returns headers for API requests including authentication
+
+**Parameters**:
+- `additionalHeaders` (object): Optional additional headers to merge
+
+**Returns**: object - Headers object with Authorization and any additional headers
+
+**Note**: This method throws an error if API key is not set
 
 #### `uploadBatch(files, faceLimit = null)`
 
@@ -295,6 +311,53 @@ const stream = api.createProgressStream(taskId, {
 
 **Returns**: Promise - Result of the operation
 
+#### `uploadFiles(files, faceLimit = 5000)`
+
+**Description**: Alternative upload endpoint (legacy compatibility)
+
+**Parameters**:
+- `files` (Array): Array of File objects
+- `faceLimit` (number): Maximum faces for generated models (default: 5000)
+
+**Returns**: Object - Upload result similar to uploadBatch
+
+#### `getDownloadUrl(jobId, filename)`
+
+**Description**: Generates a direct download URL for a single file
+
+**Parameters**:
+- `jobId` (string): The job identifier
+- `filename` (string): The filename to download
+
+**Returns**: string - Direct download URL
+
+#### `getDownloadAllUrl(jobId)`
+
+**Description**: Generates a URL to download all files as a zip
+
+**Parameters**:
+- `jobId` (string): The job identifier
+
+**Returns**: string - Batch download URL
+
+#### `isExternalUrl(url)`
+
+**Description**: Checks if a URL is from an external service (FAL.AI)
+
+**Parameters**:
+- `url` (string): URL to check
+
+**Returns**: boolean - True if external, false if local
+
+#### `formatFileSize(bytes)`
+
+**Description**: Formats byte size into human-readable string
+
+**Parameters**:
+- `bytes` (number): File size in bytes
+
+**Returns**: string - Formatted size (e.g., "2.5 MB")
+
 ## Best Practices
 
 ### ✅ DO
@@ -370,5 +433,5 @@ customApi.DEFAULT_TIMEOUT = 120000; // 2 minutes
 
 - [SSE Handling](./sse-handling.md) - Detailed Server-Sent Events implementation
 - [Error Handling](./error-handling.md) - Comprehensive error management patterns
-- [Auth Store](../stores/auth-store.md) - API key management
-- [API Reference](../../03-backend/api-reference/endpoints.md) - Backend API documentation
+- [State Management](../architecture/state-management.md) - Store management patterns
+- [Backend Architecture](../../03-backend/architecture/README.md) - Backend API documentation (planned)
