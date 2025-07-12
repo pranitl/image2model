@@ -58,7 +58,7 @@ flowchart TD
 ### Route Structure
 
 ```
-src/routes/
+frontend-svelte/src/routes/
 ├── +layout.server.js     # Root server data loader
 ├── +layout.svelte        # Root layout wrapper
 ├── +page.svelte          # Homepage (/)
@@ -77,8 +77,37 @@ src/routes/
 └── dev/
     ├── +page.svelte      # Dev tools index
     ├── components/       # Component showcase
-    ├── edge-cases/       # Edge case testing
-    └── test-scenarios/   # Test scenarios
+    │   ├── buttons/
+    │   │   └── +page.svelte
+    │   ├── cards/
+    │   │   └── +page.svelte
+    │   ├── forms/
+    │   │   └── +page.svelte
+    │   ├── icons/
+    │   │   └── +page.svelte
+    │   ├── loading/
+    │   │   └── +page.svelte
+    │   └── toasts/
+    │       └── +page.svelte
+    ├── edge-cases/
+    │   └── +page.svelte
+    ├── empty-states/
+    │   └── +page.svelte
+    ├── error-states/
+    │   └── +page.svelte
+    ├── processing-active/
+    │   └── +page.svelte
+    ├── results/
+    │   └── +page.svelte
+    ├── test-scenarios/
+    │   ├── edge-cases/
+    │   │   └── +page.svelte
+    │   ├── empty-states/
+    │   │   └── +page.svelte
+    │   └── error-states/
+    │       └── +page.svelte
+    └── upload-with-files/
+        └── +page.svelte
 ```
 
 ## Implementation
@@ -90,7 +119,7 @@ src/routes/
 Each route is defined by a `+page.svelte` file:
 
 ```javascript
-// File: src/routes/about/+page.svelte
+// File: frontend-svelte/src/routes/about/+page.svelte
 <script>
   import { page } from '$app/stores';
   
@@ -107,13 +136,22 @@ Each route is defined by a `+page.svelte` file:
 Layouts wrap page content and cascade through the directory structure:
 
 ```javascript
-// File: src/routes/+layout.svelte
+// File: frontend-svelte/src/routes/+layout.svelte
 <script>
   import '../app-core.css';
+  import { page } from '$app/stores';
+  import { onMount } from 'svelte';
   import Toast from '$lib/components/Toast.svelte';
   import api from '$lib/services/api.js';
+  import { apiKey } from '$lib/stores/auth.js';
   
   export let data; // From +layout.server.js
+  
+  // Set API key immediately when data is available
+  $: if (data?.apiKey) {
+    api.setApiKey(data.apiKey);
+    apiKey.set(data.apiKey);
+  }
 </script>
 
 <!-- All pages render here -->
@@ -128,16 +166,38 @@ Layouts wrap page content and cascade through the directory structure:
 Load data on the server before rendering:
 
 ```javascript
-// File: src/routes/+layout.server.js
-export async function load({ cookies, request }) {
-  // Access environment variables server-side
-  const apiKey = process.env.PUBLIC_API_KEY;
-  
-  // Return data to layout
+// File: frontend-svelte/src/routes/+layout.server.js
+export function load({ url, locals }) {
+  // Access API key from locals (set by hooks.server.js)
   return {
-    apiKey,
-    user: cookies.get('user')
+    url: url.pathname,
+    apiKey: locals.apiKey
   };
+}
+
+// File: frontend-svelte/src/hooks.server.js
+import { env } from '$env/dynamic/private';
+
+export async function handle({ event, resolve }) {
+  // Get API key from runtime environment
+  const API_KEY = env.API_KEY || process.env.API_KEY;
+  
+  // Make API key available to all routes via locals
+  event.locals.apiKey = API_KEY;
+  
+  if (!API_KEY) {
+    console.error('API_KEY not found in environment variables');
+    throw new Error('API_KEY environment variable is required');
+  }
+  
+  const response = await resolve(event);
+  
+  // Add security headers
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  // ... additional security headers
+  
+  return response;
 }
 ```
 
@@ -206,17 +266,35 @@ export async function load({ url }) {
 </a>
 ```
 
-#### Navigation Guards
+#### Client-Side Error Handling
+
+The application uses hooks.client.js for error handling:
 
 ```javascript
-// File: src/hooks.client.js
-import { goto } from '$app/navigation';
+// File: frontend-svelte/src/hooks.client.js
+import { errorHandler, ErrorTypes, ErrorSeverity } from '$lib/utils/error-handler.js';
 
-export async function beforeNavigate({ to, from, cancel }) {
-  // Check if user has unsaved changes
-  if (hasUnsavedChanges() && !confirm('Leave without saving?')) {
-    cancel();
-  }
+export function handleError({ error, event, status, message }) {
+  // Determine severity based on status code
+  let severity = ErrorSeverity.MEDIUM;
+  if (status >= 500) severity = ErrorSeverity.CRITICAL;
+  else if (status >= 400) severity = ErrorSeverity.HIGH;
+  
+  // Log the error with our error handler
+  errorHandler.logError({
+    type: ErrorTypes.GENERAL,
+    severity,
+    message: message || error?.message || 'Unknown error',
+    // ... additional error details
+  });
+  
+  // Return a safe error message for the user
+  return {
+    message: import.meta.env.DEV 
+      ? (message || error?.message || 'An unexpected error occurred')
+      : 'An unexpected error occurred. Please try again.',
+    code: error?.code ?? 'UNKNOWN'
+  };
 }
 ```
 
@@ -297,78 +375,81 @@ Global error page for route errors:
 </a>
 ```
 
-### Dynamic Route Parameters
+### Query Parameters
+
+The application uses query parameters for passing data between routes:
 
 ```javascript
-// File: src/routes/models/[id]/+page.svelte
+// File: frontend-svelte/src/routes/processing/+page.js
+export async function load({ url }) {
+  const taskId = url.searchParams.get('taskId');
+  
+  if (!taskId) {
+    return {
+      error: 'No task ID provided'
+    };
+  }
+  
+  return {
+    taskId,
+    // Initial data for immediate render
+    status: 'initializing'
+  };
+}
+
+// Usage in component
 <script>
   export let data;
   
-  // Access route parameter
-  $: modelId = data.id;
+  $: taskId = data.taskId;
+  $: if (data.error) {
+    // Handle missing taskId
+  }
 </script>
-
-<h1>Model {modelId}</h1>
-
-<!-- File: src/routes/models/[id]/+page.js -->
-export async function load({ params }) {
-  return {
-    id: params.id,
-    // Fetch model data
-  };
-}
 ```
 
 ### Protected Routes
 
-```javascript
-// File: src/routes/admin/+layout.server.js
-import { redirect } from '@sveltejs/kit';
+Since the application uses API key authentication set through environment variables, route protection is handled at the API level. The frontend ensures API key availability through the `hooks.server.js` file:
 
-export async function load({ cookies }) {
-  const user = cookies.get('user');
+```javascript
+// File: frontend-svelte/src/hooks.server.js
+export async function handle({ event, resolve }) {
+  const API_KEY = env.API_KEY || process.env.API_KEY;
   
-  if (!user || !isAdmin(user)) {
-    throw redirect(303, '/login');
+  if (!API_KEY) {
+    console.error('API_KEY not found in environment variables');
+    throw new Error('API_KEY environment variable is required');
   }
   
-  return {
-    user: JSON.parse(user)
-  };
+  event.locals.apiKey = API_KEY;
+  // ... rest of handler
 }
 ```
 
-### Multi-Step Workflow
+### Navigation Flow Example
+
+Here's how the application handles the typical user flow:
 
 ```javascript
-// File: src/lib/stores/workflow.js
-import { writable } from 'svelte/store';
-import { goto } from '$app/navigation';
-
-function createWorkflowStore() {
-  const { subscribe, update, set } = writable({
-    step: 1,
-    data: {}
-  });
+// File: frontend-svelte/src/routes/upload/+page.svelte
+<script>
+  import { goto } from '$app/navigation';
+  import api from '$lib/services/api.js';
   
-  return {
-    subscribe,
-    nextStep: async (data) => {
-      update(state => {
-        state.data = { ...state.data, ...data };
-        state.step += 1;
-        return state;
-      });
+  async function handleUpload(files) {
+    try {
+      const result = await api.uploadBatch(files);
       
-      // Navigate based on step
-      const routes = ['/upload', '/configure', '/processing'];
-      await goto(routes[state.step - 1]);
-    },
-    reset: () => set({ step: 1, data: {} })
-  };
-}
-
-export const workflow = createWorkflowStore();
+      if (result.success) {
+        // Navigate to processing page with task ID
+        await goto(`/processing?taskId=${result.taskId}`);
+      }
+    } catch (error) {
+      // Handle error
+    }
+  }
+</script>
 ```
 
 ## API Reference
@@ -529,5 +610,5 @@ export async function load({ params }) {
 
 - [SvelteKit Structure](./svelte-structure.md) - Application architecture
 - [State Management](./state-management.md) - Managing application state
-- [API Integration](../api/api-integration.md) - Backend communication
-- [Testing Routes](../../04-testing/route-testing.md) - Testing strategies
+- [API Integration](../integrations/backend-api.md) - Backend communication
+- [Testing Guide](../../04-testing/overview.md) - Testing strategies

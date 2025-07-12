@@ -48,28 +48,30 @@ flowchart TD
         G[API Responses] --> H[Store Mutations]
         H --> A
         
-        A --> I[Derived Stores]
+        A --> I[Component Reactivity]
         I --> B
     end
     
-    subgraph "Store Types"
-        J[Auth Store]
-        K[Toast Store]
-        L[Upload Store]
-        M[Processing Store]
+    subgraph "Available Stores"
+        J[Auth Store - API Key Management]
+        K[Toast Store - Notifications]
+    end
+    
+    subgraph "Component-Level State"
+        L[Upload State - in upload/+page.svelte]
+        M[Processing State - in processing/+page.svelte]
     end
 ```
 
 ### Store Architecture
 
 ```
-src/lib/stores/
-├── auth.js          # Authentication state
-├── toast.js         # Toast notifications
-├── upload.js        # Upload workflow state
-├── processing.js    # Processing status
-└── index.js         # Store exports
+frontend-svelte/src/lib/stores/
+├── auth.js          # Authentication state (API key management)
+└── toast.js         # Toast notifications system
 ```
+
+**Note**: Additional application state is managed at the component level using Svelte's built-in reactivity. Complex states like upload workflow and processing status are handled within their respective page components rather than global stores.
 
 ## Implementation
 
@@ -186,145 +188,124 @@ function createToastStore() {
 export const toast = createToastStore();
 ```
 
-#### Upload State Management
+#### Component-Level State Management
 
-Managing complex upload workflow:
+Instead of global stores for every feature, the application uses component-level state for features like upload and processing. This approach keeps state close to where it's used and simplifies the architecture.
+
+Example of managing upload state within a component:
 
 ```javascript
-// File: src/lib/stores/upload.js
-import { writable, derived } from 'svelte/store';
-
-function createUploadStore() {
-  const files = writable([]);
-  const settings = writable({
+// Example pattern used in frontend-svelte/src/routes/upload/+page.svelte
+<script>
+  import { writable, derived } from 'svelte/store';
+  
+  // Local state for upload functionality
+  let files = [];
+  let uploadStatus = 'idle'; // idle, uploading, success, error
+  let settings = {
     faceLimit: 'auto',
     quality: 'high'
-  });
-  const status = writable('idle'); // idle, uploading, success, error
-  
-  // Derived store for validation
-  const isValid = derived(
-    files,
-    $files => $files.length > 0 && $files.length <= 10
-  );
-  
-  // Derived store for total size
-  const totalSize = derived(
-    files,
-    $files => $files.reduce((sum, file) => sum + file.size, 0)
-  );
-  
-  return {
-    files: {
-      subscribe: files.subscribe,
-      add: (newFiles) => {
-        files.update(current => [...current, ...newFiles]);
-      },
-      remove: (index) => {
-        files.update(current => current.filter((_, i) => i !== index));
-      },
-      clear: () => files.set([])
-    },
-    settings: {
-      subscribe: settings.subscribe,
-      update: (newSettings) => {
-        settings.update(current => ({ ...current, ...newSettings }));
-      }
-    },
-    status: {
-      subscribe: status.subscribe,
-      set: status.set
-    },
-    isValid,
-    totalSize
   };
-}
-
-export const uploadStore = createUploadStore();
+  
+  // Reactive statements for derived values
+  $: isValid = files.length > 0 && files.length <= 10;
+  $: totalSize = files.reduce((sum, file) => sum + file.size, 0);
+  $: totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+  
+  function addFiles(newFiles) {
+    files = [...files, ...newFiles];
+  }
+  
+  function removeFile(index) {
+    files = files.filter((_, i) => i !== index);
+  }
+  
+  async function handleUpload() {
+    uploadStatus = 'uploading';
+    try {
+      const result = await api.uploadBatch(files, settings.faceLimit);
+      uploadStatus = 'success';
+      // Navigate to processing
+    } catch (error) {
+      uploadStatus = 'error';
+    }
+  }
+</script>
 ```
 
-#### Processing State with SSE
+#### Real-time Updates with Server-Sent Events
 
-Real-time state updates via Server-Sent Events:
+The processing page manages SSE connections for real-time updates:
 
 ```javascript
-// File: src/lib/stores/processing.js
-import { writable, readable } from 'svelte/store';
-import api from '$lib/services/api.js';
-
-export function createProcessingStore(taskId) {
-  const progress = writable({
-    percentage: 0,
-    stage: 'initializing',
-    message: ''
-  });
+// Example pattern used in frontend-svelte/src/routes/processing/+page.svelte
+<script>
+  import { onMount, onDestroy } from 'svelte';
+  import api from '$lib/services/api.js';
   
-  const files = writable([]);
-  const errors = writable([]);
+  export let data; // Contains taskId from +page.js
   
-  // Readable store for SSE connection
-  const connection = readable(null, (set) => {
-    const eventSource = api.createProgressStream(taskId, {
-      onProgress: (data) => {
-        progress.set({
-          percentage: data.progress || 0,
-          stage: data.stage,
-          message: data.message
-        });
+  let progress = 0;
+  let stage = 'initializing';
+  let eventSource;
+  
+  onMount(() => {
+    // Create SSE connection through API service
+    eventSource = api.createProgressStream(data.taskId, {
+      onProgress: (event) => {
+        progress = event.progress || 0;
+        stage = event.stage;
       },
-      onFileUpdate: (file) => {
-        files.update(current => {
-          const index = current.findIndex(f => f.id === file.id);
-          if (index >= 0) {
-            current[index] = file;
-          } else {
-            current.push(file);
-          }
-          return [...current];
-        });
+      onComplete: (result) => {
+        // Handle completion
       },
       onError: (error) => {
-        errors.update(current => [...current, error]);
+        // Handle error
       }
     });
-    
-    set(eventSource);
-    
-    // Cleanup on unsubscribe
-    return () => {
-      eventSource.close();
-    };
   });
   
-  return {
-    progress,
-    files,
-    errors,
-    connection
-  };
-}
+  onDestroy(() => {
+    // Clean up SSE connection
+    if (eventSource) {
+      eventSource.close();
+    }
+  });
+</script>
 ```
 
 ### Reactive Patterns
 
 #### Component Reactivity
 
-Using reactive statements in components:
+Using reactive statements in components with available stores:
 
 ```svelte
-<!-- File: src/routes/upload/+page.svelte -->
+<!-- Example pattern demonstrating reactivity with auth and toast stores -->
 <script>
-  import { uploadStore } from '$lib/stores/upload.js';
+  import { apiKey } from '$lib/stores/auth.js';
   import { toast } from '$lib/stores/toast.js';
   
-  // Subscribe to store with $ prefix
-  $: fileCount = $uploadStore.files.length;
-  $: totalSizeMB = ($uploadStore.totalSize / 1024 / 1024).toFixed(2);
-  $: canUpload = $uploadStore.isValid && $uploadStore.status !== 'uploading';
+  // Local component state
+  let files = [];
+  let uploadStatus = 'idle';
+  
+  // Subscribe to auth store with $ prefix
+  $: hasAuth = !!$apiKey;
+  
+  // Reactive derived values
+  $: fileCount = files.length;
+  $: totalSize = files.reduce((sum, file) => sum + file.size, 0);
+  $: totalSizeMB = (totalSize / 1024 / 1024).toFixed(2);
+  $: canUpload = hasAuth && files.length > 0 && uploadStatus !== 'uploading';
   
   // Reactive side effects
   $: if (fileCount > 10) {
     toast.warning('Maximum 10 files allowed');
+  }
+  
+  $: if (!hasAuth) {
+    toast.error('API key not configured');
   }
   
   // Reactive class bindings
@@ -345,25 +326,33 @@ Using reactive statements in components:
 
 #### Store Composition
 
-Combining multiple stores:
+Since the application uses minimal global stores, composition typically happens at the component level:
 
 ```javascript
-// File: src/lib/stores/app.js
-import { derived } from 'svelte/store';
-import { apiKey } from './auth.js';
-import { uploadStore } from './upload.js';
-
-// Derive app readiness from multiple stores
-export const appReady = derived(
-  [apiKey, uploadStore.files],
-  ([$apiKey, $files]) => {
-    return {
-      hasAuth: !!$apiKey,
-      hasFiles: $files.length > 0,
-      canProceed: !!$apiKey && $files.length > 0
-    };
-  }
-);
+// Example of combining stores with component state
+<script>
+  import { derived } from 'svelte/store';
+  import { apiKey } from '$lib/stores/auth.js';
+  
+  // Component state
+  let files = [];
+  let isProcessing = false;
+  
+  // Create a derived value from store and local state
+  const canProceed = derived(
+    apiKey,
+    $apiKey => {
+      return {
+        hasAuth: !!$apiKey,
+        hasFiles: files.length > 0,
+        isReady: !!$apiKey && files.length > 0 && !isProcessing
+      };
+    }
+  );
+  
+  // Use in template
+  $: readyState = $canProceed;
+</script>
 ```
 
 ### Context API Usage
@@ -439,85 +428,89 @@ Passing stores through context:
 {/if}
 ```
 
-### Complex State Management
+### Complex State Management Pattern
+
+For complex features, the application follows a pattern of encapsulating state within components or creating local stores when needed:
 
 ```javascript
-// File: src/lib/stores/model-generation.js
-import { writable, derived, get } from 'svelte/store';
-
-export function createModelGenerationStore() {
-  // Individual state slices
-  const images = writable([]);
-  const settings = writable({
-    quality: 'high',
-    format: 'glb',
-    optimization: true
-  });
-  const status = writable('idle');
-  const results = writable(null);
+// Example pattern for managing complex state in a component
+<script>
+  import { writable, derived, get } from 'svelte/store';
+  import api from '$lib/services/api.js';
+  import { toast } from '$lib/stores/toast.js';
   
-  // Computed values
-  const canGenerate = derived(
-    [images, status],
-    ([$images, $status]) => 
-      $images.length > 0 && $status === 'idle'
-  );
-  
-  const progress = writable(0);
-  
-  // Actions
-  async function generate() {
-    status.set('generating');
-    progress.set(0);
-    
-    try {
-      const currentImages = get(images);
-      const currentSettings = get(settings);
-      
-      // Simulate progress
-      const interval = setInterval(() => {
-        progress.update(p => Math.min(p + 10, 90));
-      }, 1000);
-      
-      // API call
-      const result = await api.generateModel(
-        currentImages,
-        currentSettings
-      );
-      
-      clearInterval(interval);
-      progress.set(100);
-      results.set(result);
-      status.set('complete');
-    } catch (error) {
-      status.set('error');
-      throw error;
-    }
-  }
-  
-  function reset() {
-    images.set([]);
-    settings.set({
-      quality: 'high',
-      format: 'glb',
-      optimization: true
+  // Create local stores for complex state
+  const createLocalStore = () => {
+    const files = writable([]);
+    const settings = writable({
+      faceLimit: 'auto',
+      quality: 'high'
     });
-    status.set('idle');
-    results.set(null);
-    progress.set(0);
-  }
-  
-  return {
-    images,
-    settings,
-    status,
-    results,
-    progress,
-    canGenerate,
-    generate,
-    reset
+    const status = writable('idle');
+    const results = writable(null);
+    const progress = writable(0);
+    
+    // Derived stores for computed values
+    const canProcess = derived(
+      [files, status],
+      ([$files, $status]) => 
+        $files.length > 0 && $status === 'idle'
+    );
+    
+    // Actions
+    async function process() {
+      status.set('processing');
+      progress.set(0);
+      
+      try {
+        const currentFiles = get(files);
+        const currentSettings = get(settings);
+        
+        // Upload and process
+        const result = await api.uploadBatch(
+          currentFiles,
+          currentSettings.faceLimit
+        );
+        
+        results.set(result);
+        status.set('complete');
+        toast.success('Processing complete!');
+      } catch (error) {
+        status.set('error');
+        toast.error(error.message);
+        throw error;
+      }
+    }
+    
+    function reset() {
+      files.set([]);
+      settings.set({
+        faceLimit: 'auto',
+        quality: 'high'
+      });
+      status.set('idle');
+      results.set(null);
+      progress.set(0);
+    }
+    
+    return {
+      files,
+      settings,
+      status,
+      results,
+      progress,
+      canProcess,
+      process,
+      reset
+    };
   };
-}
+  
+  // Initialize local store
+  const store = createLocalStore();
+  
+  // Destructure for easier access
+  const { files, settings, status, canProcess, process, reset } = store;
+</script>
 ```
 
 ### Store Persistence
@@ -699,5 +692,5 @@ const doubled = derived(
 
 - [SvelteKit Structure](./svelte-structure.md) - Application architecture
 - [Routing Patterns](./routing-patterns.md) - Navigation and routing
-- [Component Patterns](../components/patterns.md) - Component design
-- [Testing Stores](../../04-testing/store-testing.md) - Testing strategies
+- [Component Library](../components/overview.md) - Component documentation
+- [Testing Guide](../../04-testing/overview.md) - Testing strategies

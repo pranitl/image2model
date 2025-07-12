@@ -275,12 +275,12 @@ export function scrollReveal(node, options = {}) {
 ### Using Load Functions
 
 ```javascript
-// File: src/routes/+layout.server.js
-export async function load({ cookies }) {
-  const apiKey = process.env.PUBLIC_API_KEY;
-  
+// File: frontend-svelte/src/routes/+layout.server.js
+export function load({ url, locals }) {
+  // API key is provided via locals from hooks.server.js
   return {
-    apiKey
+    url: url.pathname,
+    apiKey: locals.apiKey
   };
 }
 ```
@@ -401,5 +401,5 @@ if (browser) {
 
 - [Routing Patterns](./routing-patterns.md) - Deep dive into routing
 - [State Management](./state-management.md) - Store patterns and data flow
-- [Component Library](../components/README.md) - Component documentation
-- [Testing Guide](../../04-testing/frontend-testing.md) - Testing strategies
+- [Component Library](../components/overview.md) - Component documentation
+- [Testing Guide](../../04-testing/overview.md) - Testing strategies
