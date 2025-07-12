@@ -10,12 +10,11 @@ All errors follow this standard format:
 
 ```json
 {
-  "detail": {
-    "code": "ERROR_CODE",
-    "message": "Human-readable error message",
-    "details": {
-      "additional": "context-specific information"
-    }
+  "error": true,
+  "error_code": "ERROR_CODE",
+  "message": "Human-readable error message",
+  "details": {
+    "additional": "context-specific information"
   }
 }
 ```
@@ -25,15 +24,14 @@ All errors follow this standard format:
 ### Authentication Errors (4xx)
 
 #### AUTHENTICATION_REQUIRED
-- **HTTP Status**: 401 Unauthorized
+- **HTTP Status**: 500 Internal Server Error
 - **Description**: Request requires authentication but no API key provided
 - **Example**:
 ```json
 {
-  "detail": {
-    "code": "AUTHENTICATION_REQUIRED",
-    "message": "API key required"
-  }
+  "error": true,
+  "error_code": "AUTHENTICATION_REQUIRED",
+  "message": "API key not configured"
 }
 ```
 
@@ -43,10 +41,9 @@ All errors follow this standard format:
 - **Example**:
 ```json
 {
-  "detail": {
-    "code": "INVALID_API_KEY",
-    "message": "Invalid API key"
-  }
+  "error": true,
+  "error_code": "INVALID_API_KEY",
+  "message": "Invalid API key"
 }
 ```
 
@@ -56,10 +53,9 @@ All errors follow this standard format:
 - **Example**:
 ```json
 {
-  "detail": {
-    "code": "INSUFFICIENT_PERMISSIONS",
-    "message": "Admin access required"
-  }
+  "error": true,
+  "error_code": "INSUFFICIENT_PERMISSIONS",
+  "message": "Invalid admin API key"
 }
 ```
 
@@ -71,13 +67,12 @@ All errors follow this standard format:
 - **Example**:
 ```json
 {
-  "detail": {
-    "code": "VALIDATION_ERROR",
-    "message": "Invalid file format",
-    "details": {
-      "file": "image.bmp",
-      "allowed_formats": ["jpg", "jpeg", "png"]
-    }
+  "error": true,
+  "error_code": "VALIDATION_ERROR",
+  "message": "Invalid file format",
+  "details": {
+    "file": "image.bmp",
+    "allowed_formats": ["jpg", "jpeg", "png"]
   }
 }
 ```
@@ -88,13 +83,12 @@ All errors follow this standard format:
 - **Example**:
 ```json
 {
-  "detail": {
-    "code": "FILE_TOO_LARGE",
-    "message": "File size exceeds 10MB limit",
-    "details": {
-      "file_size": 15728640,
-      "max_size": 10485760
-    }
+  "error": true,
+  "error_code": "FILE_TOO_LARGE",
+  "message": "File size exceeds 10MB limit",
+  "details": {
+    "file_size": 15728640,
+    "max_size": 10485760
   }
 }
 ```
@@ -268,14 +262,103 @@ All errors follow this standard format:
 - **Example**:
 ```json
 {
-  "detail": {
-    "code": "STORAGE_ERROR",
-    "message": "Insufficient storage space",
-    "details": {
-      "required": 1048576,
-      "available": 524288
-    }
+  "error": true,
+  "error_code": "STORAGE_ERROR",
+  "message": "Insufficient storage space",
+  "details": {
+    "required": 1048576,
+    "available": 524288
   }
+}
+```
+
+### Custom Application Errors (5xx)
+
+#### APIEXCEPTION
+- **HTTP Status**: 500 Internal Server Error
+- **Description**: General API-related errors
+- **Example**:
+```json
+{
+  "error": true,
+  "error_code": "APIEXCEPTION",
+  "message": "API operation failed"
+}
+```
+
+#### FALAPIEXCEPTION
+- **HTTP Status**: 502 Bad Gateway
+- **Description**: FAL.AI API service errors
+- **Example**:
+```json
+{
+  "error": true,
+  "error_code": "FALAPIEXCEPTION",
+  "message": "External FAL.AI service error",
+  "details": {
+    "service": "fal.ai",
+    "error": "Model generation failed"
+  }
+}
+```
+
+#### DATABASEEXCEPTION
+- **HTTP Status**: 500 Internal Server Error
+- **Description**: Database operation failures
+- **Example**:
+```json
+{
+  "error": true,
+  "error_code": "DATABASEEXCEPTION",
+  "message": "Database operation failed"
+}
+```
+
+#### PROCESSINGEXCEPTION
+- **HTTP Status**: 500 Internal Server Error
+- **Description**: Image or model processing failures
+- **Example**:
+```json
+{
+  "error": true,
+  "error_code": "PROCESSINGEXCEPTION",
+  "message": "Failed to process image"
+}
+```
+
+#### NETWORKEXCEPTION
+- **HTTP Status**: 503 Service Unavailable
+- **Description**: Network-related errors
+- **Example**:
+```json
+{
+  "error": true,
+  "error_code": "NETWORKEXCEPTION",
+  "message": "Network connectivity issue"
+}
+```
+
+#### MODELEXCEPTION
+- **HTTP Status**: 500 Internal Server Error
+- **Description**: Model operation failures
+- **Example**:
+```json
+{
+  "error": true,
+  "error_code": "MODELEXCEPTION",
+  "message": "Model operation failed"
+}
+```
+
+#### CONFIGURATIONEXCEPTION
+- **HTTP Status**: 500 Internal Server Error
+- **Description**: Configuration-related errors
+- **Example**:
+```json
+{
+  "error": true,
+  "error_code": "CONFIGURATIONEXCEPTION",
+  "message": "Invalid configuration"
 }
 ```
 

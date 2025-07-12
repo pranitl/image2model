@@ -59,17 +59,21 @@ async def get_system_info():
 Some endpoints support optional authentication for enhanced features:
 
 ```python
-from app.middleware.auth import get_optional_api_key
+from app.middleware.auth import OptionalAuth
 
-@router.get("/download/{job_id}/{file_id}/model")
+@router.get("/download/{job_id}/{filename}")
 async def download_model(
     job_id: str,
-    file_id: str,
-    api_key: Optional[str] = Depends(get_optional_api_key)
+    filename: str,
+    api_key: Optional[str] = OptionalAuth
 ):
-    # If api_key provided, verify ownership
+    # If api_key provided, verify ownership and access control
+    # If no api_key, provide limited functionality
     pass
 ```
+
+**Endpoints with Optional Authentication:**
+- `/api/v1/download/{job_id}/{filename}` - Enhanced access control with API key
 
 ## Session Management
 
@@ -101,14 +105,16 @@ sequenceDiagram
 
 ## Development Mode
 
-In development mode (when no API_KEY is configured):
-- Authentication is bypassed
-- All endpoints are accessible
+In development mode (when no API_KEY is configured and ENVIRONMENT != "production"):
+- Authentication is bypassed for regular endpoints
+- All endpoints are accessible without API keys
+- Admin endpoints still require ADMIN_API_KEY
 - Useful for local development and testing
 
 ```python
-# Enable dev mode by not setting API_KEY
-# Or set API_KEY to empty string
+# Enable dev mode by not setting API_KEY in non-production environment
+export ENVIRONMENT="development"
+# API_KEY not set or empty
 export API_KEY=""
 ```
 
@@ -134,23 +140,21 @@ export API_KEY=""
 
 ```json
 {
-  "detail": {
-    "code": "AUTHENTICATION_REQUIRED",
-    "message": "API key required"
-  }
+  "error": true,
+  "error_code": "AUTHENTICATION_REQUIRED",
+  "message": "API key required"
 }
 ```
 
-**HTTP Status**: 401 Unauthorized
+**HTTP Status**: 500 Internal Server Error (if API key not configured in production)
 
 ### Invalid API Key
 
 ```json
 {
-  "detail": {
-    "code": "INVALID_API_KEY",
-    "message": "Invalid API key"
-  }
+  "error": true,
+  "error_code": "INVALID_API_KEY",
+  "message": "Invalid API key"
 }
 ```
 
@@ -160,10 +164,9 @@ export API_KEY=""
 
 ```json
 {
-  "detail": {
-    "code": "INSUFFICIENT_PERMISSIONS",
-    "message": "Admin access required"
-  }
+  "error": true,
+  "error_code": "INSUFFICIENT_PERMISSIONS",
+  "message": "Invalid admin API key"
 }
 ```
 

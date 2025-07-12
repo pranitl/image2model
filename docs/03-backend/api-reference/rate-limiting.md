@@ -10,18 +10,22 @@ The Image2Model API implements rate limiting to ensure fair usage and protect sy
 
 | Limit Type | Value | Window | Scope |
 |------------|-------|--------|-------|
-| Per Minute | 60 requests | 1 minute | Per API Key |
-| Per Hour | 1000 requests | 1 hour | Per API Key |
+| Per Minute | 60 requests | 1 minute | Per IP Address |
+| Per Hour | 1000 requests | 1 hour | Per IP Address |
 
 ### Endpoint-Specific Limits
 
-Some endpoints have custom rate limits:
+Rate limits are configured via environment variables and applied via decorators:
 
-| Endpoint | Limit | Window | Notes |
-|----------|-------|--------|-------|
-| `/upload/batch` | 10 requests | 1 minute | Large file processing |
-| `/admin/*` | 30 requests | 1 minute | Admin operations |
-| `/logs` | 20 requests | 1 minute | Log retrieval |
+| Configuration | Default | Description |
+|---------------|---------|-------------|
+| `RATE_LIMIT_PER_MINUTE` | 60 | Default requests per minute |
+| `RATE_LIMIT_PER_HOUR` | 1000 | Default requests per hour |
+
+**Current Implementation**: 
+- Upload endpoints use `upload_rate_limit` decorator
+- No endpoint-specific custom limits currently implemented
+- All endpoints inherit default rate limits from settings
 
 ## Rate Limit Headers
 
@@ -41,36 +45,40 @@ X-RateLimit-Reset: 1710500000
 
 ## Implementation Details
 
-### SlowAPI Configuration
+### SlowAPI Implementation
 
-The API uses SlowAPI (Starlette-based rate limiter):
+The API uses SlowAPI (FastAPI-compatible rate limiter):
 
 ```python
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-limiter = Limiter(
-    key_func=get_remote_address,
-    default_limits=["60/minute", "1000/hour"],
-    storage_uri="redis://localhost:6379"
-)
+# Create limiter instance
+limiter = Limiter(key_func=get_remote_address)
+
+# Applied to FastAPI app
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 ```
 
 ### Rate Limit Key
 
 Rate limits are applied based on:
-1. API Key (if authenticated)
-2. IP Address (fallback)
+1. IP Address (primary via SlowAPI)
+2. Per-endpoint limits via decorators
+
+**Note**: The current implementation uses IP-based limiting via SlowAPI's `get_remote_address`. API key-based limiting is not currently implemented but would be a future enhancement.
 
 ```python
-def get_rate_limit_key(request: Request) -> str:
-    # Try to get API key first
-    auth = request.headers.get("Authorization")
-    if auth and auth.startswith("Bearer "):
-        return f"api_key:{auth[7:]}"
-    
-    # Fall back to IP address
-    return get_remote_address(request)
+from slowapi.util import get_remote_address
+
+# Current implementation uses IP address
+limiter = Limiter(key_func=get_remote_address)
+
+# Applied via decorators
+@limiter.limit(f"{settings.RATE_LIMIT_PER_MINUTE}/minute")
+async def endpoint():
+    pass
 ```
 
 ## Handling Rate Limits
@@ -84,17 +92,15 @@ HTTP/1.1 429 Too Many Requests
 X-RateLimit-Limit: 60
 X-RateLimit-Remaining: 0
 X-RateLimit-Reset: 1710500000
-Retry-After: 45
+Retry-After: 60
 
 {
-  "detail": {
-    "code": "RATE_LIMIT_EXCEEDED",
-    "message": "Rate limit exceeded",
-    "details": {
-      "limit": 60,
-      "window": "1 minute",
-      "retry_after": 45
-    }
+  "error": true,
+  "error_code": "RATE_LIMIT_EXCEEDED", 
+  "message": "Rate limit exceeded: 60 per 1 minute",
+  "details": {
+    "limit": "60 per 1 minute",
+    "retry_after": 60
   }
 }
 ```
