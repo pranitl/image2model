@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Image2Model backend uses Celery for distributed task processing, enabling asynchronous 3D model generation and system maintenance tasks. This document covers the task architecture, worker configuration, and best practices.
+The Image2Model backend uses Celery for distributed task processing, enabling asynchronous 3D model generation and system maintenance tasks. This document accurately reflects the current implementation as validated against the actual codebase.
 
 ## Task Architecture
 
@@ -45,801 +45,386 @@ graph TB
 
 ### Application Setup
 
+The Celery application is configured in `app/core/celery_app.py`:
+
 ```python
 from celery import Celery
-from celery.signals import (
-    task_prerun, task_postrun, task_failure,
-    task_retry, worker_ready, worker_shutting_down
-)
+from celery.signals import task_prerun, task_postrun, task_failure, task_retry, worker_ready
+from celery.schedules import crontab
 from app.core.config import settings
-import logging
+from app.core.logging_config import setup_logging, set_correlation_id, get_task_logger
 
 # Create Celery application
-celery_app = Celery('image2model')
+celery_app = Celery(
+    "ai_3d_generator",
+    broker=settings.CELERY_BROKER_URL,
+    backend=settings.CELERY_RESULT_BACKEND,
+    include=["app.workers.tasks", "app.workers.cleanup"]
+)
 
 # Configure Celery
 celery_app.conf.update(
-    # Broker settings
-    broker_url=f'redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/0',
-    result_backend=f'redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/0',
+    # Serialization settings
+    task_serializer="json",
+    accept_content=["json"],
+    result_serializer="json",
     
-    # Task settings
-    task_serializer='json',
-    accept_content=['json'],
-    result_serializer='json',
-    timezone='UTC',
+    # Timezone settings
+    timezone="UTC",
     enable_utc=True,
     
-    # Worker settings
-    worker_prefetch_multiplier=1,  # Fair task distribution
-    worker_max_tasks_per_child=50,  # Prevent memory leaks
-    worker_disable_rate_limits=False,
+    # Task tracking and state
+    task_track_started=True,
+    task_send_sent_event=True,
     
-    # Task execution settings
-    task_acks_late=True,
-    task_reject_on_worker_lost=True,
-    task_acks_on_failure_or_timeout=True,
+    # Task time limits (30 minutes hard, 25 minutes soft)
+    task_time_limit=30 * 60,  # 30 minutes
+    task_soft_time_limit=25 * 60,  # 25 minutes
     
-    # Time limits
-    task_soft_time_limit=1500,  # 25 minutes
-    task_time_limit=1800,  # 30 minutes
-    
-    # Result backend settings
+    # Result expiration
     result_expires=3600,  # 1 hour
-    result_persistent=True,
+    
+    # Worker settings optimized for parallel processing
+    worker_prefetch_multiplier=1,  # Disable prefetching for fair distribution
+    worker_max_tasks_per_child=50,  # Restart workers more frequently to avoid memory leaks
+    task_acks_on_failure_or_timeout=True,  # Acknowledge failed tasks
     
     # Task routing
     task_routes={
-        'tasks.process_batch': {'queue': 'batch_processing'},
-        'tasks.generate_single_model': {'queue': 'model_generation'},
-        'tasks.cleanup_old_files': {'queue': 'maintenance'},
-        'tasks.health_check': {'queue': 'priority'}
+        'app.workers.tasks.process_batch': {'queue': 'batch_processing'},
+        'app.workers.tasks.process_file_in_batch': {'queue': 'model_generation'},
+        'app.workers.tasks.generate_3d_model_task': {'queue': 'model_generation'},
+        'app.workers.cleanup.cleanup_old_files': {'queue': 'maintenance'},
+        'app.workers.cleanup.get_disk_usage': {'queue': 'maintenance'},
+        'app.workers.cleanup.cleanup_job_files': {'queue': 'maintenance'},
+        'app.workers.tasks.health_check_task': {'queue': 'priority'},
     },
     
     # Beat schedule for periodic tasks
     beat_schedule={
         'cleanup-old-files': {
-            'task': 'tasks.cleanup_old_files',
-            'schedule': 3600.0,  # Every hour
-            'options': {'queue': 'maintenance'}
+            'task': 'app.workers.cleanup.cleanup_old_files',
+            'schedule': crontab(hour=2, minute=0),  # Run daily at 2 AM
         },
-        'system-health-check': {
-            'task': 'tasks.system_health_check',
-            'schedule': 600.0,  # Every 10 minutes
-            'options': {'queue': 'priority'}
-        }
-    }
+        'disk-usage-monitoring': {
+            'task': 'app.workers.cleanup.get_disk_usage',
+            'schedule': crontab(minute=0),  # Run hourly
+        },
+    },
+    
+    # Error handling
+    task_reject_on_worker_lost=True,
+    task_acks_late=True,
+    
+    # Connection pool settings for Redis
+    broker_pool_limit=10,
+    result_backend_pool_limit=10,
+    broker_connection_retry_on_startup=True,
+    
+    # Monitoring
+    worker_send_task_events=True,
+    task_send_events=True,
 )
 ```
 
 ### Signal Handlers
 
+The implementation includes basic signal handlers for logging and task lifecycle management:
+
 ```python
+@worker_ready.connect
+def setup_worker_logging(sender=None, **kwargs):
+    """Set up logging when worker starts."""
+    setup_logging()
+    logger = get_task_logger('worker', 'startup')
+    logger.info(f"Worker ready: {sender}")
+
 @task_prerun.connect
-def task_prerun_handler(sender=None, task_id=None, task=None, **kwargs):
-    """Log task start"""
-    logger.info(
-        "Task starting",
-        task_name=task.name,
-        task_id=task_id,
-        args=kwargs.get('args'),
-        kwargs=kwargs.get('kwargs')
-    )
-    
-    # Set task start time for metrics
-    task.request.start_time = time.time()
+def task_prerun_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, **kwds):
+    """Handle task start - set up logging context."""
+    correlation_id = set_correlation_id()
+    logger = get_task_logger(task.name, task_id)
+    logger.info(f"Starting task {task.name} with ID {task_id} (correlation: {correlation_id})")
 
 @task_postrun.connect
-def task_postrun_handler(sender=None, task_id=None, task=None, **kwargs):
-    """Log task completion and collect metrics"""
-    duration = time.time() - getattr(task.request, 'start_time', time.time())
-    
-    logger.info(
-        "Task completed",
-        task_name=task.name,
-        task_id=task_id,
-        duration=duration,
-        retval=kwargs.get('retval')
-    )
-    
-    # Update metrics
-    task_duration.labels(
-        task_name=task.name,
-        status='success'
-    ).observe(duration)
+def task_postrun_handler(sender=None, task_id=None, task=None, args=None, kwargs=None, 
+                        retval=None, state=None, **kwds):
+    """Handle task completion."""
+    logger = get_task_logger(task.name, task_id)
+    logger.info(f"Task {task.name} completed with state: {state}")
 
 @task_failure.connect
-def task_failure_handler(sender=None, task_id=None, exception=None, **kwargs):
-    """Handle task failures"""
+def task_failure_handler(sender=None, task_id=None, exception=None, traceback=None, einfo=None, **kwds):
+    """Handle task failures with detailed logging."""
+    logger = get_task_logger(sender.name if sender else 'unknown', task_id)
     logger.error(
-        "Task failed",
-        task_name=sender.name,
-        task_id=task_id,
-        exception=str(exception),
-        traceback=kwargs.get('traceback')
+        f"Task {sender.name if sender else 'unknown'} failed with exception: {exception}",
+        exc_info=einfo if einfo else True,
+        extra={
+            'task_id': task_id,
+            'exception_type': type(exception).__name__ if exception else 'Unknown',
+            'exception_message': str(exception) if exception else 'No message',
+            'traceback': traceback
+        }
     )
-    
-    # Update failure metrics
-    task_failures.labels(
-        task_name=sender.name,
-        exception_type=type(exception).__name__
-    ).inc()
 
 @task_retry.connect
-def task_retry_handler(sender=None, task_id=None, reason=None, **kwargs):
-    """Log task retries"""
-    logger.warning(
-        "Task retry",
-        task_name=sender.name,
-        task_id=task_id,
-        reason=str(reason),
-        retry_count=kwargs.get('request').retries
-    )
+def task_retry_handler(sender=None, task_id=None, reason=None, einfo=None, **kwds):
+    """Handle task retries."""
+    logger = get_task_logger(sender.name if sender else 'unknown', task_id)
+    logger.warning(f"Task {sender.name if sender else 'unknown'} retry: {reason}")
 ```
 
 ## Task Definitions
 
-### Batch Processing Tasks
+### Core Tasks (Implemented)
+
+The following tasks are currently implemented in the system:
+
+#### Model Generation Tasks (`app/workers/tasks.py`)
 
 ```python
-from celery import group, chord
-from typing import List, Dict
-import asyncio
-
-@celery_app.task(
-    bind=True,
-    name='tasks.process_batch',
-    max_retries=3,
-    default_retry_delay=60
-)
-def process_batch(
-    self,
-    job_id: str,
-    files: List[Dict],
-    settings: Dict
-) -> Dict:
-    """Orchestrate batch processing using Celery chord"""
+@celery_app.task(bind=True)
+def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, quality: str = "medium", texture_enabled: bool = True):
+    """
+    Background task to generate 3D model from image using FAL.AI Tripo3D.
     
-    try:
-        logger.info(f"Starting batch processing for job {job_id}")
+    Args:
+        file_id: Unique file identifier
+        file_path: Path to the input image file
+        job_id: Unique job identifier
+        quality: Quality setting (low, medium, high)
+        texture_enabled: Whether to enable texture generation
         
-        # Initialize progress tracking
-        progress_tracker = ProgressTracker(redis_client, job_id)
-        progress_tracker.initialize_batch(len(files))
-        
-        # Create tasks for each file
-        file_tasks = []
-        for file_info in files:
-            task = generate_single_model.s(
-                job_id=job_id,
-                file_info=file_info,
-                settings=settings
-            )
-            file_tasks.append(task)
-        
-        # Use chord for parallel processing with callback
-        callback = finalize_batch.s(job_id=job_id)
-        job = chord(file_tasks)(callback)
-        
-        return {
-            "status": "processing",
-            "job_id": job_id,
-            "chord_id": job.id,
-            "total_files": len(files)
-        }
-        
-    except Exception as exc:
-        logger.error(f"Batch processing failed: {exc}")
-        self.retry(exc=exc)
-
-@celery_app.task(
-    bind=True,
-    name='tasks.generate_single_model',
-    max_retries=3,
-    autoretry_for=(NetworkError, FALAPIException),
-    retry_backoff=True,
-    retry_backoff_max=600
-)
-def generate_single_model(
-    self,
-    job_id: str,
-    file_info: Dict,
-    settings: Dict
-) -> Dict:
-    """Generate 3D model for a single image"""
-    
-    file_id = file_info['file_id']
-    
-    try:
-        # Update progress
-        progress_tracker = ProgressTracker(redis_client, job_id)
-        progress_tracker.update_file_status(file_id, "processing")
-        
-        # Initialize FAL client
-        fal_client = FalAIClient(settings['fal_api_key'])
-        
-        # Create progress callback
-        def progress_callback(update):
-            # Run async function in sync context
-            asyncio.run(
-                progress_tracker.update_progress(file_id, update)
-            )
-        
-        # Generate model
-        result = asyncio.run(
-            fal_client.generate_model(
-                image_url=file_info['url'],
-                face_limit=settings.get('face_limit', 50000),
-                progress_callback=progress_callback
-            )
-        )
-        
-        # Store result
-        job_store.store_result(job_id, file_id, {
-            "status": "completed",
-            "model_url": result.model_url,
-            "task_id": result.task_id,
-            "processing_time": result.processing_time,
-            "completed_at": datetime.utcnow().isoformat()
-        })
-        
-        # Update progress
-        progress_tracker.update_file_status(file_id, "completed")
-        
-        return {
-            "file_id": file_id,
-            "status": "completed",
-            "model_url": result.model_url
-        }
-        
-    except RateLimitException as exc:
-        # Retry with delay from rate limit
-        raise self.retry(
-            exc=exc,
-            countdown=exc.retry_after or 60
-        )
-        
-    except AuthenticationException:
-        # Don't retry auth errors
-        progress_tracker.update_file_status(file_id, "failed")
-        raise
-        
-    except Exception as exc:
-        logger.error(f"Model generation failed for {file_id}: {exc}")
-        progress_tracker.update_file_status(file_id, "failed")
-        raise self.retry(exc=exc)
-
-@celery_app.task(name='tasks.finalize_batch')
-def finalize_batch(results: List[Dict], job_id: str) -> Dict:
-    """Finalize batch processing after all files complete"""
-    
-    logger.info(f"Finalizing batch {job_id}")
-    
-    # Count successes and failures
-    completed = sum(1 for r in results if r and r.get('status') == 'completed')
-    failed = len(results) - completed
-    
-    # Update job status
-    job_data = {
-        "status": "completed",
-        "completed_at": datetime.utcnow().isoformat(),
-        "total_files": len(results),
-        "completed_files": completed,
-        "failed_files": failed
-    }
-    
-    redis_client.setex(
-        f"job:{job_id}:status",
-        86400,  # 24 hours
-        json.dumps(job_data)
-    )
-    
-    # Send completion notification
-    notification = {
-        "type": "batch_completed",
-        "job_id": job_id,
-        "completed": completed,
-        "failed": failed
-    }
-    
-    redis_client.publish(
-        f"progress:{job_id}",
-        json.dumps(notification)
-    )
-    
-    return job_data
+    Returns:
+        Dict with job results
+    """
+    # Implementation handles progress tracking, FAL.AI integration,
+    # job store updates, and comprehensive error handling
 ```
-
-### Maintenance Tasks
 
 ```python
-@celery_app.task(name='tasks.cleanup_old_files')
-def cleanup_old_files(older_than_hours: int = 24) -> Dict:
-    """Clean up old uploaded files and results"""
-    
-    logger.info(f"Starting cleanup of files older than {older_than_hours} hours")
-    
-    cleanup_stats = {
-        "files_deleted": 0,
-        "space_freed_mb": 0,
-        "redis_keys_deleted": 0
-    }
-    
-    cutoff_time = datetime.utcnow() - timedelta(hours=older_than_hours)
-    
-    # Clean upload directory
-    upload_dir = Path(settings.UPLOAD_DIR)
-    for job_dir in upload_dir.iterdir():
-        if job_dir.is_dir():
-            # Check directory age
-            mtime = datetime.fromtimestamp(job_dir.stat().st_mtime)
-            
-            if mtime < cutoff_time:
-                # Calculate size before deletion
-                dir_size = sum(f.stat().st_size for f in job_dir.rglob('*') if f.is_file())
-                
-                # Delete directory
-                shutil.rmtree(job_dir)
-                
-                cleanup_stats["files_deleted"] += 1
-                cleanup_stats["space_freed_mb"] += dir_size / (1024 * 1024)
-    
-    # Clean Redis keys
-    pattern = "job:*"
-    cursor = 0
-    
-    while True:
-        cursor, keys = redis_client.scan(cursor, match=pattern, count=100)
-        
-        for key in keys:
-            # Check key age using TTL
-            ttl = redis_client.ttl(key)
-            
-            if ttl == -1:  # No expiration set
-                # Get creation time from key data
-                data = redis_client.get(key)
-                if data:
-                    try:
-                        job_data = json.loads(data)
-                        created = datetime.fromisoformat(job_data.get('created_at'))
-                        
-                        if created < cutoff_time:
-                            redis_client.delete(key)
-                            cleanup_stats["redis_keys_deleted"] += 1
-                    except:
-                        pass
-        
-        if cursor == 0:
-            break
-    
-    logger.info(f"Cleanup completed: {cleanup_stats}")
-    
-    # Update metrics
-    cleanup_files_total.inc(cleanup_stats["files_deleted"])
-    cleanup_space_freed.inc(cleanup_stats["space_freed_mb"])
-    
-    return cleanup_stats
-
-@celery_app.task(name='tasks.system_health_check')
-def system_health_check() -> Dict:
-    """Check system health and resources"""
-    
-    health_status = {
-        "timestamp": datetime.utcnow().isoformat(),
-        "status": "healthy",
-        "checks": {}
-    }
-    
-    # Check disk space
-    disk_usage = psutil.disk_usage('/')
-    health_status["checks"]["disk"] = {
-        "used_percent": disk_usage.percent,
-        "free_gb": disk_usage.free / (1024**3),
-        "status": "ok" if disk_usage.percent < 90 else "warning"
-    }
-    
-    # Check memory
-    memory = psutil.virtual_memory()
-    health_status["checks"]["memory"] = {
-        "used_percent": memory.percent,
-        "available_gb": memory.available / (1024**3),
-        "status": "ok" if memory.percent < 85 else "warning"
-    }
-    
-    # Check Redis
-    try:
-        redis_client.ping()
-        redis_info = redis_client.info()
-        health_status["checks"]["redis"] = {
-            "connected": True,
-            "used_memory_mb": redis_info['used_memory'] / (1024**2),
-            "connected_clients": redis_info['connected_clients'],
-            "status": "ok"
-        }
-    except Exception as e:
-        health_status["checks"]["redis"] = {
-            "connected": False,
-            "error": str(e),
-            "status": "error"
-        }
-        health_status["status"] = "degraded"
-    
-    # Check worker status
-    active_tasks = celery_app.control.inspect().active()
-    if active_tasks:
-        total_active = sum(len(tasks) for tasks in active_tasks.values())
-        health_status["checks"]["workers"] = {
-            "active_workers": len(active_tasks),
-            "active_tasks": total_active,
-            "status": "ok"
-        }
-    else:
-        health_status["checks"]["workers"] = {
-            "status": "error",
-            "message": "No active workers"
-        }
-        health_status["status"] = "critical"
-    
-    # Overall status
-    if any(check.get('status') == 'error' for check in health_status["checks"].values()):
-        health_status["status"] = "critical"
-    elif any(check.get('status') == 'warning' for check in health_status["checks"].values()):
-        health_status["status"] = "degraded"
-    
-    # Alert if critical
-    if health_status["status"] == "critical":
-        send_alert.delay(
-            level="critical",
-            message="System health check failed",
-            details=health_status
-        )
-    
-    return health_status
+@celery_app.task(bind=True)
+def process_file_in_batch(self, file_path: str, job_id: str, face_limit: Optional[int] = None, 
+                         file_index: int = 0, total_files: int = 1):
+    """
+    Process a single file as part of a batch operation.
+    Designed to run in parallel with other files from the same batch.
+    """
+    # Implementation uses FAL.AI client with progress tracking
 ```
-
-### Priority Tasks
 
 ```python
-@celery_app.task(
-    name='tasks.send_alert',
-    queue='priority',
-    priority=10  # High priority
-)
-def send_alert(level: str, message: str, details: Dict) -> None:
-    """Send critical alerts"""
-    
-    alert_data = {
-        "timestamp": datetime.utcnow().isoformat(),
-        "level": level,
-        "message": message,
-        "details": details
-    }
-    
-    # Log alert
-    if level == "critical":
-        logger.critical(message, extra=alert_data)
-    elif level == "warning":
-        logger.warning(message, extra=alert_data)
-    else:
-        logger.info(message, extra=alert_data)
-    
-    # Send to monitoring system
-    # In production, integrate with PagerDuty, Slack, etc.
-    if settings.ALERT_WEBHOOK_URL:
-        requests.post(
-            settings.ALERT_WEBHOOK_URL,
-            json=alert_data,
-            timeout=10
-        )
-
-@celery_app.task(
-    name='tasks.emergency_cleanup',
-    queue='priority',
-    priority=10
-)
-def emergency_cleanup() -> Dict:
-    """Emergency cleanup when disk space critical"""
-    
-    logger.warning("Starting emergency cleanup")
-    
-    # More aggressive cleanup
-    return cleanup_old_files(older_than_hours=1)
+@celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 60})
+def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional[int] = None):
+    """
+    Enhanced batch processing task that processes files in parallel across multiple workers.
+    Uses Celery's chord primitive for parallel execution with callback.
+    """
+    # Implementation creates parallel tasks and uses chord for coordination
 ```
-
-## Worker Management
-
-### Worker Configuration
 
 ```python
-# worker_config.py
-from celery import bootsteps
-from celery.worker import WorkController
-
-class WorkerConfig:
-    """Worker-specific configuration"""
-    
-    WORKER_PROFILES = {
-        'batch': {
-            'concurrency': 4,
-            'prefetch_multiplier': 1,
-            'max_tasks_per_child': 50,
-            'task_events': True,
-            'queues': ['batch_processing']
-        },
-        'model': {
-            'concurrency': 8,
-            'prefetch_multiplier': 2,
-            'max_tasks_per_child': 100,
-            'task_events': True,
-            'queues': ['model_generation']
-        },
-        'maintenance': {
-            'concurrency': 2,
-            'prefetch_multiplier': 4,
-            'max_tasks_per_child': 1000,
-            'task_events': True,
-            'queues': ['maintenance']
-        },
-        'priority': {
-            'concurrency': 2,
-            'prefetch_multiplier': 1,
-            'max_tasks_per_child': 100,
-            'task_events': True,
-            'queues': ['priority']
-        }
-    }
-    
-    @classmethod
-    def get_worker_config(cls, profile: str) -> dict:
-        """Get configuration for worker profile"""
-        return cls.WORKER_PROFILES.get(profile, cls.WORKER_PROFILES['model'])
-
-class CustomWorkerStep(bootsteps.StartStopStep):
-    """Custom worker initialization"""
-    
-    def __init__(self, worker: WorkController, **options):
-        logger.info(f"Initializing worker: {worker.hostname}")
-        
-        # Set process title
-        import setproctitle
-        setproctitle.setproctitle(f"celery:worker:{worker.hostname}")
-    
-    def start(self, worker: WorkController):
-        """Worker startup tasks"""
-        logger.info(f"Worker {worker.hostname} started")
-        
-        # Initialize connections
-        worker.app.redis_pool = ConnectionPool(
-            host=settings.REDIS_HOST,
-            port=settings.REDIS_PORT,
-            max_connections=10
-        )
-    
-    def stop(self, worker: WorkController):
-        """Worker shutdown tasks"""
-        logger.info(f"Worker {worker.hostname} shutting down")
-        
-        # Cleanup connections
-        if hasattr(worker.app, 'redis_pool'):
-            worker.app.redis_pool.disconnect()
-
-# Register custom step
-celery_app.steps['worker'].add(CustomWorkerStep)
+@celery_app.task(bind=True)
+def finalize_batch_results(self, results: List[Dict[str, Any]], job_id: str, total_files: int, 
+                          face_limit: Optional[int] = None):
+    """
+    Callback task to finalize batch processing results after all files are processed.
+    Called by the chord after all parallel file processing tasks complete.
+    """
+    # Implementation aggregates results and stores them in job store
 ```
 
-### Worker Deployment
+#### Maintenance Tasks (`app/workers/cleanup.py`)
 
 ```python
-# start_worker.py
-import sys
-import os
-from celery import current_app
-from app.core.celery_app import celery_app
-from app.workers.worker_config import WorkerConfig
-
-def start_worker(profile: str = 'model'):
-    """Start Celery worker with profile"""
-    
-    # Get worker configuration
-    config = WorkerConfig.get_worker_config(profile)
-    
-    # Build worker command
-    argv = [
-        'worker',
-        '--loglevel=info',
-        f'--concurrency={config["concurrency"]}',
-        f'--prefetch-multiplier={config["prefetch_multiplier"]}',
-        f'--max-tasks-per-child={config["max_tasks_per_child"]}',
-        '--without-gossip',
-        '--without-mingle',
-        '--without-heartbeat',
-        f'--hostname={profile}@%h',
-    ]
-    
-    # Add queues
-    for queue in config['queues']:
-        argv.extend(['-Q', queue])
-    
-    # Enable events if configured
-    if config.get('task_events'):
-        argv.append('-E')
-    
-    # Start worker
-    celery_app.worker_main(argv)
-
-if __name__ == '__main__':
-    profile = sys.argv[1] if len(sys.argv) > 1 else 'model'
-    start_worker(profile)
+@celery_app.task
+def cleanup_old_files(hours: int = 24) -> Dict[str, Any]:
+    """
+    Remove files older than specified hours from upload and output directories.
+    Scheduled to run daily at 2 AM via Celery Beat.
+    """
+    # Implementation includes comprehensive file cleanup with size tracking
 ```
-
-## Monitoring and Management
-
-### Flower Dashboard
-
-```yaml
-# docker-compose.yml
-services:
-  flower:
-    image: mher/flower:latest
-    environment:
-      - CELERY_BROKER_URL=redis://redis:6379/0
-      - FLOWER_PORT=5555
-      - FLOWER_BASIC_AUTH=admin:${FLOWER_PASSWORD}
-    ports:
-      - "5555:5555"
-    depends_on:
-      - redis
-    command: flower --broker=redis://redis:6379/0 --port=5555
-```
-
-### Monitoring Metrics
 
 ```python
-from celery import Task
-from prometheus_client import Counter, Histogram, Gauge
-
-# Task metrics
-task_counter = Counter(
-    'celery_tasks_total',
-    'Total number of tasks processed',
-    ['task_name', 'status']
-)
-
-task_duration = Histogram(
-    'celery_task_duration_seconds',
-    'Task execution duration',
-    ['task_name', 'status'],
-    buckets=[1, 5, 10, 30, 60, 120, 300, 600]
-)
-
-active_tasks = Gauge(
-    'celery_active_tasks',
-    'Number of active tasks',
-    ['queue']
-)
-
-queue_length = Gauge(
-    'celery_queue_length',
-    'Number of tasks in queue',
-    ['queue']
-)
-
-class MonitoredTask(Task):
-    """Base task class with monitoring"""
-    
-    def __call__(self, *args, **kwargs):
-        """Execute task with monitoring"""
-        
-        start_time = time.time()
-        queue_name = self.request.delivery_info.get('routing_key', 'default')
-        
-        # Increment active tasks
-        active_tasks.labels(queue=queue_name).inc()
-        
-        try:
-            result = super().__call__(*args, **kwargs)
-            status = 'success'
-            return result
-            
-        except Exception as exc:
-            status = 'failure'
-            raise
-            
-        finally:
-            # Record metrics
-            duration = time.time() - start_time
-            task_counter.labels(
-                task_name=self.name,
-                status=status
-            ).inc()
-            
-            task_duration.labels(
-                task_name=self.name,
-                status=status
-            ).observe(duration)
-            
-            # Decrement active tasks
-            active_tasks.labels(queue=queue_name).dec()
-
-# Set as base task
-celery_app.Task = MonitoredTask
+@celery_app.task
+def get_disk_usage() -> Dict[str, Any]:
+    """
+    Get disk usage statistics for upload and output directories.
+    Scheduled to run hourly via Celery Beat.
+    """
+    # Implementation provides detailed disk usage metrics
 ```
+
+```python
+@celery_app.task
+def cleanup_job_files(job_id: str) -> Dict[str, Any]:
+    """
+    Remove files for a specific job ID from all directories.
+    Can be called on-demand for immediate cleanup.
+    """
+    # Implementation removes job-specific files and directories
+```
+
+#### Health Check Tasks
+
+```python
+@celery_app.task
+def health_check_task():
+    """
+    Simple health check task for monitoring worker status.
+    Routes to priority queue for immediate execution.
+    """
+    return {"status": "healthy", "worker": "image2model-worker"}
+```
+
+### Advanced Task with Retry Logic
+
+```python
+@celery_app.task(bind=True, max_retries=5)
+def process_single_image_with_retry(self, file_path: str, face_limit: Optional[int] = None):
+    """
+    Enhanced task with comprehensive retry logic including:
+    - Exponential backoff for rate limits
+    - Progressive timeout handling
+    - Error type categorization
+    - Circuit breaker patterns
+    """
+    # Implementation includes sophisticated retry strategies
+```
+
+## Queue Configuration
+
+The system uses four main queues:
+
+1. **batch_processing** - High-level batch coordination tasks
+2. **model_generation** - Individual file processing tasks
+3. **maintenance** - Cleanup and monitoring tasks
+4. **priority** - Health checks and urgent tasks
+
+## Periodic Tasks (Celery Beat)
+
+- **cleanup-old-files**: Runs daily at 2 AM
+- **disk-usage-monitoring**: Runs hourly
+
+## Worker Features
+
+### Current Implementation
+- Basic signal handlers with structured logging
+- Progress tracking via Redis and Celery state
+- Comprehensive error handling with custom exceptions
+- Integration with FAL.AI client
+- Job store management for result persistence
+
+### Missing Features (Not Implemented)
+- Worker profiles and custom configuration
+- Prometheus metrics integration in signal handlers
+- Custom worker steps and bootstrap
+- Flower dashboard configuration
+- Emergency cleanup and alerting tasks
+- Complex monitoring and alerting system
+
+## FAL.AI Integration
+
+Tasks integrate with the FAL.AI client using synchronous wrappers:
+
+```python
+from app.workers.fal_client import FalAIClient
+
+fal_client = FalAIClient()
+result = fal_client.process_single_image_sync(
+    file_path=file_path,
+    face_limit=face_limit,
+    texture_enabled=texture_enabled,
+    progress_callback=progress_callback,
+    job_id=job_id
+)
+```
+
+## Progress Tracking
+
+The system uses a Redis-based progress tracker:
+
+```python
+from app.core.progress_tracker import progress_tracker
+
+progress_tracker.update_file_progress(
+    job_id=job_id,
+    file_path=file_path,
+    status="processing",
+    progress=progress_percent
+)
+```
+
+## Error Handling
+
+Tasks use custom exception types from `app.core.exceptions`:
+
+- `ProcessingException` - General processing errors
+- `FALAPIException` - FAL.AI specific errors
+- `NetworkException` - Network-related errors
+- `RateLimitException` - Rate limiting errors
 
 ## Best Practices
 
 ### 1. Task Design
-- Keep tasks idempotent
-- Use task IDs for deduplication
+- Tasks are idempotent where possible
+- Use job IDs for tracking and deduplication
 - Handle partial failures gracefully
-- Log comprehensively
+- Comprehensive logging with correlation IDs
 
 ### 2. Error Handling
-- Use automatic retries wisely
-- Implement exponential backoff
-- Don't retry permanent failures
-- Log all failures with context
+- Automatic retries with exponential backoff
+- Error categorization for appropriate handling
+- Failed task acknowledgment to prevent reprocessing
 
 ### 3. Performance
-- Use appropriate concurrency settings
-- Batch operations when possible
-- Monitor task duration
-- Optimize memory usage
+- Worker prefetch disabled for fair distribution
+- Memory limits per child process
+- Regular worker restarts to prevent memory leaks
 
 ### 4. Reliability
-- Set appropriate timeouts
-- Use acks_late for critical tasks
-- Implement health checks
-- Monitor queue lengths
-
-### 5. Scaling
-- Use queue routing effectively
-- Scale workers independently
-- Monitor resource usage
-- Implement autoscaling
+- Late acknowledgment for critical tasks
+- Connection retry on startup
+- Task state tracking and progress reporting
 
 ## Troubleshooting
 
-### Common Issues
-
-1. **Tasks Not Processing**
-   ```bash
-   # Check worker status
-   celery -A app.core.celery_app inspect active
-   
-   # Check registered tasks
-   celery -A app.core.celery_app inspect registered
-   
-   # Check queue lengths
-   celery -A app.core.celery_app inspect reserved
-   ```
-
-2. **Memory Leaks**
-   - Reduce max_tasks_per_child
-   - Monitor worker memory usage
-   - Check for circular references
-
-3. **Task Timeouts**
-   - Increase time limits for long tasks
-   - Break large tasks into smaller ones
-   - Use progress reporting
-
-4. **Lost Tasks**
-   - Enable task_acks_late
-   - Use persistent result backend
-   - Implement task tracking
-
-### Debug Commands
+### Common Commands
 
 ```bash
-# Purge all queues
-celery -A app.core.celery_app purge
+# Check worker status
+celery -A app.core.celery_app inspect active
 
-# Start worker with debug logging
-celery -A app.core.celery_app worker --loglevel=DEBUG
+# Check registered tasks
+celery -A app.core.celery_app inspect registered
 
 # Monitor events in real-time
 celery -A app.core.celery_app events
 
-# Check worker pool stats
-celery -A app.core.celery_app inspect stats
+# Purge all queues (development only)
+celery -A app.core.celery_app purge
+```
+
+### Health Monitoring
+
+Workers can be monitored via:
+- Health check task execution
+- Redis connection status
+- Task completion rates
+- Error logging and tracking
+
+## Deployment
+
+Workers are typically started with:
+
+```bash
+celery -A app.core.celery_app worker --loglevel=info --concurrency=4
+```
+
+Beat scheduler for periodic tasks:
+
+```bash
+celery -A app.core.celery_app beat --loglevel=info
 ```
