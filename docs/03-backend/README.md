@@ -1,85 +1,114 @@
 # Backend Documentation
 
-> **Last Updated**: 2025-07-11  
-> **Status**: Planned  
-> **Version**: 0.1
+> **Last Updated**: 2025-07-12  
+> **Status**: Active  
+> **Version**: 1.0
 
-Comprehensive documentation for the image2model FastAPI backend and worker services.
+Comprehensive documentation for the Image2Model FastAPI backend, Celery workers, and service integrations.
 
 ## 📋 In This Section
 
-### Architecture
-
-- **[FastAPI Structure](./architecture/fastapi-structure.md)** *(coming soon)* - Application organization
-- **[Celery Workers](./architecture/celery-workers.md)** *(coming soon)* - Task queue architecture
-- **[Redis Patterns](./architecture/redis-patterns.md)** *(coming soon)* - Caching and job storage
-
 ### API Reference
 
-- **[Endpoints Overview](./api-reference/endpoints-overview.md)** *(coming soon)* - Complete API catalog
-- **[Upload Endpoints](./api-reference/upload-endpoints.md)** *(coming soon)* - File upload APIs
-- **[Status Endpoints](./api-reference/status-endpoints.md)** *(coming soon)* - Progress and SSE APIs
-- **[Download Endpoints](./api-reference/download-endpoints.md)** *(coming soon)* - File retrieval APIs
+- **[Endpoints Reference](./api-reference/endpoints.md)** - Complete API endpoint documentation
+- **[Authentication Guide](./api-reference/authentication.md)** - API key authentication system
+- **[Error Codes](./api-reference/error-codes.md)** - Error response formats and handling
+- **[Rate Limiting](./api-reference/rate-limiting.md)** - Rate limit policies and best practices
 
-### Services
+### Architecture
 
-- **[FAL.AI Integration](./services/fal-integration.md)** *(coming soon)* - 3D model generation
-- **[Job Processing](./services/job-processing.md)** *(coming soon)* - Job lifecycle management
-- **[File Handling](./services/file-handling.md)** *(coming soon)* - Upload/download patterns
+- **[System Design](./architecture/system-design.md)** - Overall architecture and design principles
+- **[Core Components](./architecture/components.md)** - Component overview and relationships
+- **[Data Flow](./architecture/data-flow.md)** - Request lifecycle and data processing
+- **[Scalability](./architecture/scalability.md)** - Scaling strategies and performance
 
 ### Security
 
-- **[Authentication](./security/authentication.md)** *(coming soon)* - API key system
-- **[Rate Limiting](./security/rate-limiting.md)** *(coming soon)* - Request throttling
-- **[CORS Configuration](./security/cors-configuration.md)** *(coming soon)* - Cross-origin setup
+- **[Authentication & Authorization](./security/authentication.md)** - Security implementation details
+- **[Best Practices](./security/best-practices.md)** - Security measures and guidelines
+- **[Vulnerabilities](./security/vulnerabilities.md)** - Known issues and mitigation strategies
+- **[Compliance](./security/compliance.md)** - GDPR, privacy, and regulatory compliance
+
+### Services
+
+- **[FAL.AI Integration](./services/fal-integration.md)** - 3D model generation service
+- **[Background Tasks](./services/background-tasks.md)** - Celery architecture and task processing
+- **[Monitoring](./services/monitoring.md)** - Logging, metrics, and observability
+- **[Redis Usage](./services/redis-usage.md)** - Data structures and caching patterns
 
 ## 🎯 Quick Overview
 
 ### Technology Stack
 
 - **Framework**: FastAPI (Python 3.11+)
-- **Task Queue**: Celery with Redis
-- **API Docs**: OpenAPI/Swagger
-- **Validation**: Pydantic
-- **Testing**: Pytest
+- **Task Queue**: Celery 5.x with Redis broker
+- **3D Generation**: FAL.AI Tripo3D v2.5 API
+- **Caching/Storage**: Redis 7.x
+- **Monitoring**: Prometheus + Grafana
+- **API Docs**: OpenAPI 3.0/Swagger
+- **Validation**: Pydantic v2
+- **Testing**: Pytest with async support
 
 ### Key Features
 
-- **Async Support**: High-performance async endpoints
-- **Auto Documentation**: Interactive API docs
-- **Type Safety**: Full type hints throughout
-- **Background Tasks**: Celery for long-running jobs
-- **Real-time Updates**: SSE for progress streaming
+- **Async Architecture**: High-performance async/await throughout
+- **Distributed Processing**: Parallel batch processing with Celery
+- **Real-time Updates**: Server-Sent Events (SSE) for live progress
+- **Comprehensive Monitoring**: Structured logging and Prometheus metrics
+- **Robust Error Handling**: Retry mechanisms and circuit breakers
+- **Type Safety**: Full type hints and Pydantic validation
+- **Security First**: API key auth, rate limiting, input validation
 
 ### System Architecture
 
 ```mermaid
 graph TB
-    subgraph "API Layer"
-        FastAPI[FastAPI Server]
-        MW[Middleware Stack]
+    subgraph "Client Layer"
+        WEB[Web Frontend]
+        API_CLIENT[API Clients]
     end
     
-    subgraph "Task Layer"
-        Celery[Celery Workers]
-        Beat[Celery Beat]
+    subgraph "API Gateway"
+        LB[Load Balancer]
+        FASTAPI[FastAPI Application]
+        MW[Middleware Stack<br/>- Auth<br/>- CORS<br/>- Rate Limit<br/>- Monitoring]
     end
     
-    subgraph "Storage"
-        Redis[(Redis)]
-        FS[File System]
+    subgraph "Processing Layer"
+        subgraph "Worker Pools"
+            BATCH[Batch Workers]
+            MODEL[Model Workers]
+            MAINT[Maintenance Workers]
+        end
     end
     
-    subgraph "External"
-        FAL[FAL.AI API]
+    subgraph "Data Layer"
+        REDIS[(Redis<br/>- Task Queue<br/>- Job Store<br/>- Progress<br/>- Cache)]
+        FS[File Storage<br/>- Uploads<br/>- Results]
     end
     
-    FastAPI --> MW
-    MW --> Celery
-    Celery --> Redis
-    Celery --> FAL
-    Celery --> FS
-    Beat --> Redis
+    subgraph "External Services"
+        FAL[FAL.AI<br/>Tripo3D API]
+        PROM[Prometheus]
+    end
+    
+    WEB --> LB
+    API_CLIENT --> LB
+    LB --> FASTAPI
+    FASTAPI --> MW
+    MW --> REDIS
+    
+    REDIS --> BATCH
+    REDIS --> MODEL
+    REDIS --> MAINT
+    
+    MODEL --> FAL
+    BATCH --> FAL
+    
+    FASTAPI --> FS
+    MODEL --> FS
+    
+    MW --> PROM
 ```
 
 ## 🚀 Getting Started
@@ -87,13 +116,18 @@ graph TB
 ### Prerequisites
 
 - Python 3.11+
-- Redis server
-- Virtual environment tool
+- Redis 7.x server
+- Docker & Docker Compose
 - FAL.AI API key
+- Virtual environment tool (venv/conda)
 
 ### Quick Start
 
 ```bash
+# Clone the repository
+git clone <repository-url>
+cd image2model/backend
+
 # Set up virtual environment
 python -m venv venv
 source venv/bin/activate  # or `venv\Scripts\activate` on Windows
@@ -103,198 +137,379 @@ pip install -r requirements.txt
 
 # Set environment variables
 cp .env.example .env
-# Edit .env with your configuration
+# Edit .env with your configuration:
+# - FAL_KEY=your_fal_api_key
+# - API_KEY=your_api_key
+# - ADMIN_API_KEY=your_admin_key
 
-# Run the server
-uvicorn app.main:app --reload
+# Start Redis with Docker
+docker compose up -d redis
 
-# In another terminal, run Celery worker
-celery -A app.core.celery_app worker --loglevel=info
+# Run database migrations (if applicable)
+# python -m alembic upgrade head
+
+# Start the FastAPI server
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+# In another terminal, start Celery worker
+celery -A app.core.celery_app worker --loglevel=info -Q model_generation,batch_processing
+
+# Optional: Start Flower for monitoring
+celery -A app.core.celery_app flower --port=5555
 ```
 
 ## 📊 Core Concepts
 
-### API Structure
+### Project Structure
 
 ```
-app/
-├── api/
-│   ├── endpoints/      # Route handlers
-│   └── api.py         # Router configuration
-├── core/
-│   ├── config.py      # Settings
-│   ├── celery_app.py  # Celery setup
-│   └── security.py    # Auth utilities
-├── models/            # Pydantic models
-├── workers/           # Celery tasks
-└── main.py           # FastAPI app
+backend/
+├── app/
+│   ├── api/
+│   │   ├── endpoints/      # Route handlers
+│   │   │   ├── upload.py   # Batch upload endpoints
+│   │   │   ├── models.py   # Model generation
+│   │   │   ├── status.py   # Job status & SSE
+│   │   │   ├── download.py # File retrieval
+│   │   │   ├── admin.py    # Admin operations
+│   │   │   └── health.py   # Health checks
+│   │   └── api.py          # Main router
+│   ├── core/
+│   │   ├── config.py       # Pydantic settings
+│   │   ├── celery_app.py   # Celery configuration
+│   │   ├── job_store.py    # Redis job management
+│   │   ├── session_store.py # Session tracking
+│   │   ├── monitoring.py   # Prometheus metrics
+│   │   └── exceptions.py   # Custom exceptions
+│   ├── middleware/
+│   │   ├── auth.py         # API key authentication
+│   │   └── rate_limit.py   # Rate limiting
+│   ├── models/             # Pydantic models
+│   ├── workers/
+│   │   ├── tasks.py        # Celery tasks
+│   │   ├── fal_client.py   # FAL.AI integration
+│   │   └── cleanup.py      # Maintenance tasks
+│   └── main.py             # FastAPI application
+├── tests/                  # Test suites
+├── logs/                   # Application logs
+├── uploads/                # Temporary uploads
+└── docker-compose.yml      # Service orchestration
 ```
 
-### Request Flow
+### Request Processing Flow
 
-1. **Request arrives** at FastAPI endpoint
-2. **Middleware** handles auth, CORS, rate limiting
-3. **Endpoint** validates input with Pydantic
-4. **Service** processes business logic
-5. **Response** returned (or task queued)
+1. **Client Request** → Load Balancer → FastAPI
+2. **Authentication** → API key validation
+3. **Rate Limiting** → Check request limits
+4. **Validation** → Pydantic model validation
+5. **File Upload** → Store in uploads directory
+6. **Job Creation** → Create job in Redis
+7. **Task Dispatch** → Send to Celery queue
+8. **Worker Processing** → FAL.AI API call
+9. **Progress Updates** → Redis pub/sub → SSE
+10. **Result Storage** → Store model URL in Redis
+11. **Client Download** → Redirect to FAL.AI CDN
 
-### Background Jobs
+### Task Processing
 
 ```python
-# Queueing a task
-from app.workers.tasks import process_images
+# Batch processing with Celery chord
+from celery import group, chord
 
-task = process_images.delay(file_paths, options)
-task_id = task.id
+# Create parallel tasks for each file
+file_tasks = group(
+    generate_single_model.s(job_id, file)
+    for file in files
+)
+
+# Execute with callback
+job = chord(file_tasks)(finalize_batch.s(job_id))
 ```
 
 ## 🔧 API Endpoints
 
+### Health Check
+
+```
+GET /api/v1/health
+- Basic health check
+
+GET /api/v1/health/ready
+- Kubernetes readiness probe with dependency checks
+```
+
 ### Upload API
 
 ```
-POST /api/v1/upload/
-- Accepts: multipart/form-data
-- Files: up to 25 images
-- Returns: task_id, job_id
+POST /api/v1/upload/batch
+- Accept: multipart/form-data
+- Files: up to 25 images (max 10MB each)
+- Formats: JPG, JPEG, PNG
+- Returns: {job_id, session_id, files[], status}
+- Auth: Required
+```
+
+### Model Generation
+
+```
+POST /api/v1/models/generate-single
+- Generate 3D model from uploaded image
+- Body: {job_id, file_id, face_limit}
+- Returns: {job_id, file_id, model_task_id, status}
+- Auth: Required
 ```
 
 ### Status API
 
 ```
-GET /api/v1/status/tasks/{task_id}/stream
-- Returns: SSE stream
-- Events: progress, completed, failed
+GET /api/v1/status/{job_id}
+- Get batch job status
+- Returns: {job_id, status, progress, files[]}
+- Auth: Optional
 
-GET /api/v1/status/tasks/{task_id}
-- Returns: Current task status
+GET /api/v1/status/stream/{job_id}
+- Server-Sent Events for real-time updates
+- Events: progress, log, completed, error
+- Auth: Optional
 ```
 
 ### Download API
 
 ```
-GET /api/v1/download/{job_id}/all
-- Returns: List of available files
+GET /api/v1/download/{job_id}/{file_id}/model
+- Download or redirect to 3D model
+- Returns: 302 redirect to FAL.AI CDN or file download
+- Auth: Optional (required for ownership)
 
-GET /api/v1/download/{job_id}/{filename}
-- Returns: File download
+GET /api/v1/download/{job_id}/all
+- Download all models as ZIP
+- Returns: application/zip
+- Auth: Optional
+```
+
+### Admin API
+
+```
+GET /api/v1/admin/system-info
+- System resource information
+- Auth: Admin required
+
+POST /api/v1/admin/cleanup
+- Manual cleanup trigger
+- Body: {older_than_hours}
+- Auth: Admin required
 ```
 
 ## 🔐 Security
 
 ### Authentication
 
-- API key in Authorization header
-- Format: `Bearer {API_KEY}`
-- Keys stored in environment variables
+- **Bearer Token**: API key in Authorization header
+- **Format**: `Authorization: Bearer {API_KEY}`
+- **Two Levels**: Regular users and admin access
+- **Session Management**: Redis-based job ownership tracking
 
 ### Rate Limiting
 
-- Default: 100 requests/minute
-- Configurable per endpoint
-- Redis-backed counter
+- **Default Limits**: 60/minute, 1000/hour per API key
+- **Endpoint Specific**: Upload endpoints have lower limits
+- **Implementation**: SlowAPI with Redis backend
+- **Headers**: X-RateLimit-Limit, X-RateLimit-Remaining, X-RateLimit-Reset
 
 ### Input Validation
 
-- File type validation
-- Size limits enforced
-- Path traversal protection
+- **File Validation**: MIME type and extension checking
+- **Size Limits**: 10MB per file, 25 files per batch
+- **Path Security**: Sanitized filenames, no directory traversal
+- **Job ID Format**: Alphanumeric with underscores/hyphens only
+
+### Security Headers
+
+- X-Content-Type-Options: nosniff
+- X-Frame-Options: DENY
+- Strict-Transport-Security (HSTS)
+- CORS configured per environment
 
 ## 📡 Real-time Features
 
-### Server-Sent Events
+### Server-Sent Events (SSE)
 
-Used for real-time progress updates:
+Real-time progress updates for batch processing:
 
 ```python
-async def stream_progress(task_id: str):
-    while True:
-        status = get_task_status(task_id)
-        yield f"data: {json.dumps(status)}\n\n"
-        if status["state"] in ["SUCCESS", "FAILURE"]:
-            break
-        await asyncio.sleep(1)
+@router.get("/status/stream/{job_id}")
+async def stream_status(job_id: str):
+    async def event_generator():
+        while True:
+            # Get progress from Redis pub/sub
+            progress = await get_progress(job_id)
+            
+            # Send SSE event
+            yield f"data: {json.dumps(progress)}\n\n"
+            
+            if progress["status"] in ["completed", "failed"]:
+                break
+                
+            await asyncio.sleep(0.5)
+    
+    return EventSourceResponse(event_generator())
 ```
 
-### WebSocket Support
+### Progress Tracking
 
-Planned for future bidirectional communication.
+- **Granular Updates**: Per-file progress percentage
+- **Log Streaming**: Real-time processing logs
+- **Event Types**: progress, log, completed, error
+- **Redis Pub/Sub**: Distributed event broadcasting
 
 ## 🧪 Testing
 
-### Unit Tests
+### Test Structure
+
+```
+tests/
+├── unit/              # Unit tests
+├── integration/       # API integration tests
+│   ├── test_api_endpoints.py
+│   ├── test_sse_progress.py
+│   └── test_sse_streaming.py
+├── load/              # Performance tests
+└── fixtures/          # Test data
+```
+
+### Running Tests
 
 ```bash
+# All tests
+pytest
+
+# Unit tests only
 pytest tests/unit/
-```
 
-### Integration Tests
-
-```bash
+# Integration tests
 pytest tests/integration/
+
+# With coverage
+pytest --cov=app --cov-report=html
+
+# Load testing
+locust -f tests/load/test_performance.py --host=http://localhost:8000
 ```
 
-### Load Tests
+### Test Configuration
 
-```bash
-locust -f tests/load/locustfile.py
+```python
+# Test with mock FAL.AI client
+pytest --mock-fal
+
+# Test with real services
+pytest --integration
 ```
 
 ## 🔗 Key Resources
 
 ### Internal Documentation
 
-- [API OpenAPI Spec](http://localhost:8000/docs)
-- [Frontend Integration](../02-frontend/api-integration/)
-- [Deployment Guide](../04-deployment/)
+- [API Interactive Docs](http://localhost:8000/docs)
+- [API ReDoc](http://localhost:8000/redoc)
+- [Prometheus Metrics](http://localhost:8000/metrics)
+- [Flower Dashboard](http://localhost:5555)
 
 ### External Resources
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Celery Documentation](https://docs.celeryproject.org/)
+- [Celery Documentation](https://docs.celeryq.dev/)
 - [FAL.AI API Docs](https://fal.ai/docs)
+- [Redis Documentation](https://redis.io/docs/)
 
 ## 💡 Best Practices
 
 ### Performance
 
-- Use async endpoints where possible
-- Implement caching strategies
-- Optimize database queries
-- Monitor task queue health
+- **Async First**: Use async/await for all I/O operations
+- **Connection Pooling**: Redis and HTTP connection reuse
+- **Batch Processing**: Process multiple files in parallel
+- **Caching Strategy**: Cache FAL.AI results and status
+- **Progress Tracking**: Atomic Redis operations
 
 ### Error Handling
 
-- Consistent error response format
-- Proper HTTP status codes
-- Detailed error logging
-- Graceful degradation
+- **Custom Exceptions**: Hierarchical exception structure
+- **Retry Logic**: Exponential backoff for transient failures
+- **Error Codes**: Consistent error code system
+- **Correlation IDs**: Track requests across services
+- **Graceful Degradation**: Fallback mechanisms
 
 ### Code Quality
 
-- Type hints throughout
-- Docstrings for all functions
-- Follow PEP 8 style guide
-- Comprehensive test coverage
+- **Type Safety**: 100% type hints with mypy
+- **Documentation**: Docstrings and inline comments
+- **Code Style**: Black formatter, isort, flake8
+- **Testing**: >80% test coverage target
+- **CI/CD**: Automated testing and deployment
+
+### Monitoring
+
+- **Structured Logging**: JSON logs with context
+- **Metrics Collection**: Prometheus metrics
+- **Distributed Tracing**: OpenTelemetry ready
+- **Health Checks**: Liveness and readiness probes
+- **Performance Tracking**: Request and task duration
 
 ## 🐛 Troubleshooting
 
 ### Common Issues
 
-- **Celery not picking up tasks**: Check Redis connection
-- **CORS errors**: Verify allowed origins
-- **File upload fails**: Check size limits
-- **SSE disconnects**: Review timeout settings
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Celery tasks not processing | Redis connection issue | Check Redis connectivity and credentials |
+| CORS errors | Origin not whitelisted | Add origin to ALLOWED_ORIGINS |
+| File upload fails | Size limit exceeded | Check MAX_UPLOAD_SIZE setting |
+| SSE disconnects | Proxy timeout | Configure proxy keep-alive settings |
+| Rate limit errors | Too many requests | Implement request queuing |
+| FAL.AI timeouts | Large model generation | Increase task timeout settings |
 
-### Debugging Tools
+### Debug Commands
 
-- FastAPI interactive docs
-- Celery Flower for monitoring
-- Redis CLI for queue inspection
-- Python debugger (pdb)
+```bash
+# Check Celery workers
+celery -A app.core.celery_app inspect active
+
+# Monitor Redis
+redis-cli monitor
+
+# View task queue
+celery -A app.core.celery_app inspect reserved
+
+# Check application logs
+tail -f logs/app.log | jq '.'
+
+# Test FAL.AI connectivity
+python -m app.workers.fal_client test
+```
+
+### Environment Variables
+
+```bash
+# Required
+FAL_KEY=your_fal_api_key
+API_KEY=your_api_key
+REDIS_HOST=localhost
+REDIS_PORT=6379
+
+# Optional
+ADMIN_API_KEY=admin_key
+ENVIRONMENT=development
+LOG_LEVEL=INFO
+SENTRY_DSN=your_sentry_dsn
+```
 
 ---
 
-**Next Steps**: Explore the [API Reference](./api-reference/endpoints-overview.md) or learn about [Architecture](./architecture/fastapi-structure.md).
+**Next Steps**: 
+- 📚 Review the [API Reference](./api-reference/endpoints.md) for detailed endpoint documentation
+- 🏗️ Explore the [System Architecture](./architecture/system-design.md) for design insights
+- 🔒 Check [Security Best Practices](./security/best-practices.md) for secure deployment
+- 🚀 See the [Deployment Guide](../04-deployment/) for production setup
 
-*This documentation is planned for development. Check back for updates!*
+*Backend documentation v1.0 - For the latest updates, check the repository.*
