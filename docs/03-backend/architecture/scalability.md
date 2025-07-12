@@ -328,35 +328,39 @@ class BatchProcessor:
         self.processing = False
 ```
 
-### 4. Database Query Optimization
+### 4. Redis Query Optimization
 
 ```python
-# Future PostgreSQL optimization
-from sqlalchemy import select, and_
-from sqlalchemy.orm import selectinload, joinedload
+# Current Redis optimization strategies
+import redis.asyncio as redis
+from typing import List, Dict
 
-class OptimizedQueries:
-    @staticmethod
-    async def get_jobs_with_files(session, user_id: str, limit: int = 100):
-        """Optimized query with eager loading"""
-        stmt = (
-            select(Job)
-            .options(selectinload(Job.files))
-            .where(Job.user_id == user_id)
-            .order_by(Job.created_at.desc())
-            .limit(limit)
-        )
-        return await session.execute(stmt)
+class OptimizedRedisQueries:
+    def __init__(self, redis_client: redis.Redis):
+        self.redis = redis_client
     
-    @staticmethod
-    async def bulk_update_status(session, job_ids: List[str], status: str):
-        """Bulk update for efficiency"""
-        stmt = (
-            update(Job)
-            .where(Job.id.in_(job_ids))
-            .values(status=status, updated_at=datetime.utcnow())
-        )
-        await session.execute(stmt)
+    async def batch_get_jobs(self, job_ids: List[str]) -> Dict[str, dict]:
+        """Efficiently fetch multiple jobs"""
+        pipe = self.redis.pipeline()
+        for job_id in job_ids:
+            pipe.get(f"job:{job_id}")
+        
+        results = await pipe.execute()
+        return {
+            job_id: json.loads(result) if result else None
+            for job_id, result in zip(job_ids, results)
+        }
+    
+    async def bulk_update_progress(self, updates: List[tuple]):
+        """Bulk progress updates for efficiency"""
+        pipe = self.redis.pipeline()
+        for job_id, file_id, progress in updates:
+            key = f"progress:{job_id}:{file_id}"
+            pipe.set(key, progress, ex=86400)
+        
+        await pipe.execute()
+
+# Note: PostgreSQL configured but not actively used in current MVP
 ```
 
 ## Load Testing and Capacity Planning
@@ -424,8 +428,9 @@ class CapacityMonitor:
    - Monitoring: Track FAL.AI response times
 
 2. **Redis Memory**
-   - Solution: TTL optimization, data compression
-   - Monitoring: Memory usage alerts
+   - Solution: TTL optimization, data compression, key expiration policies
+   - Monitoring: Memory usage alerts, key count tracking
+   - Current: Single Redis instance, future: Redis cluster for scaling
 
 3. **Disk I/O**
    - Solution: SSD storage, async I/O

@@ -64,10 +64,10 @@ graph TB
 - Reactive system design
 
 ### 4. Fault Tolerance
-- Automatic retry mechanisms
-- Circuit breaker patterns
-- Graceful degradation
-- Comprehensive error handling
+- Automatic retry mechanisms with exponential backoff
+- Graceful degradation on FAL.AI failures
+- Comprehensive error handling and logging
+- Task retry policies for transient failures
 
 ## System Components
 
@@ -290,8 +290,8 @@ async def get_model_metadata(model_id: str):
 
 ### Connection Pooling
 - Redis: 10 connections per process
-- HTTP: Keep-alive connections
-- Database: Connection pooling (future)
+- HTTP: Keep-alive connections for FAL.AI
+- PostgreSQL: Not currently used (configured for future implementation)
 
 ### Resource Limits
 ```python
@@ -329,7 +329,7 @@ networks:
 
 ### Metrics Collection
 ```python
-# Prometheus metrics
+# Prometheus metrics (basic implementation)
 http_requests_total = Counter(
     'http_requests_total',
     'Total HTTP requests',
@@ -341,6 +341,8 @@ task_duration = Histogram(
     'Task execution time',
     ['task_name', 'status']
 )
+
+# Note: Grafana dashboards not yet configured
 ```
 
 ### Logging Pipeline
@@ -348,23 +350,27 @@ task_duration = Histogram(
 Application → Structured Logs → Log Files → Log Aggregation → Analysis
 ```
 
-### Distributed Tracing (Future)
+### Distributed Tracing (Planned)
 ```python
-# OpenTelemetry integration
-tracer = trace.get_tracer(__name__)
+# Future: OpenTelemetry integration
+# Currently using structured logging for observability
 
-@tracer.start_as_current_span("process_image")
+import structlog
+logger = structlog.get_logger()
+
 async def process_image(image_id: str):
-    # Traced operation
-    pass
+    logger.info("Starting image processing", image_id=image_id)
+    # Processing logic with detailed logging
+    logger.info("Completed image processing", image_id=image_id)
 ```
 
 ## Future Architecture Enhancements
 
 ### 1. Database Integration
-- PostgreSQL for job metadata
-- Relationship mapping
-- Advanced querying capabilities
+- Currently using Redis for all data storage
+- PostgreSQL configured but not actively used in MVP
+- Future: Migrate job metadata to PostgreSQL for complex queries
+- Relationship mapping and advanced analytics capabilities
 
 ### 2. S3 Storage
 - Cloud-native file storage
