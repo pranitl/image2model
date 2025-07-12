@@ -49,7 +49,7 @@ graph TD
 ### File Structure
 
 ```
-src/lib/components/
+frontend-svelte/src/lib/components/
 ├── Button.svelte         # Main button component
 └── Button.test.js       # Component tests
 ```
@@ -102,7 +102,7 @@ The Button component uses Svelte's reactive declarations and event dispatching:
 ### Basic Usage
 
 ```svelte
-<!-- File: src/routes/example.svelte -->
+<!-- File: frontend-svelte/src/routes/example.svelte -->
 <script>
   import Button from '$lib/components/Button.svelte';
 </script>
@@ -119,7 +119,7 @@ The Button component uses Svelte's reactive declarations and event dispatching:
 ### Advanced Usage
 
 ```svelte
-<!-- File: src/routes/upload/+page.svelte -->
+<!-- File: frontend-svelte/src/routes/upload/+page.svelte -->
 <script>
   import Button from '$lib/components/Button.svelte';
   import { toast } from '$lib/stores/toast';
@@ -168,7 +168,7 @@ The Button component uses Svelte's reactive declarations and event dispatching:
 ### Complete Example
 
 ```svelte
-<!-- File: src/components/ActionBar.svelte -->
+<!-- File: frontend-svelte/src/lib/components/ActionBar.svelte -->
 <script>
   import Button from '$lib/components/Button.svelte';
   import Icon from '$lib/components/Icon.svelte';
@@ -472,7 +472,7 @@ Focus ring provides 3:1 contrast ratio against all backgrounds.
 ## Related Documentation
 
 - [Component Library](./component-library.md) - Complete component inventory
-- [Icon System](./icon-system.md) - Icon component usage
-- [Form Components](./form-components.md) - Form integration patterns
+- [Icon Component](./component-library.md#icon-component) - Icon component usage
+- [Form Patterns](./form-patterns.md) - Form integration patterns
 - [Accessibility Guidelines](../../../brand/guidelines/accessibility.md) - WCAG compliance
-- [Color System](../../../brand/guidelines/color-usage.md) - Brand colors
+- [Color System](../../../brand/design-system/colors.md) - Brand colors

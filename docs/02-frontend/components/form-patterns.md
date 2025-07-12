@@ -1,12 +1,13 @@
-# Form Components Documentation
+# Form Patterns Documentation
 
-> **Last Updated**: 2025-07-11  
+> **Last Updated**: 2025-07-12  
 > **Status**: Complete  
-> **Version**: 1.0
+> **Version**: 1.1
+> **Note**: This document covers form patterns and implementations. The application currently uses native HTML form elements rather than custom form components.
 
 ## Overview
 
-The image2model application uses a combination of native HTML form elements and custom components to create accessible, user-friendly forms. This document covers form patterns, input handling, validation, and file upload components used throughout the application.
+The image2model application uses a combination of native HTML form elements and custom UI components to create accessible, user-friendly forms. This document covers form patterns, input handling, validation, and file upload implementations used throughout the application.
 
 ## Table of Contents
 
@@ -576,6 +577,7 @@ onMount(() => {
 
 - [Component Library](./component-library.md) - All UI components
 - [Button System](./button-system.md) - Button component details
-- [Toast Notifications](./toast-system.md) - User feedback system
-- [API Integration](../api/upload-endpoints.md) - Backend integration
+- [Image Grid Component](./component-library.md#imagegrid-component) - File preview component
+- [Toast Component](./component-library.md#toast-component) - User feedback system
+- [API Integration](../../03-backend/api/endpoints/upload.md) - Backend integration
 - [Accessibility Guidelines](../../../brand/guidelines/accessibility.md) - WCAG compliance

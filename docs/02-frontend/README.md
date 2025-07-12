@@ -16,10 +16,10 @@ Comprehensive documentation for the image2model SvelteKit frontend application.
 
 ### Components
 
-- **[Component Library](./components/component-library.md)** *(coming soon)* - Complete component inventory
-- **[Button System](./components/button-system.md)** *(coming soon)* - Button variants and usage
-- **[Form Components](./components/form-components.md)** *(coming soon)* - Forms and input components
-- **[Layout Components](./components/layout-components.md)** *(coming soon)* - Navigation, footer, etc.
+- **[Component Library](./components/component-library.md)** - Complete component inventory
+- **[Button System](./components/button-system.md)** - Button variants and usage
+- **[Form Patterns](./components/form-patterns.md)** - Form implementation patterns and file upload
+- **[Layout Components](./components/layout-components.md)** - Navigation, footer, hero sections
 
 ### Design System
 

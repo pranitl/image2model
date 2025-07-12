@@ -190,6 +190,7 @@ static/css/
 |------|------|---------|-------------|
 | `title` | `string` | required | Main heading text |
 | `subtitle` | `string` | optional | Supporting description |
+| `variant` | `'default' \| 'landing'` | `'default'` | Visual variant - 'landing' has increased padding and min-height |
 
 #### Slots
 
@@ -198,12 +199,24 @@ static/css/
 #### Usage
 
 ```svelte
+<!-- Default variant for standard pages -->
 <Hero 
   title="Upload Your Images"
   subtitle="Transform photos into professional 3D models in minutes"
 >
   <div slot="content" class="hero-actions">
     <ProgressIndicator currentStep={1} />
+  </div>
+</Hero>
+
+<!-- Landing variant with extra padding -->
+<Hero 
+  variant="landing"
+  title="Transform Images to 3D"
+  subtitle="AI-powered 3D model generation"
+>
+  <div slot="content">
+    <Button variant="primary" size="lg">Get Started</Button>
   </div>
 </Hero>
 ```
@@ -595,5 +608,5 @@ main {
 - [Component Library](./component-library.md) - All UI components
 - [CSS Architecture](../styling/css-architecture.md) - Styling system
 - [Responsive Design](../design/responsive-design.md) - Breakpoint system
-- [Navigation Patterns](../patterns/navigation.md) - Navigation UX
+- [Form Patterns](./form-patterns.md) - Form implementation patterns
 - [Accessibility Guidelines](../../../brand/guidelines/accessibility.md) - WCAG compliance

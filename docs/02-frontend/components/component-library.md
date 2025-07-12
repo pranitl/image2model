@@ -188,8 +188,9 @@ Presentational components for content display.
 | `class` | `string` | `''` | Additional CSS classes |
 
 **Available Icons**:
-- UI: `check`, `x`, `eye`, `external-link`, `chevron-down`
-- File: `folder`, `document`, `download`, `upload`
+- UI: `check`, `check-circle`, `x`, `x-circle`, `eye`, `external-link`
+- Navigation: `chevron-down`, `chevron-right`, `arrow-down`
+- File: `folder`, `document`, `download`, `upload`, `cloud-download`
 - Status: `info`, `warning`, `error`, `clock`
 - 3D: `cube`
 - Utility: `cog`, `key`
@@ -218,8 +219,13 @@ Presentational components for content display.
 | Prop | Type | Default | Description |
 |------|------|---------|-------------|
 | `items` | `Array` | required | Image data array |
-| `onRemove` | `Function` | required | Remove callback |
-| `gridSize` | `string` | `'medium'` | Grid density |
+| `onRemove` | `Function` | `null` | Optional remove callback |
+| `showOverlay` | `boolean` | `false` | Show overlay for processing state |
+| `overlayContent` | `any` | `null` | Custom overlay content |
+| `gridSize` | `'small' \| 'medium' \| 'large'` | `'medium'` | Grid density |
+
+**Slots**:
+- `tile-content`: Additional content for each tile, receives `item` prop
 
 ### Hero Component
 **Location**: `src/lib/components/Hero.svelte`
@@ -231,6 +237,7 @@ Presentational components for content display.
 |------|------|---------|-------------|
 | `title` | `string` | required | Main heading text |
 | `subtitle` | `string` | optional | Supporting text |
+| `variant` | `'default' \| 'landing'` | `'default'` | Visual variant (landing has more padding) |
 
 **Slots**:
 - `content`: Additional content below title/subtitle
@@ -250,11 +257,18 @@ Presentational components for content display.
 
 **Purpose**: Graceful error handling wrapper for component trees.
 
+**Props**:
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `fallback` | `Component` | `null` | Custom fallback component |
+| `onError` | `Function` | `null` | Error callback function |
+
 **Features**:
-- Catches JavaScript errors
+- Catches JavaScript errors via error-handler utility
 - Displays user-friendly error state
-- Logs errors for debugging
+- Shows error details in development mode
 - Retry functionality
+- Custom fallback component support
 
 ## Usage Patterns
 
@@ -341,7 +355,7 @@ All components follow WCAG 2.1 AA guidelines:
 ## Related Documentation
 
 - [Button System](./button-system.md) - Detailed button component guide
-- [Form Components](./form-components.md) - Form and input components
+- [Form Patterns](./form-patterns.md) - Form implementation patterns
 - [Layout Components](./layout-components.md) - Page structure components
 - [Brand Guidelines](../../../brand/guidelines/accessibility.md) - Accessibility standards
 - [CSS Architecture](../styling/css-architecture.md) - Styling patterns
