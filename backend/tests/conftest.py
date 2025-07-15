@@ -85,7 +85,21 @@ def mock_fal_subscribe(monkeypatch):
                 return MALFORMED_RESPONSES[self.response_type]
             elif self.response_type in ERROR_RESPONSES:
                 error_data = ERROR_RESPONSES[self.response_type]
-                raise Exception(error_data["message"])
+                # Handle both new structured error format and legacy format
+                if "detail" in error_data:
+                    # New structured error format from fal.ai docs
+                    error_detail = error_data["detail"][0]
+                    error_msg = error_detail.get("msg", "Unknown error")
+                    error_type = error_detail.get("type", "unknown")
+                    # Create a more realistic exception with error details
+                    import json
+                    raise Exception(json.dumps({
+                        "detail": error_data["detail"],
+                        "status_code": error_data.get("status_code", 500)
+                    }))
+                else:
+                    # Legacy simple format
+                    raise Exception(error_data.get("message", "Unknown error"))
             
             return {"error": "Unknown response type"}
     
