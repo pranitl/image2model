@@ -303,12 +303,12 @@ class TestAbstractFalClient:
             # Should only process once due to timestamp deduplication
             assert len(progress_updates) == 1
     
-    def test_process_single_image_sync_wrapper(self, mock_fal_subscribe, temp_image_file):
+    def test_process_single_image_sync_wrapper(self, mock_fal_subscribe, mock_fal_upload, temp_image_file):
         """Test synchronous wrapper for async process_single_image."""
         class TestClient(AbstractFalClient):
             @property
             def model_endpoint(self):
-                return "test/endpoint"
+                return "tripo3d/tripo/v2.5/image-to-3d"  # Use a known endpoint for proper mock response
             
             def prepare_input(self, image_url, params):
                 return {"image_url": image_url}
@@ -331,3 +331,4 @@ class TestAbstractFalClient:
             
             assert result["status"] == "success"
             assert "download_url" in result
+            assert result["download_url"] == TRIPO_SUCCESS["model_mesh"]["url"]
