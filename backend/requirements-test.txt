@@ -1,0 +1,17 @@
+# Testing dependencies for Image-to-3D backend
+
+# Core testing framework
+pytest==7.4.3
+pytest-asyncio==0.21.1
+pytest-mock==3.12.0
+pytest-cov==4.1.0
+
+# API testing
+httpx==0.25.2
+
+# Redis mocking
+fakeredis==2.20.0
+
+# Additional test utilities
+pytest-timeout==2.2.0
+pytest-env==1.1.1
