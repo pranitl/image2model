@@ -254,7 +254,7 @@ def sample_model_params():
 @pytest.fixture(autouse=True)
 def setup_test_environment(monkeypatch):
     """Set up test environment variables."""
-    monkeypatch.setenv("FAL_KEY", "test-api-key")
+    monkeypatch.setenv("FAL_API_KEY", "test-api-key")
     monkeypatch.setenv("ENVIRONMENT", "test")
     
 

@@ -43,7 +43,7 @@ class TestAbstractFalClient:
                 pass
         
         # Mock settings with valid API key
-        monkeypatch.setenv("FAL_KEY", "test-api-key")
+        monkeypatch.setenv("FAL_API_KEY", "test-api-key")
         monkeypatch.setattr("app.core.config.settings.FAL_API_KEY", "test-api-key")
         
         # Should initialize without error

@@ -103,7 +103,7 @@ class AbstractFalClient(ABC):
             # Configure FAL credentials using the single API key
             if settings.FAL_API_KEY and settings.FAL_API_KEY != "your-fal-api-key-here":
                 # Set the FAL_KEY environment variable which fal_client uses
-                os.environ["FAL_KEY"] = settings.FAL_API_KEY
+                os.environ["FAL_API_KEY"] = settings.FAL_API_KEY
                 logger.info("FAL.AI API key configured successfully")
             else:
                 logger.error("FAL.AI API key not found or not set in settings")

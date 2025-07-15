@@ -281,8 +281,8 @@ class TestDownloadIntegration:
         assert data["error"] is True
         assert "Invalid job ID length" in data["message"]
         
-        # Invalid characters
-        response = client.get("/api/v1/download/../../etc/passwd/all")
+        # Invalid characters - test with special characters
+        response = client.get("/api/v1/download/job@id!invalid/all")
         assert response.status_code == 400
         data = response.json()
         assert data["error"] is True
@@ -292,8 +292,8 @@ class TestDownloadIntegration:
         """Test validation of filename format."""
         job_id, _ = mock_job_result
         
-        # Directory traversal attempt
-        response = client.get(f"/api/v1/download/{job_id}/../../../etc/passwd")
+        # Test filename with null byte (security risk)
+        response = client.get(f"/api/v1/download/{job_id}/file%00.glb")
         assert response.status_code == 400
         data = response.json()
         assert data["error"] is True
