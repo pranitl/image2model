@@ -271,7 +271,7 @@ def cleanup_old_files():
 
 
 @celery_app.task(bind=True)
-def process_file_in_batch(self, file_path: str, job_id: str, face_limit: Optional[int] = None, file_index: int = 0, total_files: int = 1):
+def process_file_in_batch(self, file_path: str, job_id: str, model_type: str = "tripo3d", params: Optional[Dict[str, Any]] = None, file_index: int = 0, total_files: int = 1):
     """
     Process a single file as part of a batch operation.
     This task is designed to be run in parallel with other files from the same batch.
@@ -279,7 +279,8 @@ def process_file_in_batch(self, file_path: str, job_id: str, face_limit: Optiona
     Args:
         file_path: Path to the image file to process
         job_id: Unique job identifier for the batch
-        face_limit: Optional limit on number of faces in generated models
+        model_type: Type of model to use ("tripo3d" or "trellis")
+        params: Model-specific parameters
         file_index: Index of this file in the batch (for progress tracking)
         total_files: Total number of files in the batch
         
@@ -308,14 +309,20 @@ def process_file_in_batch(self, file_path: str, job_id: str, face_limit: Optiona
 
         # Process single image using FAL.AI with synchronous wrapper
         file_start_time = time.time()
-        from app.workers.fal_client import fal_client
+        from app.workers.fal_client import get_model_client
         
+        # Initialize parameters if not provided
+        if params is None:
+            params = {}
+            
         try:
+            # Get the appropriate client for the model type
+            fal_client = get_model_client(model_type)
+            
             # Use synchronous wrapper to avoid coroutine serialization issues
             result = fal_client.process_single_image_sync(
                 file_path=file_path, 
-                face_limit=face_limit, 
-                texture_enabled=True,
+                params=params,
                 progress_callback=parallel_file_progress_callback,
                 job_id=job_id
             )
@@ -334,7 +341,6 @@ def process_file_in_batch(self, file_path: str, job_id: str, face_limit: Optiona
                 "model_url": result.get("model_url"),
                 "rendered_image": result.get("rendered_image"),
                 "filename": result.get("filename"),
-                "face_count": face_limit if face_limit else 1000,
                 "processing_time": actual_processing_time,
                 "model_format": result.get("model_format", "glb"),
                 "file_size": result.get("file_size", 0),
@@ -364,7 +370,7 @@ def process_file_in_batch(self, file_path: str, job_id: str, face_limit: Optiona
 
 
 @celery_app.task(bind=True)
-def finalize_batch_results(self, results: List[Dict[str, Any]], job_id: str, total_files: int, face_limit: Optional[int] = None):
+def finalize_batch_results(self, results: List[Dict[str, Any]], job_id: str, total_files: int, model_type: str = "tripo3d"):
     """
     Callback task to finalize batch processing results after all files are processed.
     
@@ -375,7 +381,7 @@ def finalize_batch_results(self, results: List[Dict[str, Any]], job_id: str, tot
         results: List of results from each file processing task
         job_id: Unique job identifier
         total_files: Total number of files in the batch
-        face_limit: Optional limit on number of faces in generated models
+        model_type: Type of model used for generation
         
     Returns:
         Dict with batch processing summary
@@ -397,7 +403,7 @@ def finalize_batch_results(self, results: List[Dict[str, Any]], job_id: str, tot
             "successful_files": success_count,
             "failed_files": failure_count,
             "timeout_files": timeout_count,
-            "face_limit": face_limit,
+            "model_type": model_type,
             "results": results,
             "message": f"Batch processing completed. {success_count} successful, {failure_count} failed, {timeout_count} timed out."
         }
@@ -409,7 +415,7 @@ def finalize_batch_results(self, results: List[Dict[str, Any]], job_id: str, tot
             # Prepare job result data in the format expected by download API
             job_result = {
                 "job_id": job_id,
-                "model_type": "tripo3d",  # Default to tripo3d for batch processing
+                "model_type": model_type,  # Use the provided model type
                 "files": [],
                 "total_files": total_files,
                 "successful_files": success_count,
@@ -441,7 +447,7 @@ def finalize_batch_results(self, results: List[Dict[str, Any]], job_id: str, tot
 
 
 @celery_app.task(bind=True, autoretry_for=(Exception,), retry_kwargs={'max_retries': 3, 'countdown': 60})
-def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional[int] = None):
+def process_batch(self, job_id: str, file_paths: List[str], model_type: str = "tripo3d", params: Optional[Dict[str, Any]] = None):
     """
     Enhanced batch processing task that processes files in parallel across multiple workers.
     
@@ -451,7 +457,8 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
     Args:
         job_id: Unique job identifier
         file_paths: List of paths to uploaded image files
-        face_limit: Optional limit on number of faces in generated models
+        model_type: Type of model to use ("tripo3d" or "trellis")
+        params: Model-specific parameters
         
     Returns:
         Dict with batch processing results
@@ -483,7 +490,8 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
             process_file_in_batch.s(
                 file_path=file_path,
                 job_id=job_id,
-                face_limit=face_limit,
+                model_type=model_type,
+                params=params,
                 file_index=i,
                 total_files=total_files
             ) for i, file_path in enumerate(file_paths)
@@ -507,7 +515,7 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
         # Use chord to execute tasks in parallel and call finalize_batch_results when done
         # The chord will automatically handle result collection without blocking
         chord_result = chord(parallel_tasks)(
-            finalize_batch_results.s(job_id=job_id, total_files=total_files, face_limit=face_limit)
+            finalize_batch_results.s(job_id=job_id, total_files=total_files, model_type=model_type)
         )
         
         # Return the chord result ID so the upload endpoint can track it
@@ -548,7 +556,7 @@ def process_batch(self, job_id: str, file_paths: List[str], face_limit: Optional
 
 
 @celery_app.task(bind=True, max_retries=5)
-def process_single_image_with_retry(self, file_path: str, face_limit: Optional[int] = None):
+def process_single_image_with_retry(self, file_path: str, model_type: str = "tripo3d", params: Optional[Dict[str, Any]] = None):
     """
     Enhanced task to process a single image with comprehensive retry logic.
     
@@ -557,7 +565,8 @@ def process_single_image_with_retry(self, file_path: str, face_limit: Optional[i
     
     Args:
         file_path: Path to the input image file
-        face_limit: Optional limit on number of faces
+        model_type: Type of model to use ("tripo3d" or "trellis")
+        params: Model-specific parameters
         
     Returns:
         Dict with processing result
@@ -602,11 +611,18 @@ def process_single_image_with_retry(self, file_path: str, face_limit: Optional[i
             logger.info(f"Retry task progress: {progress}% - {message}")
 
         # Import FAL client and process with sync wrapper
-        from app.workers.fal_client import fal_client
+        from app.workers.fal_client import get_model_client
+        
+        # Initialize parameters if not provided
+        if params is None:
+            params = {}
+            
+        # Get the appropriate client for the model type
+        fal_client = get_model_client(model_type)
+        
         result = fal_client.process_single_image_sync(
             file_path=file_path, 
-            face_limit=face_limit, 
-            texture_enabled=True,
+            params=params,
             progress_callback=retry_progress_callback
         )
         
