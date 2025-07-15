@@ -65,20 +65,20 @@ Based on the dependency graph in deps.json:
   - Attributes: self.model_endpoint (abstract property), self.max_retries=3, self.base_timeout=300, etc.
   - Methods:
     - `__init__(self)`: Setup authentication (as current).
-    - `upload_image(self, file_path: str) -> str`: Extract and refactor current upload logic.
+    - `upload_file_to_fal(self, file_path: str) -> str`: A new common method to handle `fal.upload_file()`.
     - `submit_job(self, input_data: Dict) -> Dict`: Refactor subscribe call with progress handling.
     - `process_result(self, result: Dict, ...) -> Dict`: Refactor to extract URLs generically.
-    - Abstract: `@abstractmethod def prepare_input(self, params: Dict) -> Dict`
+    - Abstract: `@abstractmethod def prepare_input(self, image_url: str, params: Dict) -> Dict`
     - Abstract (optional): `@abstractmethod def validate_params(self, params: Dict)`
     - Common error handler: _handle_fal_error (as current).
 
 - **1.2: Implement TripoClient (Subclass)**
   - Inherit from AbstractFalClient.
   - `@property def model_endpoint(self) -> str: return "tripo3d/tripo/v2.5/image-to-3d"`
-  - `prepare_input(self, params: Dict) -> Dict`: 
+  - `prepare_input(self, image_url: str, params: Dict) -> Dict`: 
     ```python
     input_data = {
-        "image_url": ...,  # From upload
+        "image_url": image_url,
         "texture": "standard" if params.get('texture_enabled', True) else "no",
         "texture_alignment": "original_image",
         "orientation": "default"
@@ -91,9 +91,9 @@ Based on the dependency graph in deps.json:
 - **1.3: Implement TrellisClient (Subclass)**
   - Inherit from AbstractFalClient.
   - `@property def model_endpoint(self) -> str: return "fal-ai/trellis"`
-  - `prepare_input(self, params: Dict) -> Dict`:
+  - `prepare_input(self, image_url: str, params: Dict) -> Dict`:
     ```python
-    input_data = {"image_url": ...}  # From upload
+    input_data = {"image_url": image_url}
     defaults = {  # From Trellis docs
         "ss_guidance_strength": 7.5,
         "ss_sampling_steps": 12,
@@ -116,7 +116,11 @@ Based on the dependency graph in deps.json:
   ```
 
 - **1.5: Update process_single_image**
-    - Make it a base method: Use self.prepare_input(params), self.submit_job, self.process_result.
+    - Make it a base method in `AbstractFalClient`.
+    - It should first call `image_url = self.upload_file_to_fal(file_path)`.
+    - Then, `input_data = self.prepare_input(image_url, params)`.
+    - Finally, it calls `self.submit_job(input_data)` and `self.process_result(...)`.
+    - This ensures the flow is clear: local file -> FAL.AI URL -> model input.
     - Remove Tripo specifics.
 
 ### Step 2: Update app/api/endpoints/models.py (Endpoint and Queuing)
@@ -162,5 +166,3 @@ Based on the dependency graph in deps.json:
 
 ### Step 6: Documentation
 - Docstrings, README updates on adding models.
-
-This is the complete, detailed plan in MD format. If you'd like any adjustments, let me know—otherwise, toggle to Act mode to create the file.
