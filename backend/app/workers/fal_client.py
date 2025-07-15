@@ -607,12 +607,128 @@ class TripoClient(AbstractFalClient):
                     raise ValueError("face_limit must be a positive integer")
 
 
+class TrellisClient(AbstractFalClient):
+    """
+    FAL.AI client implementation for Trellis model.
+    """
+    
+    @property
+    def model_endpoint(self) -> str:
+        """Return the Trellis model endpoint."""
+        return "fal-ai/trellis"
+    
+    def prepare_input(self, image_url: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Prepare input data for Trellis model.
+        
+        Args:
+            image_url: URL of the uploaded image
+            params: Model-specific parameters
+                - ss_guidance_strength (float): Guidance strength for SS (default: 7.5, range: 0-10)
+                - ss_sampling_steps (int): Sampling steps for SS (default: 12, range: 1-50)
+                - slat_guidance_strength (float): Guidance strength for SLAT (default: 3, range: 0-10)
+                - slat_sampling_steps (int): Sampling steps for SLAT (default: 12, range: 1-50)
+                - mesh_simplify (float): Mesh simplification ratio (default: 0.95, range: 0.9-0.98)
+                - texture_size (str): Texture size (enum: "512", "1024", "2048", default: "1024")
+            
+        Returns:
+            Dictionary of input data for the FAL.AI API
+        """
+        # Start with image URL
+        input_data = {"image_url": image_url}
+        
+        # Define defaults based on Trellis documentation
+        defaults = {
+            "ss_guidance_strength": 7.5,
+            "ss_sampling_steps": 12,
+            "slat_guidance_strength": 3,
+            "slat_sampling_steps": 12,
+            "mesh_simplify": 0.95,
+            "texture_size": "1024"
+        }
+        
+        # Update with provided parameters, using defaults for missing values
+        for key, default_value in defaults.items():
+            input_data[key] = params.get(key, default_value)
+        
+        logger.info(f"Trellis input data prepared: {input_data}")
+        return input_data
+    
+    def validate_params(self, params: Dict[str, Any]) -> None:
+        """
+        Validate Trellis-specific parameters.
+        
+        Args:
+            params: Parameters to validate
+            
+        Raises:
+            ValueError: If parameters are invalid
+        """
+        # Validate ss_guidance_strength
+        if 'ss_guidance_strength' in params:
+            value = params['ss_guidance_strength']
+            if not isinstance(value, (int, float)) or value < 0 or value > 10:
+                raise ValueError("ss_guidance_strength must be a number between 0 and 10")
+        
+        # Validate ss_sampling_steps
+        if 'ss_sampling_steps' in params:
+            value = params['ss_sampling_steps']
+            if not isinstance(value, int) or value < 1 or value > 50:
+                raise ValueError("ss_sampling_steps must be an integer between 1 and 50")
+        
+        # Validate slat_guidance_strength
+        if 'slat_guidance_strength' in params:
+            value = params['slat_guidance_strength']
+            if not isinstance(value, (int, float)) or value < 0 or value > 10:
+                raise ValueError("slat_guidance_strength must be a number between 0 and 10")
+        
+        # Validate slat_sampling_steps
+        if 'slat_sampling_steps' in params:
+            value = params['slat_sampling_steps']
+            if not isinstance(value, int) or value < 1 or value > 50:
+                raise ValueError("slat_sampling_steps must be an integer between 1 and 50")
+        
+        # Validate mesh_simplify
+        if 'mesh_simplify' in params:
+            value = params['mesh_simplify']
+            if not isinstance(value, (int, float)) or value < 0.9 or value > 0.98:
+                raise ValueError("mesh_simplify must be a number between 0.9 and 0.98")
+        
+        # Validate texture_size
+        if 'texture_size' in params:
+            value = params['texture_size']
+            valid_sizes = ["512", "1024", "2048"]
+            if str(value) not in valid_sizes:
+                raise ValueError(f"texture_size must be one of {valid_sizes}")
+
+
 class FalAIClient(TripoClient):
     """
     Legacy class name for backward compatibility.
     This is now just an alias for TripoClient.
     """
     pass
+
+
+def get_model_client(model_type: str) -> AbstractFalClient:
+    """
+    Factory function to get the appropriate FAL.AI client for a given model type.
+    
+    Args:
+        model_type: The type of model to use ("tripo3d" or "trellis")
+        
+    Returns:
+        An instance of the appropriate FAL.AI client
+        
+    Raises:
+        ValueError: If the model type is not supported
+    """
+    if model_type == "tripo3d":
+        return TripoClient()
+    elif model_type == "trellis":
+        return TrellisClient()
+    else:
+        raise ValueError(f"Unsupported model type: {model_type}")
 
 
 # Global instance for use in tasks - using TripoClient for backward compatibility
