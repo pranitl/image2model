@@ -1,0 +1,924 @@
+{
+    "__main__": {
+        "bacon": 0,
+        "imports": [
+            "app",
+            "app.api",
+            "app.api.api",
+            "app.api.endpoints",
+            "app.api.endpoints.admin",
+            "app.api.endpoints.download",
+            "app.api.endpoints.health",
+            "app.api.endpoints.logs",
+            "app.api.endpoints.models",
+            "app.api.endpoints.status",
+            "app.api.endpoints.upload",
+            "app.core",
+            "app.core.background_tasks",
+            "app.core.celery_app",
+            "app.core.config",
+            "app.core.error_handlers",
+            "app.core.exceptions",
+            "app.core.job_store",
+            "app.core.log_management",
+            "app.core.logging_config",
+            "app.core.monitoring",
+            "app.core.progress_tracker",
+            "app.core.session_store",
+            "app.main",
+            "app.middleware",
+            "app.middleware.auth",
+            "app.middleware.rate_limit",
+            "app.models",
+            "app.models.base",
+            "app.models.file",
+            "app.workers",
+            "app.workers.cleanup",
+            "app.workers.fal_client",
+            "app.workers.tasks"
+        ],
+        "name": "__main__",
+        "path": null
+    },
+    "app": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.api",
+            "app.api.endpoints.admin",
+            "app.api.endpoints.download",
+            "app.api.endpoints.health",
+            "app.api.endpoints.logs",
+            "app.api.endpoints.models",
+            "app.api.endpoints.status",
+            "app.api.endpoints.upload",
+            "app.core.background_tasks",
+            "app.core.celery_app",
+            "app.core.error_handlers",
+            "app.core.job_store",
+            "app.core.progress_tracker",
+            "app.core.session_store",
+            "app.main",
+            "app.middleware.auth",
+            "app.middleware.rate_limit",
+            "app.models.base",
+            "app.models.file",
+            "app.workers.cleanup",
+            "app.workers.fal_client",
+            "app.workers.tasks"
+        ],
+        "name": "app",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/__init__.py"
+    },
+    "app.api": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.api",
+            "app.main"
+        ],
+        "name": "app.api",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/api/__init__.py"
+    },
+    "app.api.api": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.main"
+        ],
+        "imports": [
+            "app",
+            "app.api",
+            "app.api.endpoints",
+            "app.api.endpoints.admin",
+            "app.api.endpoints.download",
+            "app.api.endpoints.health",
+            "app.api.endpoints.logs",
+            "app.api.endpoints.models",
+            "app.api.endpoints.status",
+            "app.api.endpoints.upload",
+            "fastapi"
+        ],
+        "name": "app.api.api",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/api/api.py"
+    },
+    "app.api.endpoints": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.api"
+        ],
+        "name": "app.api.endpoints",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/api/endpoints/__init__.py"
+    },
+    "app.api.endpoints.admin": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.api"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.config",
+            "app.middleware",
+            "app.middleware.auth",
+            "app.workers",
+            "app.workers.cleanup",
+            "fastapi",
+            "pydantic"
+        ],
+        "name": "app.api.endpoints.admin",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/api/endpoints/admin.py"
+    },
+    "app.api.endpoints.download": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.api"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.celery_app",
+            "app.core.config",
+            "app.core.job_store",
+            "app.core.session_store",
+            "app.middleware",
+            "app.middleware.auth",
+            "fastapi",
+            "fastapi.responses",
+            "pydantic",
+            "redis"
+        ],
+        "name": "app.api.endpoints.download",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/api/endpoints/download.py"
+    },
+    "app.api.endpoints.health": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.api"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.celery_app",
+            "app.core.monitoring",
+            "fastapi",
+            "fastapi.responses",
+            "psutil",
+            "pydantic",
+            "redis"
+        ],
+        "name": "app.api.endpoints.health",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/api/endpoints/health.py"
+    },
+    "app.api.endpoints.logs": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.api"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.log_management",
+            "fastapi",
+            "pydantic"
+        ],
+        "name": "app.api.endpoints.logs",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/api/endpoints/logs.py"
+    },
+    "app.api.endpoints.models": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.api"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.config",
+            "app.core.exceptions",
+            "app.workers",
+            "app.workers.tasks",
+            "fastapi",
+            "pydantic"
+        ],
+        "name": "app.api.endpoints.models",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/api/endpoints/models.py"
+    },
+    "app.api.endpoints.status": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.api"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.celery_app",
+            "app.core.exceptions",
+            "app.core.progress_tracker",
+            "fastapi",
+            "fastapi.responses"
+        ],
+        "name": "app.api.endpoints.status",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/api/endpoints/status.py"
+    },
+    "app.api.endpoints.upload": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.api"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.config",
+            "app.core.error_handlers",
+            "app.core.exceptions",
+            "app.core.session_store",
+            "app.middleware",
+            "app.middleware.auth",
+            "app.middleware.rate_limit",
+            "app.workers",
+            "app.workers.tasks",
+            "fastapi",
+            "fastapi.security",
+            "pydantic"
+        ],
+        "name": "app.api.endpoints.upload",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/api/endpoints/upload.py"
+    },
+    "app.core": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.admin",
+            "app.api.endpoints.download",
+            "app.api.endpoints.health",
+            "app.api.endpoints.logs",
+            "app.api.endpoints.models",
+            "app.api.endpoints.status",
+            "app.api.endpoints.upload",
+            "app.core.background_tasks",
+            "app.core.celery_app",
+            "app.core.error_handlers",
+            "app.core.job_store",
+            "app.core.progress_tracker",
+            "app.core.session_store",
+            "app.main",
+            "app.middleware.auth",
+            "app.middleware.rate_limit",
+            "app.models.base",
+            "app.workers.cleanup",
+            "app.workers.fal_client",
+            "app.workers.tasks"
+        ],
+        "name": "app.core",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/__init__.py"
+    },
+    "app.core.background_tasks": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.log_management"
+        ],
+        "name": "app.core.background_tasks",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/background_tasks.py"
+    },
+    "app.core.celery_app": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.download",
+            "app.api.endpoints.health",
+            "app.api.endpoints.status",
+            "app.workers.cleanup",
+            "app.workers.tasks"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.config",
+            "app.core.logging_config"
+        ],
+        "name": "app.core.celery_app",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/celery_app.py"
+    },
+    "app.core.config": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.admin",
+            "app.api.endpoints.download",
+            "app.api.endpoints.models",
+            "app.api.endpoints.upload",
+            "app.core.celery_app",
+            "app.core.job_store",
+            "app.core.progress_tracker",
+            "app.core.session_store",
+            "app.main",
+            "app.middleware.auth",
+            "app.middleware.rate_limit",
+            "app.models.base",
+            "app.workers.cleanup",
+            "app.workers.fal_client"
+        ],
+        "imports": [
+            "pydantic"
+        ],
+        "name": "app.core.config",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/config.py"
+    },
+    "app.core.error_handlers": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.upload",
+            "app.main"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.exceptions",
+            "fastapi",
+            "fastapi.exceptions",
+            "fastapi.responses",
+            "starlette",
+            "starlette.exceptions"
+        ],
+        "name": "app.core.error_handlers",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/error_handlers.py"
+    },
+    "app.core.exceptions": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.models",
+            "app.api.endpoints.status",
+            "app.api.endpoints.upload",
+            "app.core.error_handlers",
+            "app.workers.tasks"
+        ],
+        "name": "app.core.exceptions",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/exceptions.py"
+    },
+    "app.core.job_store": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.download",
+            "app.workers.tasks"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.config",
+            "redis"
+        ],
+        "name": "app.core.job_store",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/job_store.py"
+    },
+    "app.core.log_management": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.logs",
+            "app.core.background_tasks"
+        ],
+        "imports": [
+            "psutil"
+        ],
+        "name": "app.core.log_management",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/log_management.py"
+    },
+    "app.core.logging_config": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.core.celery_app",
+            "app.main",
+            "app.workers.tasks"
+        ],
+        "name": "app.core.logging_config",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/logging_config.py"
+    },
+    "app.core.monitoring": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.health",
+            "app.main"
+        ],
+        "imports": [
+            "fastapi",
+            "prometheus_client",
+            "psutil"
+        ],
+        "name": "app.core.monitoring",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/monitoring.py"
+    },
+    "app.core.progress_tracker": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.status",
+            "app.workers.tasks"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.config",
+            "redis"
+        ],
+        "name": "app.core.progress_tracker",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/progress_tracker.py"
+    },
+    "app.core.session_store": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.download",
+            "app.api.endpoints.upload"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.config",
+            "redis"
+        ],
+        "name": "app.core.session_store",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/core/session_store.py"
+    },
+    "app.main": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__"
+        ],
+        "imports": [
+            "app",
+            "app.api",
+            "app.api.api",
+            "app.core",
+            "app.core.config",
+            "app.core.error_handlers",
+            "app.core.logging_config",
+            "app.core.monitoring",
+            "fastapi",
+            "fastapi.middleware",
+            "fastapi.middleware.cors",
+            "fastapi.responses",
+            "uvicorn"
+        ],
+        "name": "app.main",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/main.py"
+    },
+    "app.middleware": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.admin",
+            "app.api.endpoints.download",
+            "app.api.endpoints.upload"
+        ],
+        "imports": [
+            "app.middleware.auth"
+        ],
+        "name": "app.middleware",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/middleware/__init__.py"
+    },
+    "app.middleware.auth": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.admin",
+            "app.api.endpoints.download",
+            "app.api.endpoints.upload",
+            "app.middleware"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.config",
+            "fastapi",
+            "fastapi.Security",
+            "fastapi.security"
+        ],
+        "name": "app.middleware.auth",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/middleware/auth.py"
+    },
+    "app.middleware.rate_limit": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.upload"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.config",
+            "fastapi"
+        ],
+        "name": "app.middleware.rate_limit",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/middleware/rate_limit.py"
+    },
+    "app.models": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.models.file"
+        ],
+        "name": "app.models",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/models/__init__.py"
+    },
+    "app.models.base": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.models.file"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.config",
+            "sqlalchemy",
+            "sqlalchemy.ext",
+            "sqlalchemy.ext.declarative",
+            "sqlalchemy.orm"
+        ],
+        "name": "app.models.base",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/models/base.py"
+    },
+    "app.models.file": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__"
+        ],
+        "imports": [
+            "app",
+            "app.models",
+            "app.models.base",
+            "sqlalchemy",
+            "sqlalchemy.sql"
+        ],
+        "name": "app.models.file",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/models/file.py"
+    },
+    "app.workers": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.admin",
+            "app.api.endpoints.models",
+            "app.api.endpoints.upload",
+            "app.workers.tasks"
+        ],
+        "name": "app.workers",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/workers/__init__.py"
+    },
+    "app.workers.cleanup": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.admin"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.celery_app",
+            "app.core.config"
+        ],
+        "name": "app.workers.cleanup",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/workers/cleanup.py"
+    },
+    "app.workers.fal_client": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.workers.tasks"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.config",
+            "fal_client",
+            "requests"
+        ],
+        "name": "app.workers.fal_client",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/workers/fal_client.py"
+    },
+    "app.workers.tasks": {
+        "bacon": 1,
+        "imported_by": [
+            "__main__",
+            "app.api.endpoints.models",
+            "app.api.endpoints.upload"
+        ],
+        "imports": [
+            "app",
+            "app.core",
+            "app.core.celery_app",
+            "app.core.exceptions",
+            "app.core.job_store",
+            "app.core.logging_config",
+            "app.core.progress_tracker",
+            "app.workers",
+            "app.workers.fal_client"
+        ],
+        "name": "app.workers.tasks",
+        "path": "/Users/pranit/Documents/AI/image2model/backend/app/workers/tasks.py"
+    },
+    "fal_client": {
+        "bacon": 2,
+        "imported_by": [
+            "app.workers.fal_client",
+            "fal_client"
+        ],
+        "imports": [
+            "fal_client"
+        ],
+        "name": "fal_client",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/fal_client/__init__.py"
+    },
+    "fastapi": {
+        "bacon": 2,
+        "imported_by": [
+            "app.api.api",
+            "app.api.endpoints.admin",
+            "app.api.endpoints.download",
+            "app.api.endpoints.health",
+            "app.api.endpoints.logs",
+            "app.api.endpoints.models",
+            "app.api.endpoints.status",
+            "app.api.endpoints.upload",
+            "app.core.error_handlers",
+            "app.core.monitoring",
+            "app.main",
+            "app.middleware.auth",
+            "app.middleware.rate_limit"
+        ],
+        "imports": [
+            "fastapi.exceptions",
+            "fastapi.responses",
+            "starlette"
+        ],
+        "name": "fastapi",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/fastapi/__init__.py"
+    },
+    "fastapi.Security": {
+        "bacon": 2,
+        "imported_by": [
+            "app.middleware.auth"
+        ],
+        "name": "fastapi.Security",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/fastapi/Security/__init__.py"
+    },
+    "fastapi.exceptions": {
+        "bacon": 2,
+        "imported_by": [
+            "app.core.error_handlers",
+            "fastapi"
+        ],
+        "imports": [
+            "pydantic",
+            "starlette",
+            "starlette.exceptions"
+        ],
+        "name": "fastapi.exceptions",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/fastapi/exceptions.py"
+    },
+    "fastapi.middleware": {
+        "bacon": 2,
+        "imported_by": [
+            "app.main"
+        ],
+        "imports": [
+            "starlette"
+        ],
+        "name": "fastapi.middleware",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/fastapi/middleware/__init__.py"
+    },
+    "fastapi.middleware.cors": {
+        "bacon": 2,
+        "imported_by": [
+            "app.main"
+        ],
+        "imports": [
+            "starlette"
+        ],
+        "name": "fastapi.middleware.cors",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/fastapi/middleware/cors.py"
+    },
+    "fastapi.responses": {
+        "bacon": 2,
+        "imported_by": [
+            "app.api.endpoints.download",
+            "app.api.endpoints.health",
+            "app.api.endpoints.status",
+            "app.core.error_handlers",
+            "app.main",
+            "fastapi"
+        ],
+        "imports": [
+            "starlette"
+        ],
+        "name": "fastapi.responses",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/fastapi/responses.py"
+    },
+    "fastapi.security": {
+        "bacon": 2,
+        "imported_by": [
+            "app.api.endpoints.upload",
+            "app.middleware.auth"
+        ],
+        "name": "fastapi.security",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/fastapi/security/__init__.py"
+    },
+    "prometheus_client": {
+        "bacon": 2,
+        "imported_by": [
+            "app.core.monitoring",
+            "prometheus_client"
+        ],
+        "imports": [
+            "prometheus_client"
+        ],
+        "name": "prometheus_client",
+        "path": "/Users/pranit/Library/Python/3.11/lib/python/site-packages/prometheus_client/__init__.py"
+    },
+    "psutil": {
+        "bacon": 2,
+        "imported_by": [
+            "app.api.endpoints.health",
+            "app.core.log_management",
+            "app.core.monitoring",
+            "psutil"
+        ],
+        "imports": [
+            "psutil"
+        ],
+        "name": "psutil",
+        "path": "/Users/pranit/Library/Python/3.11/lib/python/site-packages/psutil/__init__.py"
+    },
+    "pydantic": {
+        "bacon": 2,
+        "imported_by": [
+            "app.api.endpoints.admin",
+            "app.api.endpoints.download",
+            "app.api.endpoints.health",
+            "app.api.endpoints.logs",
+            "app.api.endpoints.models",
+            "app.api.endpoints.upload",
+            "app.core.config",
+            "fastapi.exceptions",
+            "pydantic"
+        ],
+        "imports": [
+            "pydantic"
+        ],
+        "name": "pydantic",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/pydantic/__init__.py"
+    },
+    "redis": {
+        "bacon": 2,
+        "imported_by": [
+            "app.api.endpoints.download",
+            "app.api.endpoints.health",
+            "app.core.job_store",
+            "app.core.progress_tracker",
+            "app.core.session_store",
+            "redis"
+        ],
+        "imports": [
+            "redis"
+        ],
+        "name": "redis",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/redis/__init__.py"
+    },
+    "requests": {
+        "bacon": 2,
+        "imported_by": [
+            "app.workers.fal_client",
+            "requests"
+        ],
+        "imports": [
+            "requests"
+        ],
+        "name": "requests",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/requests/__init__.py"
+    },
+    "sqlalchemy": {
+        "bacon": 2,
+        "imported_by": [
+            "app.models.base",
+            "app.models.file",
+            "sqlalchemy",
+            "sqlalchemy.ext",
+            "sqlalchemy.ext.declarative",
+            "sqlalchemy.orm",
+            "sqlalchemy.sql"
+        ],
+        "imports": [
+            "sqlalchemy",
+            "sqlalchemy.sql"
+        ],
+        "name": "sqlalchemy",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/sqlalchemy/__init__.py"
+    },
+    "sqlalchemy.ext": {
+        "bacon": 2,
+        "imported_by": [
+            "app.models.base"
+        ],
+        "imports": [
+            "sqlalchemy"
+        ],
+        "name": "sqlalchemy.ext",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/sqlalchemy/ext/__init__.py"
+    },
+    "sqlalchemy.ext.declarative": {
+        "bacon": 2,
+        "imported_by": [
+            "app.models.base"
+        ],
+        "imports": [
+            "sqlalchemy",
+            "sqlalchemy.orm"
+        ],
+        "name": "sqlalchemy.ext.declarative",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/sqlalchemy/ext/declarative/__init__.py"
+    },
+    "sqlalchemy.orm": {
+        "bacon": 2,
+        "imported_by": [
+            "app.models.base",
+            "sqlalchemy.ext.declarative",
+            "sqlalchemy.orm"
+        ],
+        "imports": [
+            "sqlalchemy",
+            "sqlalchemy.orm"
+        ],
+        "name": "sqlalchemy.orm",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/sqlalchemy/orm/__init__.py"
+    },
+    "sqlalchemy.sql": {
+        "bacon": 2,
+        "imported_by": [
+            "app.models.file",
+            "sqlalchemy",
+            "sqlalchemy.sql"
+        ],
+        "imports": [
+            "sqlalchemy",
+            "sqlalchemy.sql"
+        ],
+        "name": "sqlalchemy.sql",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/sqlalchemy/sql/__init__.py"
+    },
+    "starlette": {
+        "bacon": 2,
+        "imported_by": [
+            "app.core.error_handlers",
+            "fastapi",
+            "fastapi.exceptions",
+            "fastapi.middleware",
+            "fastapi.middleware.cors",
+            "fastapi.responses",
+            "starlette.exceptions"
+        ],
+        "name": "starlette",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/starlette/__init__.py"
+    },
+    "starlette.exceptions": {
+        "bacon": 2,
+        "imported_by": [
+            "app.core.error_handlers",
+            "fastapi.exceptions"
+        ],
+        "imports": [
+            "starlette"
+        ],
+        "name": "starlette.exceptions",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/starlette/exceptions.py"
+    },
+    "uvicorn": {
+        "bacon": 2,
+        "imported_by": [
+            "app.main",
+            "uvicorn"
+        ],
+        "imports": [
+            "uvicorn"
+        ],
+        "name": "uvicorn",
+        "path": "/opt/homebrew/lib/python3.11/site-packages/uvicorn/__init__.py"
+    }
+}
