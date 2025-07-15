@@ -1,14 +1,15 @@
 """
 FAL.AI client for 3D model generation from images.
 
-This module provides a FAL.AI client wrapper for the tripo3d/tripo/v2.5/image-to-3d
-model with proper authentication, error handling, and result processing.
+This module provides a FAL.AI client wrapper for multiple image-to-3D models
+with proper authentication, error handling, and result processing.
 """
 
 import os
 import logging
 import time
 from typing import Dict, Any, Optional
+from abc import ABC, abstractmethod
 import requests
 import fal_client as fal
 from app.core.config import settings
@@ -46,23 +47,55 @@ class FalAIDownloadError(FalAIError):
     pass
 
 
-class FalAIClient:
+class AbstractFalClient(ABC):
     """
-    FAL.AI client wrapper for 3D model generation.
+    Abstract base class for FAL.AI client wrappers for 3D model generation.
     
-    This class handles authentication, API calls, and response processing
-    for the tripo3d/tripo/v2.5/image-to-3d model.
+    This class provides common functionality for authentication, API calls,
+    and response processing that can be shared across different model implementations.
     """
     
     def __init__(self):
         """Initialize the FAL.AI client with credentials."""
         self._setup_authentication()
-        self.model_endpoint = "tripo3d/tripo/v2.5/image-to-3d"
         self.max_retries = 3
         self.base_timeout = 300  # 5 minutes
         self.max_wait_time = 1800  # 30 minutes max
         self._processed_log_timestamps = set()  # Track processed logs to avoid duplicates
         self._last_progress = {}  # Track last progress per file to ensure monotonic updates
+    
+    @property
+    @abstractmethod
+    def model_endpoint(self) -> str:
+        """Return the FAL.AI model endpoint for this client."""
+        pass
+    
+    @abstractmethod
+    def prepare_input(self, image_url: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Prepare input data for the specific model.
+        
+        Args:
+            image_url: URL of the uploaded image
+            params: Model-specific parameters
+            
+        Returns:
+            Dictionary of input data for the FAL.AI API
+        """
+        pass
+    
+    @abstractmethod
+    def validate_params(self, params: Dict[str, Any]) -> None:
+        """
+        Validate model-specific parameters.
+        
+        Args:
+            params: Parameters to validate
+            
+        Raises:
+            ValueError: If parameters are invalid
+        """
+        pass
         
     def _setup_authentication(self) -> None:
         """Set up FAL.AI authentication using API key from settings."""
@@ -78,6 +111,92 @@ class FalAIClient:
         except Exception as e:
             logger.error(f"Failed to configure FAL.AI credentials: {str(e)}")
             raise FalAIAuthenticationError(f"Authentication setup failed: {str(e)}")
+    
+    def upload_file_to_fal(self, file_path: str) -> str:
+        """
+        Upload a file to FAL.AI and return the URL.
+        
+        Args:
+            file_path: Path to the file to upload
+            
+        Returns:
+            URL of the uploaded file
+        """
+        logger.info(f"Uploading file to FAL.AI: {file_path}")
+        file_url = fal.upload_file(file_path)
+        logger.info(f"File uploaded to FAL.AI: {file_url}")
+        return file_url
+    
+    def submit_job(self, input_data: Dict[str, Any], progress_callback: Optional[callable] = None, file_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Submit a job to FAL.AI and wait for the result.
+        
+        Args:
+            input_data: Input data for the model
+            progress_callback: Optional callback for progress updates
+            file_id: Optional file ID for progress tracking
+            
+        Returns:
+            Result from FAL.AI
+        """
+        logger.info(f"Submitting job to FAL.AI endpoint: {self.model_endpoint}")
+        logger.info(f"Input data: {input_data}")
+        
+        # Track timing for monitoring
+        submit_start_time = time.time()
+        
+        try:
+            # Use the correct fal_client.subscribe method for real-time execution
+            # This will handle the queue/progress automatically and provide real-time updates
+            result = fal.subscribe(
+                self.model_endpoint,
+                arguments=input_data,
+                with_logs=True,
+                on_queue_update=lambda update: self._handle_queue_update(update, progress_callback, file_id=file_id) if progress_callback else None
+            )
+            
+            # Log success metrics
+            submit_duration_ms = (time.time() - submit_start_time) * 1000
+            logger.info(
+                f"FAL.AI job completed successfully in {submit_duration_ms:.2f}ms",
+                extra={
+                    "model_endpoint": self.model_endpoint,
+                    "result_keys": list(result.keys()) if isinstance(result, dict) else None,
+                    "duration_ms": submit_duration_ms
+                }
+            )
+            
+            return result
+            
+        except Exception as e:
+            # Log failure metrics
+            submit_duration_ms = (time.time() - submit_start_time) * 1000
+            logger.error(
+                f"FAL.AI job failed after {submit_duration_ms:.2f}ms: {str(e)}",
+                extra={
+                    "model_endpoint": self.model_endpoint,
+                    "error": str(e),
+                    "duration_ms": submit_duration_ms
+                }
+            )
+            raise
+    
+    def process_result(self, result: Dict[str, Any], file_path: str, progress_callback: Optional[callable] = None, job_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Process the FAL.AI API result and return standardized output.
+        
+        This is a common method that can be overridden by subclasses if needed.
+        
+        Args:
+            result: FAL.AI API response
+            file_path: Original input file path
+            progress_callback: Optional callback function for progress updates
+            job_id: Job ID for tracking
+            
+        Returns:
+            Processed result dictionary with standardized fields
+        """
+        return self._process_result(result, file_path, progress_callback, job_id)
     
     def _exponential_backoff(self, attempt: int) -> float:
         """Calculate exponential backoff delay."""
@@ -216,8 +335,7 @@ class FalAIClient:
     async def process_single_image(
         self, 
         file_path: str, 
-        face_limit: Optional[int] = None,
-        texture_enabled: bool = True,
+        params: Optional[Dict[str, Any]] = None,
         progress_callback: Optional[callable] = None,
         job_id: Optional[str] = None
     ) -> Dict[str, Any]:
@@ -226,12 +344,18 @@ class FalAIClient:
         
         Args:
             file_path: Path to the input image file
-            face_limit: Optional face limit parameter for the model
+            params: Model-specific parameters
             progress_callback: Optional callback function for progress updates
+            job_id: Optional job ID for tracking
             
         Returns:
             Dictionary containing processing result with status, paths, and metadata
         """
+        if params is None:
+            params = {}
+        
+        # Validate parameters
+        self.validate_params(params)
         # Clear progress tracking for this file
         file_id = job_id or file_path
         if file_id in self._last_progress:
@@ -246,72 +370,22 @@ class FalAIClient:
                 if progress_callback:
                     progress_callback("Uploading image to FAL.AI...", 15)
                 
-                # Upload file and get URL using correct API
-                file_url = fal.upload_file(file_path)
-                logger.info(f"File uploaded to FAL.AI: {file_url}")
+                # Upload file and get URL
+                image_url = self.upload_file_to_fal(file_path)
                 
-                # Prepare input data for FAL.AI API according to their documentation
-                input_data = {
-                    "image_url": file_url,
-                    "texture": "standard" if texture_enabled else "no",
-                    "texture_alignment": "original_image",  # Per documentation
-                    "orientation": "default"  # Per documentation
-                }
+                # Prepare input data using subclass-specific method
+                input_data = self.prepare_input(image_url, params)
                 
-                # Add face_limit if specified
-                # Note: We do NOT set quad=True as it forces FBX output instead of GLB
-                if face_limit is not None and face_limit > 0:
-                    input_data["face_limit"] = face_limit
-                    logger.info(f"Using face_limit: {face_limit} (GLB output)")
-                
-                # Submit the job to FAL.AI using correct API method
+                # Submit the job to FAL.AI
                 logger.info("Submitting job to FAL.AI API...")
                 if progress_callback:
                     progress_callback("Submitting job to FAL.AI API...", 25)
                 
-                # Track timing for monitoring
-                submit_start_time = time.time()
+                result = self.submit_job(input_data, progress_callback, file_id)
                 
-                try:
-                    # Use the correct fal_client.subscribe method for real-time execution
-                    # This will handle the queue/progress automatically and provide real-time updates
-                    result = fal.subscribe(
-                        self.model_endpoint,
-                        arguments=input_data,
-                        with_logs=True,
-                        on_queue_update=lambda update: self._handle_queue_update(update, progress_callback, file_id=job_id or file_path) if progress_callback else None
-                    )
-                    
-                    # Log success metrics
-                    submit_duration_ms = (time.time() - submit_start_time) * 1000
-                    logger.info(
-                        f"FAL.AI job completed successfully in {submit_duration_ms:.2f}ms",
-                        extra={
-                            "model_endpoint": self.model_endpoint,
-                            "image_path": file_path,
-                            "face_limit": face_limit,
-                            "result_keys": list(result.keys()) if isinstance(result, dict) else None,
-                            "duration_ms": submit_duration_ms
-                        }
-                    )
-                    
-                    logger.info("FAL.AI processing completed")
-                    if progress_callback:
-                        progress_callback("3D model generation completed", 90)
-                        
-                except Exception as e:
-                    # Log failure metrics
-                    submit_duration_ms = (time.time() - submit_start_time) * 1000
-                    logger.error(
-                        f"FAL.AI job failed after {submit_duration_ms:.2f}ms: {str(e)}",
-                        extra={
-                            "model_endpoint": self.model_endpoint,
-                            "image_path": file_path,
-                            "error": str(e),
-                            "duration_ms": submit_duration_ms
-                        }
-                    )
-                    raise
+                logger.info("FAL.AI processing completed")
+                if progress_callback:
+                    progress_callback("3D model generation completed", 90)
                 
                 if not result:
                     raise FalAIAPIError("No result received from FAL.AI API")
@@ -443,8 +517,7 @@ class FalAIClient:
     def process_single_image_sync(
         self, 
         file_path: str, 
-        face_limit: Optional[int] = None,
-        texture_enabled: bool = True,
+        params: Optional[Dict[str, Any]] = None,
         progress_callback: Optional[callable] = None,
         job_id: Optional[str] = None
     ) -> Dict[str, Any]:
@@ -467,13 +540,80 @@ class FalAIClient:
         return loop.run_until_complete(
             self.process_single_image(
                 file_path=file_path,
-                face_limit=face_limit,
-                texture_enabled=texture_enabled,
+                params=params,
                 progress_callback=progress_callback,
                 job_id=job_id
             )
         )
 
 
-# Global instance for use in tasks
+class TripoClient(AbstractFalClient):
+    """
+    FAL.AI client implementation for Tripo3D v2.5 model.
+    """
+    
+    @property
+    def model_endpoint(self) -> str:
+        """Return the Tripo3D model endpoint."""
+        return "tripo3d/tripo/v2.5/image-to-3d"
+    
+    def prepare_input(self, image_url: str, params: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Prepare input data for Tripo3D model.
+        
+        Args:
+            image_url: URL of the uploaded image
+            params: Model-specific parameters
+                - texture_enabled (bool): Whether to enable texture generation
+                - face_limit (int): Optional face limit for the model
+            
+        Returns:
+            Dictionary of input data for the FAL.AI API
+        """
+        input_data = {
+            "image_url": image_url,
+            "texture": "standard" if params.get('texture_enabled', True) else "no",
+            "texture_alignment": "original_image",
+            "orientation": "default"
+        }
+        
+        # Add face_limit if specified
+        # Note: We do NOT set quad=True as it forces FBX output instead of GLB
+        if 'face_limit' in params and params['face_limit'] is not None and params['face_limit'] > 0:
+            input_data['face_limit'] = params['face_limit']
+            logger.info(f"Using face_limit: {params['face_limit']} (GLB output)")
+        
+        return input_data
+    
+    def validate_params(self, params: Dict[str, Any]) -> None:
+        """
+        Validate Tripo3D-specific parameters.
+        
+        Args:
+            params: Parameters to validate
+            
+        Raises:
+            ValueError: If parameters are invalid
+        """
+        # Validate texture_enabled
+        if 'texture_enabled' in params and not isinstance(params['texture_enabled'], bool):
+            raise ValueError("texture_enabled must be a boolean value")
+        
+        # Validate face_limit
+        if 'face_limit' in params:
+            face_limit = params['face_limit']
+            if face_limit is not None:
+                if not isinstance(face_limit, int) or face_limit <= 0:
+                    raise ValueError("face_limit must be a positive integer")
+
+
+class FalAIClient(TripoClient):
+    """
+    Legacy class name for backward compatibility.
+    This is now just an alias for TripoClient.
+    """
+    pass
+
+
+# Global instance for use in tasks - using TripoClient for backward compatibility
 fal_client = FalAIClient()
