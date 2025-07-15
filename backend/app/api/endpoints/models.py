@@ -4,7 +4,7 @@
 
 import uuid
 import logging
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
@@ -17,11 +17,31 @@ router = APIRouter()
 
 
 class ModelGenerationRequest(BaseModel):
-    """Request model for 3D model generation."""
+    """
+    Request model for 3D model generation.
+    
+    Attributes:
+        file_id: ID of the uploaded image file
+        model_type: Type of model to use ("tripo3d" or "trellis")
+        quality: Quality setting (standard, low, high) - legacy field for compatibility
+        texture_enabled: Whether to enable texture - legacy field for compatibility
+        params: Model-specific parameters dictionary
+            For tripo3d:
+                - face_limit (int): Maximum number of faces in the mesh
+                - texture_enabled (bool): Whether to generate texture
+            For trellis:
+                - ss_guidance_strength (float): 0-10, default 7.5
+                - ss_sampling_steps (int): 1-50, default 12
+                - slat_guidance_strength (float): 0-10, default 3
+                - slat_sampling_steps (int): 1-50, default 12
+                - mesh_simplify (float): 0.9-0.98, default 0.95
+                - texture_size (str): "512", "1024", or "2048", default "1024"
+    """
     file_id: str
     model_type: str = "tripo3d"
     quality: str = "standard"  # standard, low, high
     texture_enabled: bool = True
+    params: Optional[Dict[str, Any]] = None  # Model-specific parameters
 
 
 class ModelGenerationResponse(BaseModel):
