@@ -8,7 +8,7 @@ from typing import List, Dict, Any
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, Depends
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from pydantic import BaseModel
 
 from app.core.config import settings
@@ -347,6 +347,79 @@ async def list_job_files(job_id: str, request: Request):
         )
 
 
+@router.get("/download/{job_id}/model")
+async def download_model_direct(job_id: str, request: Request, api_key: str = OptionalAuth):
+    """
+    Download the primary 3D model file from a completed job via redirect.
+    
+    This endpoint is optimized for FAL.AI URLs and will redirect to the
+    model URL directly, avoiding local file storage.
+    
+    Args:
+        job_id: Unique job identifier
+        request: FastAPI request object for logging
+        
+    Returns:
+        RedirectResponse to the FAL.AI model URL
+    """
+    client_ip = request.client.host if request.client else "unknown"
+    
+    try:
+        # Log download attempt
+        logger.info(f"Direct model download request from {client_ip} for job {job_id}")
+        
+        # Validate job ID
+        _validate_job_id(job_id)
+        
+        # Check job ownership if API key is provided
+        if api_key and settings.ENVIRONMENT == "production":
+            from app.core.session_store import session_store
+            if not session_store.verify_job_access(job_id, api_key):
+                logger.warning(f"Unauthorized access attempt for job {job_id} by {client_ip}")
+                raise HTTPException(status_code=403, detail="Access denied")
+        
+        # Get job result from job store
+        from app.core.job_store import job_store
+        
+        job_result = job_store.get_job_result(job_id)
+        if not job_result:
+            logger.warning(f"Job result not found for {job_id}")
+            raise HTTPException(status_code=404, detail="Job not found")
+        
+        # Get the first file's model URL
+        files = job_result.get("files", [])
+        if not files:
+            logger.warning(f"No files found for job {job_id}")
+            raise HTTPException(status_code=404, detail="No model files found")
+        
+        # Get the primary model file (first one)
+        primary_file = files[0]
+        model_url = primary_file.get("model_url")
+        
+        if not model_url:
+            logger.warning(f"No model URL found for job {job_id}")
+            raise HTTPException(status_code=404, detail="Model URL not available")
+        
+        logger.info(f"Redirecting to FAL.AI URL for job {job_id}")
+        
+        # Return a redirect response to the FAL.AI URL
+        return RedirectResponse(
+            url=model_url, 
+            status_code=302,
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0"
+            }
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Unexpected error in direct download for job {job_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
 @router.get("/download/{job_id}/{filename}")
 async def download_model(job_id: str, filename: str, request: Request, api_key: str = OptionalAuth):
     """
@@ -377,6 +450,31 @@ async def download_model(job_id: str, filename: str, request: Request, api_key: 
                 logger.warning(f"Unauthorized access attempt for job {job_id} by {client_ip}")
                 raise HTTPException(status_code=403, detail="Access denied")
         
+        # First, check if we have a FAL.AI URL for this job
+        from app.core.job_store import job_store
+        
+        job_result = job_store.get_job_result(job_id)
+        if job_result:
+            # Look for the file in FAL.AI results
+            for file_data in job_result.get("files", []):
+                if file_data.get("filename") == filename and file_data.get("model_url"):
+                    # Found FAL.AI URL - redirect to it
+                    fal_url = file_data["model_url"]
+                    logger.info(f"Redirecting to FAL.AI URL for {filename}")
+                    
+                    # Return a redirect response to the FAL.AI URL
+                    # Using 302 (temporary redirect) as the URL might expire
+                    return RedirectResponse(
+                        url=fal_url, 
+                        status_code=302,
+                        headers={
+                            "Cache-Control": "no-cache, no-store, must-revalidate",
+                            "Pragma": "no-cache",
+                            "Expires": "0"
+                        }
+                    )
+        
+        # Fallback to local file system (for backward compatibility)
         # Construct file path
         file_path = os.path.join(settings.OUTPUT_DIR, job_id, filename)
         
