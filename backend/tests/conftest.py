@@ -132,7 +132,13 @@ def mock_fal_client_factory(monkeypatch):
         client.process_single_image_sync = Mock(return_value={
             "status": "success",
             "download_url": "https://fal.media/files/model.glb",
-            "model_format": "glb"
+            "model_url": "https://fal.media/files/model.glb",
+            "model_format": "glb",
+            "file_size": 1000000,
+            "filename": "model.glb",
+            "content_type": "model/gltf-binary",
+            "output": None,  # No local file path
+            "task_id": "test-task-123"
         })
         
         return client

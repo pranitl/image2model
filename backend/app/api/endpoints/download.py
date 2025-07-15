@@ -4,7 +4,7 @@ Download endpoints for generated 3D model files.
 
 import os
 import logging
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, Depends
@@ -25,7 +25,7 @@ class FileInfo(BaseModel):
     size: int
     mime_type: str
     created_time: float
-    rendered_image: Dict[str, Any] = None  # Optional rendered image data
+    rendered_image: Optional[Dict[str, Any]] = None  # Optional rendered image data
 
 
 class JobFilesResponse(BaseModel):
@@ -34,7 +34,7 @@ class JobFilesResponse(BaseModel):
     files: List[FileInfo]
     download_urls: List[str]
     total_files: int
-    model_type: str = None  # Optional model type for client rendering
+    model_type: Optional[str] = None  # Optional model type for client rendering
 
 
 def _validate_job_id(job_id: str) -> None:

@@ -15,8 +15,20 @@ class TestDownloadIntegration:
     
     @pytest.fixture
     def client(self):
-        """Create test client."""
-        return TestClient(app)
+        """Create test client with auth dependency override."""
+        from app.middleware.auth import get_optional_api_key
+        
+        # Override the auth dependency
+        async def override_get_optional_api_key():
+            return None
+        
+        app.dependency_overrides[get_optional_api_key] = override_get_optional_api_key
+        
+        client = TestClient(app)
+        yield client
+        
+        # Clean up
+        app.dependency_overrides.clear()
     
     @pytest.fixture
     def mock_job_result(self, mock_job_store):
@@ -106,7 +118,9 @@ class TestDownloadIntegration:
         
         assert response.status_code == 404
         data = response.json()
-        assert "Job not found" in data["detail"]
+        assert data["error"] is True
+        assert data["error_code"] == "HTTP_404"
+        assert "Job not found" in data["message"]
     
     def test_download_model_type_in_response(self, client, mock_job_store):
         """Test model_type field is included in responses."""
@@ -255,19 +269,24 @@ class TestDownloadIntegration:
         
         assert response.status_code == 404
         data = response.json()
-        assert "No model files found" in data["detail"]
+        assert data["error"] is True
+        assert "No model files found" in data["message"]
     
     def test_download_invalid_job_id(self, client):
         """Test validation of job ID format."""
         # Very long job ID
         response = client.get("/api/v1/download/" + "x" * 200 + "/all")
         assert response.status_code == 400
-        assert "Invalid job ID length" in response.json()["detail"]
+        data = response.json()
+        assert data["error"] is True
+        assert "Invalid job ID length" in data["message"]
         
         # Invalid characters
         response = client.get("/api/v1/download/../../etc/passwd/all")
         assert response.status_code == 400
-        assert "Invalid job ID format" in response.json()["detail"]
+        data = response.json()
+        assert data["error"] is True
+        assert "Invalid job ID format" in data["message"]
     
     def test_download_invalid_filename(self, client, mock_job_result):
         """Test validation of filename format."""
@@ -276,16 +295,25 @@ class TestDownloadIntegration:
         # Directory traversal attempt
         response = client.get(f"/api/v1/download/{job_id}/../../../etc/passwd")
         assert response.status_code == 400
-        assert "Invalid filename" in response.json()["detail"]
+        data = response.json()
+        assert data["error"] is True
+        assert "Invalid filename" in data["message"]
         
         # Invalid extension
         response = client.get(f"/api/v1/download/{job_id}/model.exe")
         assert response.status_code == 400
-        assert "Invalid file format" in response.json()["detail"]
+        data = response.json()
+        assert data["error"] is True
+        assert "Invalid file format" in data["message"]
     
     def test_download_with_auth(self, client, mock_job_result, monkeypatch):
         """Test download with API key authentication."""
         job_id, _ = mock_job_result
+        
+        # We need to temporarily remove the dependency override for this test
+        # to test the actual auth flow
+        from app.middleware.auth import get_optional_api_key
+        app.dependency_overrides.pop(get_optional_api_key, None)
         
         # Mock production environment
         monkeypatch.setattr("app.core.config.settings.ENVIRONMENT", "production")
@@ -294,18 +322,28 @@ class TestDownloadIntegration:
         with patch("app.core.session_store.session_store.verify_job_access") as mock_verify:
             mock_verify.return_value = True
             
+            # Provide a proper Bearer token
             response = client.get(
                 f"/api/v1/download/{job_id}/model",
-                headers={"X-API-Key": "test-api-key"},
+                headers={"Authorization": "Bearer test-api-key"},
                 follow_redirects=False
             )
             
             assert response.status_code == 302
             mock_verify.assert_called_once_with(job_id, "test-api-key")
+            
+        # Restore the override for other tests
+        async def override_get_optional_api_key():
+            return None
+        app.dependency_overrides[get_optional_api_key] = override_get_optional_api_key
     
     def test_download_unauthorized(self, client, mock_job_result, monkeypatch):
         """Test unauthorized access in production mode."""
         job_id, _ = mock_job_result
+        
+        # Remove the dependency override to test actual auth
+        from app.middleware.auth import get_optional_api_key
+        app.dependency_overrides.pop(get_optional_api_key, None)
         
         monkeypatch.setattr("app.core.config.settings.ENVIRONMENT", "production")
         
@@ -314,11 +352,19 @@ class TestDownloadIntegration:
             
             response = client.get(
                 f"/api/v1/download/{job_id}/model",
-                headers={"X-API-Key": "wrong-key"}
+                headers={"Authorization": "Bearer wrong-key"},
+                follow_redirects=False  # Don't follow redirect
             )
             
             assert response.status_code == 403
-            assert "Access denied" in response.json()["detail"]
+            data = response.json()
+            assert data["error"] is True
+            assert "Access denied" in data["message"]
+            
+        # Restore the override
+        async def override_get_optional_api_key():
+            return None
+        app.dependency_overrides[get_optional_api_key] = override_get_optional_api_key
     
     def test_debug_endpoint(self, client, mock_job_store):
         """Test debug endpoint for troubleshooting."""

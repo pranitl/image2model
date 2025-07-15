@@ -6,7 +6,7 @@ import pytest
 import os
 import time
 from unittest.mock import patch, Mock, MagicMock, call
-from celery import chord
+from typing import Dict, Any, Optional
 
 from app.workers.tasks import (
     process_batch,
@@ -19,6 +19,41 @@ from tests.mocks.fal_responses import TRIPO_SUCCESS, TRELLIS_SUCCESS
 
 class TestBatchProcessing:
     """Integration tests for parallel batch processing."""
+    
+    @pytest.fixture
+    def mock_task_state(self, monkeypatch):
+        """Mock Celery task state updates."""
+        state_updates = []
+        
+        class MockTask:
+            def __init__(self):
+                self.request = Mock()
+                self.request.id = "test-task-123"
+                self.request.retries = 0
+                
+            def update_state(self, state, meta):
+                state_updates.append({"state": state, "meta": meta})
+        
+        mock_task = MockTask()
+        monkeypatch.setattr("celery.current_task", mock_task)
+        return mock_task, state_updates
+    
+    @pytest.fixture
+    def mock_job_store(self, monkeypatch):
+        """Simple mock job store without Redis dependency."""
+        class MockJobStore:
+            def __init__(self):
+                self.data = {}
+                
+            def set_job_result(self, job_id: str, result: Dict[str, Any]):
+                self.data[job_id] = result
+                
+            def get_job_result(self, job_id: str) -> Optional[Dict[str, Any]]:
+                return self.data.get(job_id)
+        
+        mock_store = MockJobStore()
+        monkeypatch.setattr("app.core.job_store.job_store", mock_store)
+        return mock_store
     
     @pytest.fixture
     def batch_files(self, tmp_path):
@@ -48,7 +83,9 @@ class TestBatchProcessing:
                 result.id = "chord-task-123"
                 return result
         
-        monkeypatch.setattr("app.workers.tasks.chord", MockChord)
+        # Mock at the celery module level since it's imported within the function
+        import celery
+        monkeypatch.setattr(celery, "chord", MockChord)
         return chord_calls
     
     def test_batch_5_files_success(
@@ -139,14 +176,17 @@ class TestBatchProcessing:
         assert result_tripo["job_id"] == "batch-tripo"
         assert result_trellis["job_id"] == "batch-trellis"
     
-    def test_batch_partial_success(self, mock_fal_client_factory):
+    def test_batch_partial_success(self, mock_fal_client_factory, mock_job_store):
         """Test batch where some files succeed and others fail."""
         # Mock individual file processing
         success_result = {
             "file_path": "test1.png",
             "status": "completed",
             "download_url": "https://fal.media/files/success.glb",
-            "model_format": "glb"
+            "model_url": "https://fal.media/files/success.glb",
+            "model_format": "glb",
+            "file_size": 1000000,
+            "filename": "success.glb"
         }
         
         failure_result = {
@@ -170,8 +210,13 @@ class TestBatchProcessing:
         assert final_result["successful_files"] == 2
         assert final_result["failed_files"] == 1
         assert final_result["total_files"] == 3
+        
+        # Verify job store was updated
+        stored = mock_job_store.get_job_result("batch-partial")
+        assert stored is not None
+        assert len(stored["files"]) == 2  # Only successful files
     
-    def test_batch_all_fail(self):
+    def test_batch_all_fail(self, mock_job_store):
         """Test batch where all files fail processing."""
         failure_results = [
             {
@@ -193,14 +238,21 @@ class TestBatchProcessing:
         assert final_result["status"] == "failed"  # No successes
         assert final_result["successful_files"] == 0
         assert final_result["failed_files"] == 3
+        
+        # Verify job store not updated for all-fail case
+        stored = mock_job_store.get_job_result("batch-all-fail")
+        assert stored is None  # Should not store results when all fail
     
-    def test_batch_with_timeout(self):
+    def test_batch_with_timeout(self, mock_job_store):
         """Test batch processing with some files timing out."""
         results = [
             {
                 "file_path": "test1.png",
                 "status": "completed",
-                "download_url": "https://fal.media/files/model1.glb"
+                "download_url": "https://fal.media/files/model1.glb",
+                "model_url": "https://fal.media/files/model1.glb",
+                "file_size": 1000000,
+                "filename": "model1.glb"
             },
             {
                 "file_path": "test2.png",
@@ -219,8 +271,14 @@ class TestBatchProcessing:
         
         assert final_result["status"] == "partially_completed"
         assert final_result["timeout_files"] == 1
+        assert final_result["successful_files"] == 1
+        
+        # Verify job store has only successful file
+        stored = mock_job_store.get_job_result("batch-timeout")
+        assert stored is not None
+        assert len(stored["files"]) == 1
     
-    def test_batch_empty_file_list(self, mock_task_state):
+    def test_batch_empty_file_list(self, mock_task_state, mock_chord):
         """Test batch processing with empty file list."""
         mock_task, _ = mock_task_state
         
@@ -232,6 +290,9 @@ class TestBatchProcessing:
         )
         
         assert result["total_files"] == 0
+        # Verify chord was created even with empty list
+        assert len(mock_chord) == 1
+        assert len(mock_chord[0].tasks) == 0  # No tasks for empty file list
     
     def test_batch_single_file(self, temp_image_file, mock_chord, mock_task_state):
         """Test batch processing with just one file."""
@@ -281,16 +342,33 @@ class TestBatchProcessing:
         
         assert result["total_files"] == 2
     
-    def test_concurrent_progress_updates(self, mock_job_store):
+    def test_concurrent_progress_updates(self, mock_job_store, mock_fal_client_factory, tmp_path):
         """Test multiple workers updating same job progress."""
         job_id = "concurrent-job"
+        
+        # Create test files
+        test_files = []
+        for i in range(3):
+            file_path = tmp_path / f"test{i}.png"
+            file_path.write_bytes(b'\x89PNG\r\n\x1a\n')
+            test_files.append(str(file_path))
+        
+        # Configure mock client
+        mock_client = mock_fal_client_factory("tripo3d")
+        mock_client.process_single_image_sync.return_value = {
+            "status": "success",
+            "download_url": "https://fal.media/files/model.glb",
+            "model_format": "glb",
+            "file_size": 1000000,
+            "filename": "model.glb"
+        }
         
         # Simulate concurrent updates
         with patch.object(progress_tracker, 'update_file_progress') as mock_update:
             # Process multiple files "concurrently"
-            for i in range(3):
+            for i, file_path in enumerate(test_files):
                 process_file_in_batch(
-                    file_path=f"test{i}.png",
+                    file_path=file_path,
                     job_id=job_id,
                     model_type="tripo3d",
                     file_index=i,
@@ -326,15 +404,38 @@ class TestBatchProcessing:
         assert len(stored["files"]) == 5
         assert stored["successful_files"] == 5
     
-    def test_parallel_file_processing(self, temp_image_file, mock_fal_client_factory):
+    def test_parallel_file_processing(self, temp_image_file, mock_fal_client_factory, monkeypatch):
         """Test individual file processing in parallel context."""
-        mock_client = mock_fal_client_factory("trellis")
-        mock_client.process_single_image_sync.return_value = {
+        # Configure custom return value for this test
+        custom_result = {
             "status": "success",
             "download_url": "https://fal.media/files/parallel.glb",
+            "model_url": "https://fal.media/files/parallel.glb",
             "model_format": "glb",
-            "processing_time": 25.5
+            "file_size": 2000000,
+            "filename": "parallel.glb",
+            "content_type": "model/gltf-binary",
+            "output": None,
+            "task_id": "parallel-task-123"
         }
+        
+        # Create a persistent mock client that returns our custom result
+        from unittest.mock import Mock
+        from app.workers.fal_client import TrellisClient
+        
+        mock_client = Mock(spec=TrellisClient)
+        mock_client.model_endpoint = "fal-ai/trellis"
+        mock_client.process_single_image_sync.return_value = custom_result
+        
+        # Override the factory to always return our configured mock
+        def custom_factory(model_type):
+            if model_type == "trellis":
+                return mock_client
+            else:
+                return mock_fal_client_factory(model_type)
+        
+        monkeypatch.setattr("app.workers.fal_client.get_model_client", custom_factory)
+        monkeypatch.setattr("app.workers.tasks.get_model_client", custom_factory)
         
         # Process single file as part of batch
         result = process_file_in_batch(
@@ -349,7 +450,7 @@ class TestBatchProcessing:
         assert result["status"] == "completed"
         assert result["file_path"] == temp_image_file
         assert result["download_url"] == "https://fal.media/files/parallel.glb"
-        assert result["processing_time"] == 25.5
+        assert "processing_time" in result  # Actual processing time from task execution
     
     def test_chord_callback_execution(self, mock_job_store):
         """Test finalize callback runs after all files complete."""
@@ -407,6 +508,8 @@ class TestBatchProcessing:
         subtasks = mock_chord[0].tasks
         for task in subtasks:
             # Check task signature includes params
+            # The signature is process_file_in_batch.s(file_path, job_id, model_type, params, file_index, total_files)
+            assert len(task.args) == 6
             assert task.args[3] == custom_params  # 4th argument is params
     
     def test_batch_progress_state_updates(self, batch_files, mock_task_state, mock_chord):
