@@ -156,13 +156,188 @@ Based on the dependency graph in deps.json:
 - As per Step 1.3; test param mapping.
 
 ### Step 5: Testing
-- Unit: Mock FAL, test subclasses.
-    - Test AbstractFalClient methods (upload, submit, process).
-    - Test TripoClient: Mock FAL responses, assert correct input_data, validate params.
-    - Test TrellisClient: Similar, with Trellis params.
 
-- Integration: End-to-end with mocks.
-- Manual: Real API calls.
+#### Test Infrastructure
+- **Directory Structure**: `backend/tests/` with `unit/`, `integration/`, and `mocks/` subdirectories
+- **Dependencies**: pytest, pytest-asyncio, pytest-mock, httpx, fakeredis
+- **Mock Strategy**: Accurate FAL.AI response mocks based on API documentation to avoid $0.30/call costs
+
+#### Unit Tests (backend/tests/unit/)
+
+**Core Abstraction Tests (test_fal_client_abstract.py) - 12 test cases**:
+- Abstract base class enforcement (cannot instantiate directly)
+- Authentication setup with valid/missing API keys
+- Exponential backoff calculation (1s, 2s, 4s, 8s, max 60s)
+- Progress callback invocation and deduplication
+- File upload to FAL returning mock URLs
+- Job submission with progress tracking
+- Error handling for auth, rate limit, timeout, and server errors
+- Result processing with URL extraction
+- Synchronous wrapper for async methods
+
+**TripoClient Tests (test_tripo_client.py) - 17 test cases**:
+- Model endpoint property returns "tripo3d/tripo/v2.5/image-to-3d"
+- Parameter preparation with texture_enabled (true/false → "standard"/"no")
+- Face limit inclusion when specified (no quad=True to keep GLB output)
+- Validation: texture_enabled must be boolean
+- Validation: face_limit must be positive integer (rejects -100, 0, "1000")
+- MODEL_INFO metadata structure verification
+- Default parameter preservation
+
+**TrellisClient Tests (test_trellis_client.py) - 17 test cases**:
+- Model endpoint property returns "fal-ai/trellis"
+- All 6 parameters with defaults applied correctly
+- Custom parameters override defaults
+- Validation tests for each parameter:
+  - ss_guidance_strength: 0-10 range (reject -1, 15)
+  - ss_sampling_steps: 1-50 range (reject 0, 100)
+  - slat_guidance_strength: 0-10 range
+  - slat_sampling_steps: 1-50 range
+  - mesh_simplify: 0.9-0.98 range (reject 0.85, 0.99)
+  - texture_size: enum "512", "1024", "2048" (reject "4096", int values)
+- Boundary value testing at min/max limits
+- Wrong type validation (string for float, float for int, int for string enum)
+
+**Factory Function Tests (test_fal_client_factory.py) - 10 test cases**:
+- get_model_client("tripo3d") returns TripoClient instance
+- get_model_client("trellis") returns TrellisClient instance
+- get_model_client("invalid") raises ValueError
+- get_available_models() returns complete model list
+- FalAIClient legacy alias works for backward compatibility
+- MODEL_INFO completeness for all models
+- Factory creates independent instances
+- Model list returns copies, not references
+
+**Edge Case Validation Tests (test_edge_case_validation.py) - 18 test cases**:
+- Tripo client ignores Trellis parameters
+- Trellis client ignores Tripo parameters
+- Empty params dict uses all defaults
+- None params handled gracefully
+- Extra unknown parameters ignored
+- Missing required arguments raise TypeError
+- Mixed valid/invalid parameter values
+- No type coercion (string "1000" not converted to int)
+- Null parameter value handling
+- Special boundary values (0.0, max values)
+
+**Malformed Response Tests (test_malformed_responses.py) - 16 test cases**:
+- Missing model_mesh key → failed status
+- Missing url in model_mesh → failed status
+- Null URL value → failed status
+- Empty string URL → failed status
+- Completely empty response → failed status
+- Wrong structure (nested differently) → failed status
+- Partial data (missing optional fields) → success with defaults
+- Invalid JSON types (int URL, string file_size) → failed status
+- Extremely large file sizes (2GB) → handled gracefully
+- Missing optional fields (rendered_image, task_id) → success
+- Extra unexpected fields → ignored
+- model_mesh not a dictionary → processing error
+- Exception during processing → caught and returned as error
+
+#### Integration Tests (backend/tests/integration/)
+
+**Models Endpoint Tests (test_models_endpoint.py) - 14 test cases**:
+- POST /generate with tripo3d → 200, job queued, 180s estimate
+- POST /generate with trellis → 200, job queued, 240s estimate  
+- POST /generate with invalid model → 422 "Unsupported model type"
+- POST /generate missing file_id → 422 "field required"
+- POST /generate non-existent file → 422 "File not found"
+- Custom params passed to Celery task correctly
+- GET /available → list with tripo3d and trellis
+- GET /models/tripo3d/params → schema with defaults
+- GET /models/trellis/params → schema with 6 parameters
+- GET /models/invalid/params → 404 with available models list
+- Legacy texture_enabled field compatibility
+- Mixed legacy/new parameter format handling
+- GET /job/{id} placeholder implementation
+
+**Task Integration Tests (test_tasks_integration.py) - 10 test cases**:
+- generate_3d_model_task with Tripo → success, job store updated
+- generate_3d_model_task with Trellis → correct params used
+- Progress updates through callbacks (15%, 50%, 90%, 100%)
+- Job store contains complete result with model_type
+- FAL client errors propagated as ProcessingException
+- Retry logic for timeout errors
+- Sync wrapper calls async method correctly
+- Empty/None params handled (converted to {})
+- Result format includes all SSE required fields
+- Task state updates tracked properly
+
+**Batch Processing Tests (test_batch_processing.py) - 18 test cases**:
+- 5 files create 5 parallel subtasks via chord
+- 10 files process in parallel
+- Single model type per batch (no mixing)
+- Partial success: 3 succeed, 2 fail → status "completed"
+- All fail → status "failed"
+- Some timeout → status "partially_completed"
+- Empty file list handled gracefully
+- Single file still uses chord for consistency
+- Duplicate files processed independently
+- Invalid file paths queued (fail individually)
+- Concurrent progress updates via progress_tracker
+- Job store handles concurrent writes safely
+- Individual file processing returns correct structure
+- Chord callback aggregates results correctly
+- Custom params passed to each file
+- Progress states updated during batch
+
+**Download Integration Tests (test_download_integration.py) - 15 test cases**:
+- GET /{job_id}/all → FAL URLs with model_type field
+- GET /{job_id}/model → 302 redirect to FAL URL
+- GET /{job_id}/{filename} → 302 redirect for specific file
+- Non-existent job → 404 "Job not found"
+- model_type included for client rendering hints
+- Fallback to Celery results via Redis scan
+- Legacy local file compatibility maintained
+- Multiple files in single job handled
+- No files in job → 404 "No model files found"
+- Invalid job ID format validation
+- Invalid filename validation (no traversal)
+- API key authentication in production
+- Unauthorized access → 403
+- Debug endpoint for troubleshooting
+
+#### Mock Implementation Details
+
+**FAL Response Mocks (tests/mocks/fal_responses.py)**:
+- TRIPO_SUCCESS: Complete response with model_mesh, rendered_image, task_id
+- TRELLIS_SUCCESS: Response with model_mesh and timings
+- MALFORMED_RESPONSES: 9 variations of broken responses
+- ERROR_RESPONSES: Rate limit (429), auth (401), timeout (504), server (500)
+- PROGRESS_UPDATES: 6 stages of progress messages
+- INVALID_PARAMS: 12 parameter validation test cases
+
+**Core Fixtures (tests/conftest.py)**:
+- mock_fal_upload: Returns test URLs without API calls
+- mock_fal_subscribe: Configurable responses with progress simulation
+- mock_fal_client_factory: Returns configured mock clients
+- mock_celery_task: Captures task state updates
+- fake_redis: In-memory Redis for job store testing
+- mock_job_store: Simplified job storage
+- test_client: FastAPI test client
+- sample_model_params: Valid parameters for each model
+
+#### Test Execution
+```bash
+# Run all tests
+cd backend && pytest
+
+# Run with coverage
+pytest --cov=app --cov-report=html
+
+# Run specific test categories
+pytest tests/unit/
+pytest tests/integration/
+pytest -k "malformed"  # Run malformed response tests
+pytest -k "batch"      # Run batch processing tests
+```
+
+#### Total Test Coverage
+- **Unit Tests**: ~78 test cases covering core functionality and edge cases
+- **Integration Tests**: ~57 test cases covering API endpoints and workflows
+- **Total**: 135+ test cases ensuring robust dual-model implementation
+- **Focus Areas**: Invalid parameters, missing fields, malformed responses, parallel batch processing
 
 ### Step 6: Documentation
 - Docstrings, README updates on adding models.
