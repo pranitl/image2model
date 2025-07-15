@@ -8,7 +8,6 @@ from unittest.mock import patch, Mock
 
 from fastapi.testclient import TestClient
 from app.main import app
-from app.core.job_store import job_store
 
 
 class TestDownloadIntegration:
@@ -252,7 +251,7 @@ class TestDownloadIntegration:
         
         mock_job_store.set_job_result(job_id, job_result)
         
-        response = client.get(f"/api/v1/download/{job_id}/model`)
+        response = client.get(f"/api/v1/download/{job_id}/model")
         
         assert response.status_code == 404
         data = response.json()
@@ -326,7 +325,16 @@ class TestDownloadIntegration:
         job_id = "debug-job"
         mock_job_store.set_job_result(job_id, {"test": "data"})
         
-        response = client.get(f"/api/v1/download/debug/job/{job_id}")
+        # Mock redis.from_url to prevent live Redis connection
+        with patch("redis.from_url") as mock_redis_from_url:
+            mock_redis = Mock()
+            mock_redis_from_url.return_value = mock_redis
+            
+            # Mock Redis operations
+            mock_redis.get.return_value = '{"test": "data"}'
+            mock_redis.scan_iter.return_value = [f"job_result:{job_id}", "job_result:other"]
+            
+            response = client.get(f"/api/v1/debug/job/{job_id}")
         
         assert response.status_code == 200
         data = response.json()

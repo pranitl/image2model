@@ -72,6 +72,15 @@ class TestTripoClient:
         
         assert "face_limit" not in result
     
+    def test_prepare_input_face_limit_none_not_included(self, tripo_client):
+        """Test that face_limit of None is not included in input."""
+        image_url = "https://fal.ai/uploads/test.png"
+        params = {"face_limit": None}
+        
+        result = tripo_client.prepare_input(image_url, params)
+        
+        assert "face_limit" not in result
+    
     def test_validate_params_texture_enabled_invalid(self, tripo_client):
         """Test validation rejects non-boolean texture_enabled."""
         params = {"texture_enabled": "yes"}
@@ -148,7 +157,7 @@ class TestTripoClient:
         image_url = "https://fal.ai/uploads/test.png"
         params = {"face_limit": 0}
         
-        # Even though validation would fail, prepare_input checks > 0
+        # prepare_input checks > 0, so zero is not included
         result = tripo_client.prepare_input(image_url, params)
         
         assert "face_limit" not in result

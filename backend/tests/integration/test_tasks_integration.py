@@ -38,22 +38,27 @@ class TestTasksIntegration:
         """Test task completes successfully with Tripo model."""
         mock_task, state_updates = mock_task_state
         
-        # Configure mock client
+        # Configure mock client to return proper FAL.AI response format
         mock_client = mock_fal_client_factory("tripo3d")
         mock_client.process_single_image_sync.return_value = {
             "status": "success",
+            "input": temp_image_file,
+            "output": None,  # No local file path since we use direct FAL.AI URLs
             "download_url": "https://fal.media/files/model.glb",
             "model_format": "glb",
+            "model_url": "https://fal.media/files/model.glb",
             "file_size": 1000000,
             "content_type": "model/gltf-binary",
+            "output_directory": None,
+            "original_file_size": 1000000,
+            "original_content_type": "model/gltf-binary",
+            "task_id": "fal-task-123",
             "filename": "model.glb",
             "rendered_image": {
                 "url": "https://fal.media/files/preview.webp",
                 "file_size": 50000,
                 "content_type": "image/webp"
-            },
-            "task_id": "fal-task-123",
-            "output": None  # No local file
+            }
         }
         
         # Run task
@@ -65,11 +70,17 @@ class TestTasksIntegration:
             params={"texture_enabled": True, "face_limit": 5000}
         )
         
-        # Verify result
+        # Verify result matches implementation's return format
         assert result["status"] == "completed"
         assert result["job_id"] == "job-123"
+        assert result["file_id"] == "test-file-123"
         assert result["model_format"] == "glb"
-        assert "download_url" in result
+        assert result["result_path"] is None  # No local file, using direct FAL.AI URLs
+        assert result["total_files"] == 1
+        assert result["successful_files"] == 1
+        assert result["failed_files"] == 0
+        assert "job_result" in result  # For download endpoint fallback
+        assert "message" in result
         
         # Verify progress updates
         assert len(state_updates) > 0
@@ -94,16 +105,22 @@ class TestTasksIntegration:
         """Test task completes successfully with Trellis model."""
         mock_task, state_updates = mock_task_state
         
-        # Configure mock client
+        # Configure mock client with proper FAL.AI response format
         mock_client = mock_fal_client_factory("trellis")
         mock_client.process_single_image_sync.return_value = {
             "status": "success",
+            "input": temp_image_file,
+            "output": None,  # No local file path
             "download_url": "https://fal.media/files/trellis_model.glb",
             "model_format": "glb",
+            "model_url": "https://fal.media/files/trellis_model.glb",
             "file_size": 2000000,
             "content_type": "model/gltf-binary",
-            "filename": "trellis_model.glb",
-            "output": None
+            "output_directory": None,
+            "original_file_size": 2000000,
+            "original_content_type": "model/gltf-binary",
+            "task_id": "fal-task-456",
+            "filename": "trellis_model.glb"
         }
         
         # Run task with Trellis params
@@ -119,9 +136,15 @@ class TestTasksIntegration:
             }
         )
         
-        # Verify result
+        # Verify result matches implementation format
         assert result["status"] == "completed"
+        assert result["job_id"] == "job-456"
+        assert result["file_id"] == "test-file-456"
         assert result["model_format"] == "glb"
+        assert result["result_path"] is None
+        assert result["total_files"] == 1
+        assert result["successful_files"] == 1
+        assert result["failed_files"] == 0
         
         # Verify correct client was used
         assert mock_client.process_single_image_sync.called
@@ -146,8 +169,18 @@ class TestTasksIntegration:
             progress_callback = kwargs.get("progress_callback")
             return {
                 "status": "success",
+                "input": file_path,
+                "output": None,
                 "download_url": "https://fal.media/files/model.glb",
-                "model_format": "glb"
+                "model_format": "glb",
+                "model_url": "https://fal.media/files/model.glb",
+                "file_size": 1500000,
+                "content_type": "model/gltf-binary",
+                "output_directory": None,
+                "original_file_size": 1500000,
+                "original_content_type": "model/gltf-binary",
+                "task_id": "fal-task-progress",
+                "filename": "model.glb"
             }
         
         mock_client = mock_fal_client_factory("tripo3d")
@@ -189,12 +222,23 @@ class TestTasksIntegration:
         mock_client = mock_fal_client_factory("tripo3d")
         mock_client.process_single_image_sync.return_value = {
             "status": "success",
+            "input": temp_image_file,
+            "output": None,
             "download_url": "https://fal.media/files/test.glb",
             "model_format": "glb",
+            "model_url": "https://fal.media/files/test.glb",
             "file_size": 3000000,
             "content_type": "model/gltf-binary",
-            "rendered_image": {"url": "https://fal.media/files/preview.webp"},
-            "task_id": "fal-123"
+            "output_directory": None,
+            "original_file_size": 3000000,
+            "original_content_type": "model/gltf-binary",
+            "task_id": "fal-123",
+            "filename": "test.glb",
+            "rendered_image": {
+                "url": "https://fal.media/files/preview.webp",
+                "file_size": 25000,
+                "content_type": "image/webp"
+            }
         }
         
         # Run task
@@ -218,7 +262,9 @@ class TestTasksIntegration:
         file_data = stored_result["files"][0]
         assert file_data["model_url"] == "https://fal.media/files/test.glb"
         assert file_data["file_size"] == 3000000
+        assert file_data["content_type"] == "model/gltf-binary"
         assert file_data["rendered_image"]["url"] == "https://fal.media/files/preview.webp"
+        assert file_data["task_id"] == "fal-123"
     
     def test_task_error_handling(
         self,

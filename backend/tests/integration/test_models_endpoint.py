@@ -93,7 +93,9 @@ class TestModelsEndpoint:
         
         assert response.status_code == 422
         data = response.json()
-        assert "Unsupported model type: invalid_model" in str(data)
+        # Check the detail message from FileValidationException
+        assert "detail" in data
+        assert "Unsupported model type: invalid_model" in data["detail"]
     
     def test_generate_missing_file_id(self, client):
         """Test generation without file_id."""
@@ -106,7 +108,10 @@ class TestModelsEndpoint:
         
         assert response.status_code == 422
         data = response.json()
-        assert "field required" in str(data).lower()
+        # FastAPI validation error format
+        assert "detail" in data
+        assert isinstance(data["detail"], list)
+        assert any("field required" in str(error).lower() or "missing" in str(error).lower() for error in data["detail"])
     
     def test_generate_nonexistent_file(self, client, mock_upload_dir):
         """Test generation with non-existent file."""
@@ -152,14 +157,12 @@ class TestModelsEndpoint:
         assert captured_args["params"]["mesh_simplify"] == 0.92
         assert captured_args["params"]["texture_size"] == "2048"
     
-    def test_generate_with_invalid_params(self, client, test_image_file, mock_fal_client_factory):
+    def test_generate_with_invalid_params(self, client, test_image_file, mock_celery_task):
         """Test generation with invalid parameters."""
         file_id, _ = test_image_file
         
-        # Configure mock to raise validation error
-        mock_client = mock_fal_client_factory("tripo3d")
-        mock_client.validate_params.side_effect = ValueError("face_limit must be positive")
-        
+        # The endpoint doesn't validate params - it passes them to the worker
+        # So even invalid params will result in a successful queue
         response = client.post(
             "/api/v1/models/generate",
             json={
@@ -169,8 +172,11 @@ class TestModelsEndpoint:
             }
         )
         
-        # Should still queue the task - validation happens in worker
+        # Should successfully queue the task - validation happens in worker
         assert response.status_code == 200
+        data = response.json()
+        assert "job_id" in data
+        assert data["status"] == "queued"
     
     def test_available_models_endpoint(self, client):
         """Test listing available models."""
@@ -292,5 +298,15 @@ class TestModelsEndpoint:
         assert response.status_code == 200
         data = response.json()
         assert data["job_id"] == "test-job-123"
-        assert "status" in data
-        assert "progress" in data
+        assert data["status"] == "processing"  # Hardcoded in implementation
+        assert data["progress"] == 45  # Hardcoded in implementation
+        assert data["estimated_remaining"] == 75  # Hardcoded in implementation
+        assert data["result_url"] is None  # Hardcoded in implementation
+    
+    def test_download_model_endpoint(self, client):
+        """Test download model endpoint (not implemented)."""
+        response = client.get("/api/v1/models/download/test-job-123")
+        
+        assert response.status_code == 501
+        data = response.json()
+        assert data["detail"] == "Model download not yet implemented"
