@@ -9,6 +9,7 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from app.workers.tasks import generate_3d_model_task
+from app.workers.fal_client import get_model_client
 from app.core.exceptions import FileValidationException, ProcessingException
 
 logger = logging.getLogger(__name__)
@@ -76,10 +77,13 @@ async def generate_3d_model(request: ModelGenerationRequest, background_tasks: B
         ProcessingException: If model generation fails to start
     """
     try:
-        # Validate the model type
-        if request.model_type != "tripo3d":
+        # Validate the model type using the factory function
+        try:
+            # This will raise ValueError if model_type is not supported
+            client = get_model_client(request.model_type)
+        except ValueError as e:
             raise FileValidationException(
-                message=f"Unsupported model type: {request.model_type}. Only 'tripo3d' is supported.",
+                message=str(e),
                 filename=request.file_id
             )
         
@@ -106,21 +110,34 @@ async def generate_3d_model(request: ModelGenerationRequest, background_tasks: B
         # Generate job ID
         job_id = str(uuid.uuid4())
         
+        # Prepare parameters for the task
+        # Merge legacy parameters with new params for backward compatibility
+        task_params = request.params or {}
+        
+        # Handle legacy texture_enabled parameter for tripo3d
+        if request.model_type == "tripo3d" and "texture_enabled" not in task_params:
+            task_params["texture_enabled"] = request.texture_enabled
+        
         # Queue the 3D model generation task
         task_result = generate_3d_model_task.delay(
             file_id=request.file_id,
             file_path=file_path,
             job_id=job_id,
-            quality=request.quality,
-            texture_enabled=request.texture_enabled
+            model_type=request.model_type,
+            params=task_params
         )
         
         logger.info(f"Started 3D model generation job {job_id} for file {request.file_id}")
         
+        # Estimate processing time based on model type
+        estimated_time = 180  # Default 3 minutes
+        if request.model_type == "trellis":
+            estimated_time = 240  # 4 minutes for Trellis (typically slower)
+        
         return ModelGenerationResponse(
             job_id=job_id,
             status="queued",
-            estimated_time=180  # 3 minutes estimate for Tripo3D
+            estimated_time=estimated_time
         )
         
     except (FileValidationException, ProcessingException):

@@ -24,22 +24,22 @@ from app.core.logging_config import get_task_logger, set_correlation_id
 from app.core.progress_tracker import progress_tracker
 
 # Import FAL.AI client for real 3D model generation
-from app.workers.fal_client import FalAIClient
+from app.workers.fal_client import get_model_client
 
 logger = logging.getLogger(__name__)
 
 
 @celery_app.task(bind=True)
-def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, quality: str = "medium", texture_enabled: bool = True):
+def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, model_type: str = "tripo3d", params: Optional[Dict[str, Any]] = None):
     """
-    Background task to generate 3D model from image using Tripo3D.
+    Background task to generate 3D model from image using specified model.
     
     Args:
         file_id: Unique file identifier
         file_path: Path to the input image file
         job_id: Unique job identifier
-        quality: Quality setting (low, medium, high)
-        texture_enabled: Whether to enable texture generation
+        model_type: Type of model to use ("tripo3d" or "trellis")
+        params: Model-specific parameters
         
     Returns:
         Dict with job results
@@ -60,7 +60,7 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
             }
         )
         
-        logger.info(f"Starting Tripo3D generation for file {file_id} (job: {job_id})")
+        logger.info(f"Starting {model_type} generation for file {file_id} (job: {job_id})")
         
         # Use FAL.AI client for actual 3D model generation
         current_task.update_state(
@@ -69,19 +69,21 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
                 "current": 0,
                 "total": 1,
                 "progress": 25,
-                "status": f"Uploading {original_filename} to FAL.AI Tripo3D...",
+                "status": f"Uploading {original_filename} to FAL.AI {model_type}...",
                 "filename": original_filename,
                 "job_id": job_id,
                 "file_id": file_id
             }
         )
         
-        # Quality is now handled directly in FAL.AI client
-        # The texture setting is passed through the texture_enabled parameter
-        logger.info(f"Processing with quality: {quality}, texture_enabled: {texture_enabled}")
+        # Initialize parameters if not provided
+        if params is None:
+            params = {}
         
-        # Process the image using real FAL.AI client
-        fal_client = FalAIClient()
+        logger.info(f"Processing with model: {model_type}, params: {params}")
+        
+        # Get the appropriate client for the model type
+        fal_client = get_model_client(model_type)
         
         # Progress callback to update Celery task state with proper filename
         original_filename = os.path.basename(file_path)
@@ -116,8 +118,7 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
         # Call real 3D model generation using synchronous wrapper
         result = fal_client.process_single_image_sync(
             file_path=file_path,
-            face_limit=None,  # Quality setting handled by FAL.AI client
-            texture_enabled=texture_enabled,
+            params=params,
             progress_callback=progress_callback,
             job_id=job_id  # Pass job_id for proper file organization
         )
@@ -172,7 +173,7 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
                 meta=task_meta
             )
             
-            logger.info(f"FAL.AI Tripo3D generation completed successfully for job {job_id}")
+            logger.info(f"FAL.AI {model_type} generation completed successfully for job {job_id}")
             
             # Update progress tracker for completion
             if job_id:
@@ -205,8 +206,8 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
             }
         else:
             # Handle failure case
-            error_message = result.get("error", "Unknown error during FAL.AI Tripo3D generation")
-            logger.error(f"FAL.AI Tripo3D generation failed for job {job_id}: {error_message}")
+            error_message = result.get("error", f"Unknown error during FAL.AI {model_type} generation")
+            logger.error(f"FAL.AI {model_type} generation failed for job {job_id}: {error_message}")
             
             # Update progress tracker for failure
             if job_id:
@@ -232,7 +233,7 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
             )
             
             raise ProcessingException(
-                message=f"FAL.AI Tripo3D generation failed: {error_message}",
+                message=f"FAL.AI {model_type} generation failed: {error_message}",
                 job_id=job_id,
                 stage="model_generation"
             )
@@ -241,7 +242,7 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, qual
         # Re-raise processing exceptions
         raise
     except Exception as exc:
-        logger.error(f"Unexpected error in Tripo3D generation for job {job_id}: {str(exc)}", exc_info=True)
+        logger.error(f"Unexpected error in {model_type} generation for job {job_id}: {str(exc)}", exc_info=True)
         current_task.update_state(
             state="FAILURE",
             meta={
