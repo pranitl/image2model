@@ -34,6 +34,7 @@ class JobFilesResponse(BaseModel):
     files: List[FileInfo]
     download_urls: List[str]
     total_files: int
+    model_type: str = None  # Optional model type for client rendering
 
 
 def _validate_job_id(job_id: str) -> None:
@@ -72,12 +73,13 @@ def _validate_filename(filename: str) -> None:
     if any(pattern in filename for pattern in dangerous_patterns):
         raise HTTPException(status_code=400, detail="Invalid filename")
     
-    # Check file extension
+    # Check file extension - allow common 3D formats
     file_extension = os.path.splitext(filename)[1].lower()
-    if file_extension not in ['.glb', '.obj']:
+    allowed_extensions = ['.glb', '.obj', '.ply', '.stl', '.fbx', '.usdz']
+    if file_extension not in allowed_extensions:
         raise HTTPException(
             status_code=400, 
-            detail="Invalid file format. Only .glb and .obj files are supported"
+            detail=f"Invalid file format. Supported formats: {', '.join(allowed_extensions)}"
         )
 
 
@@ -139,11 +141,15 @@ async def download_file_direct(filename: str, request: Request):
         
         # Determine MIME type
         file_extension = os.path.splitext(filename)[1].lower()
-        mime_type = "application/octet-stream"
-        if file_extension == '.glb':
-            mime_type = "model/gltf-binary"
-        elif file_extension == '.obj':
-            mime_type = "model/obj"
+        mime_types = {
+            '.glb': 'model/gltf-binary',
+            '.obj': 'model/obj',
+            '.ply': 'model/ply',
+            '.stl': 'model/stl',
+            '.fbx': 'model/fbx',
+            '.usdz': 'model/vnd.usdz+zip'
+        }
+        mime_type = mime_types.get(file_extension, "application/octet-stream")
         
         # Security headers
         security_headers = {
@@ -263,7 +269,8 @@ async def list_job_files(job_id: str, request: Request):
                 job_id=job_id,
                 files=files,
                 download_urls=download_urls,
-                total_files=len(files)
+                total_files=len(files),
+                model_type=job_result.get("model_type")  # Include model type if available
             )
         
         # Fallback to local file system (for backward compatibility)
@@ -288,16 +295,21 @@ async def list_job_files(job_id: str, request: Request):
                 file_path = os.path.join(job_dir, filename)
                 
                 # Only include supported file types
-                if filename.lower().endswith(('.glb', '.obj')):
+                allowed_extensions = ('.glb', '.obj', '.ply', '.stl', '.fbx', '.usdz')
+                if filename.lower().endswith(allowed_extensions):
                     file_stat = os.stat(file_path)
                     
                     # Determine MIME type
                     file_extension = os.path.splitext(filename)[1].lower()
-                    mime_type = "application/octet-stream"
-                    if file_extension == '.glb':
-                        mime_type = "model/gltf-binary"
-                    elif file_extension == '.obj':
-                        mime_type = "model/obj"
+                    mime_types = {
+                        '.glb': 'model/gltf-binary',
+                        '.obj': 'model/obj',
+                        '.ply': 'model/ply',
+                        '.stl': 'model/stl',
+                        '.fbx': 'model/fbx',
+                        '.usdz': 'model/vnd.usdz+zip'
+                    }
+                    mime_type = mime_types.get(file_extension, "application/octet-stream")
                     
                     file_info = FileInfo(
                         filename=filename,
@@ -385,11 +397,15 @@ async def download_model(job_id: str, filename: str, request: Request, api_key: 
         
         # Determine MIME type based on file extension
         file_extension = os.path.splitext(filename)[1].lower()
-        mime_type = "application/octet-stream"  # Default
-        if file_extension == '.glb':
-            mime_type = "model/gltf-binary"
-        elif file_extension == '.obj':
-            mime_type = "model/obj"
+        mime_types = {
+            '.glb': 'model/gltf-binary',
+            '.obj': 'model/obj',
+            '.ply': 'model/ply',
+            '.stl': 'model/stl',
+            '.fbx': 'model/fbx',
+            '.usdz': 'model/vnd.usdz+zip'
+        }
+        mime_type = mime_types.get(file_extension, "application/octet-stream")
         
         # Enhanced security headers
         security_headers = {

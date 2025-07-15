@@ -130,6 +130,7 @@ def generate_3d_model_task(self, file_id: str, file_path: str, job_id: str, mode
             # Prepare job result data
             job_result = {
                 "job_id": job_id,
+                "model_type": model_type,  # Store model type for client rendering
                 "files": [{
                     "filename": result.get("filename", f"{original_filename.rsplit('.', 1)[0]}.glb"),
                     "model_url": result.get("download_url"),  # Direct FAL.AI URL
@@ -408,6 +409,7 @@ def finalize_batch_results(self, results: List[Dict[str, Any]], job_id: str, tot
             # Prepare job result data in the format expected by download API
             job_result = {
                 "job_id": job_id,
+                "model_type": "tripo3d",  # Default to tripo3d for batch processing
                 "files": [],
                 "total_files": total_files,
                 "successful_files": success_count,
