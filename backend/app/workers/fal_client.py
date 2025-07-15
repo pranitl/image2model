@@ -8,7 +8,7 @@ with proper authentication, error handling, and result processing.
 import os
 import logging
 import time
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from abc import ABC, abstractmethod
 import requests
 import fal_client as fal
@@ -552,6 +552,29 @@ class TripoClient(AbstractFalClient):
     FAL.AI client implementation for Tripo3D v2.5 model.
     """
     
+    # Model metadata for API responses
+    MODEL_INFO = {
+        "name": "tripo3d",
+        "description": "Tripo3D v2.5 - Advanced AI model for high-quality 3D mesh generation from single images",
+        "type": "image_to_3d",
+        "supported_formats": ["glb"],
+        "default_params": {
+            "texture_enabled": True
+        },
+        "param_schema": {
+            "texture_enabled": {
+                "type": "boolean",
+                "default": True,
+                "description": "Whether to generate texture"
+            },
+            "face_limit": {
+                "type": "integer",
+                "min": 1,
+                "description": "Maximum number of faces in the mesh"
+            }
+        }
+    }
+    
     @property
     def model_endpoint(self) -> str:
         """Return the Tripo3D model endpoint."""
@@ -611,6 +634,65 @@ class TrellisClient(AbstractFalClient):
     """
     FAL.AI client implementation for Trellis model.
     """
+    
+    # Model metadata for API responses
+    MODEL_INFO = {
+        "name": "trellis",
+        "description": "Trellis - State-of-the-art 3D generation model with advanced control parameters",
+        "type": "image_to_3d",
+        "supported_formats": ["glb"],
+        "default_params": {
+            "ss_guidance_strength": 7.5,
+            "ss_sampling_steps": 12,
+            "slat_guidance_strength": 3,
+            "slat_sampling_steps": 12,
+            "mesh_simplify": 0.95,
+            "texture_size": "1024"
+        },
+        "param_schema": {
+            "ss_guidance_strength": {
+                "type": "number",
+                "min": 0,
+                "max": 10,
+                "default": 7.5,
+                "description": "Guidance strength for structured sparsity"
+            },
+            "ss_sampling_steps": {
+                "type": "integer",
+                "min": 1,
+                "max": 50,
+                "default": 12,
+                "description": "Number of sampling steps for structured sparsity"
+            },
+            "slat_guidance_strength": {
+                "type": "number",
+                "min": 0,
+                "max": 10,
+                "default": 3,
+                "description": "Guidance strength for SLAT"
+            },
+            "slat_sampling_steps": {
+                "type": "integer",
+                "min": 1,
+                "max": 50,
+                "default": 12,
+                "description": "Number of sampling steps for SLAT"
+            },
+            "mesh_simplify": {
+                "type": "number",
+                "min": 0.9,
+                "max": 0.98,
+                "default": 0.95,
+                "description": "Mesh simplification ratio"
+            },
+            "texture_size": {
+                "type": "string",
+                "enum": ["512", "1024", "2048"],
+                "default": "1024",
+                "description": "Texture resolution"
+            }
+        }
+    }
     
     @property
     def model_endpoint(self) -> str:
@@ -729,6 +811,25 @@ def get_model_client(model_type: str) -> AbstractFalClient:
         return TrellisClient()
     else:
         raise ValueError(f"Unsupported model type: {model_type}")
+
+
+def get_available_models() -> List[Dict[str, Any]]:
+    """
+    Get metadata for all available models.
+    
+    Returns:
+        List of model information dictionaries
+    """
+    # Define all available model classes
+    model_classes = [TripoClient, TrellisClient]
+    
+    # Collect model info from each class
+    models = []
+    for model_class in model_classes:
+        if hasattr(model_class, 'MODEL_INFO'):
+            models.append(model_class.MODEL_INFO.copy())
+    
+    return models
 
 
 # Global instance for use in tasks - using TripoClient for backward compatibility

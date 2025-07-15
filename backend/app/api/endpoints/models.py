@@ -9,7 +9,7 @@ from typing import List, Optional, Dict, Any
 from fastapi import APIRouter, HTTPException, BackgroundTasks
 from pydantic import BaseModel
 from app.workers.tasks import generate_3d_model_task
-from app.workers.fal_client import get_model_client
+from app.workers.fal_client import get_model_client, get_available_models as get_fal_models
 from app.core.exceptions import FileValidationException, ProcessingException
 
 logger = logging.getLogger(__name__)
@@ -182,14 +182,52 @@ async def get_available_models():
     Returns:
         List of available models with their information
     """
-    return [
-        ModelInfo(
-            name="tripo3d",
-            description="Tripo3D v2.5 - Advanced AI model for high-quality 3D mesh generation from single images",
-            type="image_to_3d",
-            supported_formats=["obj", "ply", "glb"]
+    # Get model metadata from FAL clients
+    fal_models = get_fal_models()
+    
+    # Convert to ModelInfo format
+    models = []
+    for model_data in fal_models:
+        models.append(
+            ModelInfo(
+                name=model_data["name"],
+                description=model_data["description"],
+                type=model_data["type"],
+                supported_formats=model_data["supported_formats"]
+            )
         )
-    ]
+    
+    return models
+
+
+@router.get("/models/{model_name}/params")
+async def get_model_params(model_name: str):
+    """
+    Get detailed parameter information for a specific model.
+    
+    Args:
+        model_name: Name of the model (e.g., "tripo3d", "trellis")
+        
+    Returns:
+        Model parameter schema and defaults
+    """
+    # Get all model metadata
+    fal_models = get_fal_models()
+    
+    # Find the requested model
+    for model_data in fal_models:
+        if model_data["name"] == model_name:
+            return {
+                "model_name": model_name,
+                "default_params": model_data.get("default_params", {}),
+                "param_schema": model_data.get("param_schema", {})
+            }
+    
+    # Model not found
+    raise HTTPException(
+        status_code=404,
+        detail=f"Model '{model_name}' not found. Available models: {[m['name'] for m in fal_models]}"
+    )
 
 
 @router.get("/download/{job_id}")
