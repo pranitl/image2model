@@ -43,7 +43,9 @@ class AuthorizationException(BaseImageModelException):
 
 class FileValidationException(BaseImageModelException):
     """Exception raised when file validation fails."""
-    pass
+    def __init__(self, message: str, details: Optional[str] = None):
+        super().__init__(message, details)
+        self.status_code = 422
 
 
 class DatabaseException(BaseImageModelException):

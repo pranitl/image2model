@@ -46,8 +46,8 @@ class APIService {
     return response;
   }
 
-  // Upload batch of files with face limit
-  async uploadBatch(files, faceLimit = null) {
+  // Upload batch of files with model type and parameters
+  async uploadBatch(files, modelType = 'tripo3d', params = {}) {
     
     const formData = new FormData();
     
@@ -59,11 +59,11 @@ class APIService {
       formData.append('files', file);
     });
     
-    // Add face limit parameter (backend expects a number, not a string)
-    if (faceLimit !== null && faceLimit !== undefined && faceLimit !== 'auto') {
-      formData.append('face_limit', faceLimit);
-    }
-    // If faceLimit is 'auto' or not provided, don't send it (backend will use default)
+    // Add model type
+    formData.append('model_type', modelType);
+    
+    // Add parameters as JSON string - backend expects JSON string
+    formData.append('params', JSON.stringify(params));
     
     try {
       const headers = this.getHeaders();
@@ -245,6 +245,21 @@ class APIService {
   getDownloadAllUrl(jobId) {
     // Note: Downloads via direct URL may need auth token in query params
     return `${this.API_BASE}/download/${jobId}/all`;
+  }
+
+  // Fetch model parameters
+  async getModelParams(modelName) {
+    try {
+      const response = await fetch(`${this.API_BASE}/models/${modelName}/params`, {
+        headers: this.getHeaders()
+      });
+      await this.handleApiError(response);
+      const data = await response.json();
+      return { success: true, data };
+    } catch (error) {
+      console.error(`Failed to fetch params for model ${modelName}:`, error);
+      return { success: false, error: error.message };
+    }
   }
 
   // Check if a URL is from FAL.AI (external)

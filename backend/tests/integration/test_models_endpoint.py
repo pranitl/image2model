@@ -93,9 +93,10 @@ class TestModelsEndpoint:
         
         assert response.status_code == 422
         data = response.json()
-        # Check the detail message from FileValidationException
-        assert "detail" in data
-        assert "Unsupported model type: invalid_model" in data["detail"]
+        # Check the custom error format from FileValidationException
+        assert data["error"] is True
+        assert data["error_code"] == "FILEVALIDATIONEXCEPTION"
+        assert "Unsupported model type: invalid_model" in data["message"]
     
     def test_generate_missing_file_id(self, client):
         """Test generation without file_id."""
@@ -108,10 +109,14 @@ class TestModelsEndpoint:
         
         assert response.status_code == 422
         data = response.json()
-        # FastAPI validation error format
-        assert "detail" in data
-        assert isinstance(data["detail"], list)
-        assert any("field required" in str(error).lower() or "missing" in str(error).lower() for error in data["detail"])
+        # Custom validation error format
+        assert data["error"] is True
+        assert data["error_code"] == "VALIDATION_ERROR"
+        assert data["message"] == "Request validation failed"
+        # Check validation errors in details
+        assert "validation_errors" in data["details"]
+        errors = data["details"]["validation_errors"]
+        assert any("field required" in error["message"].lower() or "missing" in error["message"].lower() for error in errors)
     
     def test_generate_nonexistent_file(self, client, mock_upload_dir):
         """Test generation with non-existent file."""
@@ -125,7 +130,9 @@ class TestModelsEndpoint:
         
         assert response.status_code == 422
         data = response.json()
-        assert "File with ID nonexistent-file-id not found" in data["detail"]
+        assert data["error"] is True
+        assert data["error_code"] == "FILEVALIDATIONEXCEPTION"
+        assert "File with ID nonexistent-file-id not found" in data["message"]
     
     def test_generate_with_custom_params(self, client, test_image_file, mock_celery_task):
         """Test that custom parameters are passed to the task."""
@@ -244,8 +251,10 @@ class TestModelsEndpoint:
         
         assert response.status_code == 404
         data = response.json()
-        assert "Model 'invalid_model' not found" in data["detail"]
-        assert "Available models: ['tripo3d', 'trellis']" in data["detail"]
+        assert data["error"] is True
+        assert data["error_code"] == "HTTP_404"
+        assert "Model 'invalid_model' not found" in data["message"]
+        assert "Available models: ['tripo3d', 'trellis']" in data["message"]
     
     def test_generate_legacy_compatibility(self, client, test_image_file, mock_celery_task):
         """Test backward compatibility with legacy texture_enabled field."""
@@ -309,4 +318,6 @@ class TestModelsEndpoint:
         
         assert response.status_code == 501
         data = response.json()
-        assert data["detail"] == "Model download not yet implemented"
+        assert data["error"] is True
+        assert data["error_code"] == "HTTP_501"
+        assert data["message"] == "Model download not yet implemented"

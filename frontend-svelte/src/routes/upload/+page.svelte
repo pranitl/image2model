@@ -13,6 +13,7 @@
   import Hero from '$lib/components/Hero.svelte';
   import ProgressIndicator from '$lib/components/ProgressIndicator.svelte';
   import ImageGrid from '$lib/components/ImageGrid.svelte';
+  import Slider from '$lib/components/Slider.svelte';
   import api from '$lib/services/api';
   
   // Check if we're in dev mode
@@ -62,10 +63,16 @@
   let files = [];
   let dragActive = false;
   let optionsExpanded = false;
-  let faceLimit = 10000; // Auto/Medium default
-  let isAuto = true; // Track if we're in auto mode
   let uploading = false;
   let fileInput;
+  
+  // New state for model selection
+  let selectedQuality = 'standard'; // 'standard' or 'max'
+  let modelsInfo = {
+    tripo3d: null,
+    trellis: null
+  };
+  let advancedParams = {}; // Dynamic parameters based on selected model
   
   // Constants
   const MAX_FILES = 25;
@@ -78,15 +85,56 @@
   // Reactive statements
   $: fileCount = files.length;
   $: canGenerate = files.length > 0 && !uploading;
-  $: faceLimitDisplay = faceLimit === 0 ? 'Auto' : faceLimit.toLocaleString();
+  $: currentModelName = selectedQuality === 'standard' ? 'tripo3d' : 'trellis';
+  $: currentModelInfo = modelsInfo[currentModelName];
+  
+  // Update advanced params when model changes
+  $: if (currentModelInfo && currentModelInfo.param_schema) {
+    advancedParams = getDefaultParams(currentModelInfo.param_schema);
+  }
+  
+  // Helper functions
+  function getDefaultParams(schema) {
+    const params = {};
+    if (schema && schema.properties) {
+      Object.entries(schema.properties).forEach(([key, prop]) => {
+        if (prop.default !== undefined) {
+          params[key] = prop.default;
+        }
+      });
+    }
+    return params;
+  }
+  
+  async function fetchModelParams(modelName) {
+    try {
+      const response = await api.getModelParams(modelName);
+      if (response.success) {
+        modelsInfo[modelName] = response.data;
+      }
+    } catch (error) {
+      console.error(`Failed to fetch params for ${modelName}:`, error);
+    }
+  }
   
   // Lifecycle
-  onMount(() => {
+  onMount(async () => {
+    // Set API key if available
+    if ($apiKey) {
+      api.setApiKey($apiKey);
+    }
+    
     // Load mock files if in dev mode
     if (isDevMode) {
       files = mockFiles;
       optionsExpanded = true;
     }
+    
+    // Fetch model parameters for both models
+    await Promise.all([
+      fetchModelParams('tripo3d'),
+      fetchModelParams('trellis')
+    ]);
     
     return () => {
       // Cleanup object URLs on component destroy
@@ -191,11 +239,6 @@
     optionsExpanded = !optionsExpanded;
   }
   
-  function setFaceLimit(value) {
-    faceLimit = parseInt(value);
-    isAuto = false; // Reset auto flag when setting specific values
-  }
-  
   // Form submission with retry logic
   async function handleSubmit(e) {
     e.preventDefault();
@@ -232,10 +275,8 @@
       // Use the API service with retry logic
       let result;
       try {
-        // When in auto mode, pass null for face limit (backend will use default)
-        const faceLimitValue = isAuto ? null : faceLimit;
-        
-        result = await api.uploadBatch(files, faceLimitValue);
+        // Call uploadBatch with model type and params
+        result = await api.uploadBatch(files, currentModelName, advancedParams);
       } catch (uploadError) {
         throw uploadError;
       }
@@ -362,8 +403,58 @@
             </div>
           {/if}
 
+          <!-- Quality Selection -->
+          <div class="quality-selection animate-fade-in delay-600">
+            <h3 class="quality-title">Choose Quality</h3>
+            <div class="quality-options">
+              <label class="quality-option {selectedQuality === 'standard' ? 'selected' : ''}">
+                <input 
+                  type="radio" 
+                  name="quality" 
+                  value="standard" 
+                  bind:group={selectedQuality}
+                  class="quality-radio"
+                >
+                <div class="quality-content">
+                  <div class="quality-header">
+                    <span class="quality-name">Standard</span>
+                    <span class="quality-badge">Tripo3D</span>
+                  </div>
+                  <div class="quality-info">
+                    <span class="quality-credits">0.5 credits per image</span>
+                  </div>
+                </div>
+              </label>
+              
+              <label class="quality-option {selectedQuality === 'max' ? 'selected' : ''}">
+                <input 
+                  type="radio" 
+                  name="quality" 
+                  value="max" 
+                  bind:group={selectedQuality}
+                  class="quality-radio"
+                >
+                <div class="quality-content">
+                  <div class="quality-header">
+                    <span class="quality-name">Max</span>
+                    <span class="quality-badge">Trellis</span>
+                  </div>
+                  <div class="quality-info">
+                    <span class="quality-credits">2 credits per image</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <div class="credit-info">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+              </svg>
+              <span>Credits are deducted per image processed</span>
+            </div>
+          </div>
+
           <!-- Advanced Options Panel -->
-          <div class="advanced-options animate-fade-in delay-600">
+          <div class="advanced-options animate-fade-in delay-700">
             <button type="button" class="options-toggle" class:active={optionsExpanded} on:click={toggleOptions}>
               <div class="options-toggle-text">
                 <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
@@ -376,31 +467,71 @@
               </svg>
             </button>
             
-            {#if optionsExpanded}
+            {#if optionsExpanded && currentModelInfo}
               <div class="options-content active" use:scrollReveal>
-                <div class="face-limit-control">
-                  <label for="faceLimit" class="face-limit-label">
-                    Face Limit Control
-                  </label>
-                  <div class="face-limit-value">{faceLimitDisplay}</div>
-                  <input 
-                    type="range" 
-                    class="face-limit-slider" 
-                    min="1000" 
-                    max="50000" 
-                    step="1000" 
-                    bind:value={faceLimit}
-                  >
-                  <div class="face-limit-presets">
-                    <button type="button" class="preset-btn" class:active={faceLimit === 5000} on:click={() => setFaceLimit(5000)}>Low</button>
-                    <button type="button" class="preset-btn" class:active={faceLimit === 10000 && !isAuto} on:click={() => { setFaceLimit(10000); isAuto = false; }}>Medium</button>
-                    <button type="button" class="preset-btn" class:active={faceLimit === 20000} on:click={() => setFaceLimit(20000)}>High</button>
-                    <button type="button" class="preset-btn" class:active={faceLimit === 10000 && isAuto} on:click={() => { setFaceLimit(10000); isAuto = true; }}>Auto</button>
-                  </div>
-                  <p class="face-limit-description">
-                    Controls the level of detail in your 3D model. Higher values create more detailed models but take longer to process.
-                  </p>
-                </div>
+                {#if currentModelInfo.param_schema && currentModelInfo.param_schema.properties}
+                  {#each Object.entries(currentModelInfo.param_schema.properties) as [key, prop]}
+                    <div class="param-control">
+                      {#if prop.type === 'boolean'}
+                        <label class="param-checkbox-label">
+                          <input 
+                            type="checkbox" 
+                            bind:checked={advancedParams[key]}
+                            class="param-checkbox"
+                          >
+                          <span class="param-label">{prop.title || key}</span>
+                        </label>
+                        {#if prop.description}
+                          <p class="param-description">{prop.description}</p>
+                        {/if}
+                      {:else if prop.type === 'integer' || prop.type === 'number'}
+                        <Slider
+                          bind:value={advancedParams[key]}
+                          min={prop.minimum || 0}
+                          max={prop.maximum || 100}
+                          step={prop.type === 'integer' ? 1 : 0.1}
+                          label={prop.title || key}
+                          description={prop.description}
+                        />
+                      {:else if prop.enum}
+                        <div class="param-select-group">
+                          <label for={key} class="param-label">
+                            {prop.title || key}
+                          </label>
+                          <select 
+                            id={key}
+                            bind:value={advancedParams[key]}
+                            class="param-select"
+                          >
+                            {#each prop.enum as option}
+                              <option value={option}>{option}</option>
+                            {/each}
+                          </select>
+                          {#if prop.description}
+                            <p class="param-description">{prop.description}</p>
+                          {/if}
+                        </div>
+                      {:else}
+                        <div class="param-input-group">
+                          <label for={key} class="param-label">
+                            {prop.title || key}
+                          </label>
+                          <input 
+                            type="text" 
+                            id={key}
+                            bind:value={advancedParams[key]}
+                            class="param-input"
+                          >
+                          {#if prop.description}
+                            <p class="param-description">{prop.description}</p>
+                          {/if}
+                        </div>
+                      {/if}
+                    </div>
+                  {/each}
+                {:else}
+                  <p class="no-params">No advanced settings available for {currentModelName}.</p>
+                {/if}
               </div>
             {/if}
           </div>
@@ -589,6 +720,168 @@
     margin: 0;
     text-align: center;
     width: 100%;
+  }
+  
+  /* Quality Selection Styles */
+  :global(.quality-selection) {
+    margin-bottom: 2rem;
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+  
+  :global(.quality-title) {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1a202c;
+    margin-bottom: 1rem;
+  }
+  
+  :global(.quality-options) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  :global(.quality-option) {
+    display: block;
+    position: relative;
+    cursor: pointer;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 1rem;
+    transition: all 0.3s ease;
+    background: white;
+  }
+  
+  :global(.quality-option:hover) {
+    border-color: #2196f3;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.15);
+  }
+  
+  :global(.quality-option.selected) {
+    border-color: #2196f3;
+    background: #e3f2fd;
+  }
+  
+  :global(.quality-radio) {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  :global(.quality-content) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  :global(.quality-header) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  :global(.quality-name) {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a202c;
+  }
+  
+  :global(.quality-badge) {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: #2196f3;
+    background: rgba(33, 150, 243, 0.1);
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+  }
+  
+  :global(.quality-info) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  :global(.quality-credits) {
+    font-size: 0.875rem;
+    color: #666;
+  }
+  
+  :global(.credit-info) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #666;
+  }
+  
+  :global(.credit-info svg) {
+    color: #2196f3;
+  }
+  
+  /* Parameter Control Styles */
+  :global(.param-control) {
+    margin-bottom: 1.5rem;
+  }
+  
+  :global(.param-checkbox-label) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+  
+  :global(.param-checkbox) {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+  }
+  
+  :global(.param-label) {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #334155;
+  }
+  
+  :global(.param-description) {
+    font-size: 0.8125rem;
+    color: #666;
+    margin-top: 0.25rem;
+    line-height: 1.5;
+  }
+  
+  :global(.param-select-group),
+  :global(.param-input-group) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  :global(.param-select),
+  :global(.param-input) {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    transition: all 0.2s ease;
+  }
+  
+  :global(.param-select:focus),
+  :global(.param-input:focus) {
+    outline: none;
+    border-color: #2196f3;
+    box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+  }
+  
+  :global(.no-params) {
+    text-align: center;
+    color: #666;
+    font-size: 0.875rem;
+    padding: 2rem;
   }
   
   /* Face limit preset buttons */

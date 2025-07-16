@@ -256,7 +256,119 @@ def setup_test_environment(monkeypatch):
     """Set up test environment variables."""
     monkeypatch.setenv("FAL_API_KEY", "test-api-key")
     monkeypatch.setenv("ENVIRONMENT", "test")
+    monkeypatch.setenv("CELERY_BROKER_URL", "redis://localhost:6379/0")  # Use DB 0 to match worker
+    monkeypatch.setenv("CELERY_RESULT_BACKEND", "redis://localhost:6379/0")
+    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
     
+
+@pytest.fixture(scope="session")
+def celery_config():
+    """Configure Celery for testing."""
+    return {
+        'broker_url': 'redis://localhost:6379/0',
+        'result_backend': 'redis://localhost:6379/0',
+        'task_always_eager': False,  # Run tasks in background as normal
+        'task_eager_propagates': True,
+        'task_serializer': 'json',
+        'result_serializer': 'json',
+        'accept_content': ['json'],
+    }
+
+
+@pytest.fixture(scope="session")
+def celery_worker_parameters():
+    """Configure Celery worker parameters for testing."""
+    return {
+        'loglevel': 'info',
+        'concurrency': 2,
+        'pool': 'solo',  # Use solo pool for testing to avoid multiprocessing issues
+    }
+
+
+@pytest.fixture
+def live_celery_app(celery_config):
+    """Create a live Celery app instance for integration testing."""
+    from app.core.celery_app import celery_app
+    
+    # Update configuration
+    celery_app.conf.update(celery_config)
+    
+    # Override task routing for tests - use default queue
+    celery_app.conf.task_routes = {}
+    
+    # Don't flush DB since we're sharing with the running worker
+    # Just ensure connection works
+    import redis
+    r = redis.from_url(celery_config['broker_url'])
+    r.ping()
+    
+    return celery_app
+
+
+@pytest.fixture
+def live_celery_worker(live_celery_app):
+    """Use the already-running Celery worker for integration tests."""
+    # We assume a Celery worker is already running in the background
+    # This fixture just ensures the app is configured and Redis is clean
+    
+    # Wait a bit to ensure worker is ready
+    import time
+    time.sleep(0.5)
+    
+    # Return the app (worker is already running externally)
+    yield live_celery_app
+
+
+@pytest.fixture
+def mock_fal_only():
+    """Mock only FAL API calls while keeping Celery live."""
+    with patch('app.workers.fal_client.get_model_client') as mock_factory:
+        from app.workers.fal_client import TripoClient, TrellisClient
+        
+        def create_mock_client(model_type: str):
+            if model_type == "tripo3d":
+                client = Mock(spec=TripoClient)
+                client.model_endpoint = "tripo3d/tripo/v2.5/image-to-3d"
+                client.MODEL_INFO = TripoClient.MODEL_INFO
+            elif model_type == "trellis":
+                client = Mock(spec=TrellisClient)
+                client.model_endpoint = "fal-ai/trellis"
+                client.MODEL_INFO = TrellisClient.MODEL_INFO
+            else:
+                raise ValueError(f"Unsupported model type: {model_type}")
+            
+            # Mock methods with realistic delays
+            import time
+            import asyncio
+            
+            def mock_process_sync(*args, **kwargs):
+                # Simulate processing time
+                time.sleep(0.5)
+                return {
+                    "status": "success",
+                    "download_url": "https://fal.media/files/model.glb",
+                    "model_url": "https://fal.media/files/model.glb",
+                    "model_format": "glb",
+                    "file_size": 1000000,
+                    "filename": "model.glb",
+                    "content_type": "model/gltf-binary",
+                    "input": {"image_url": "https://fal.ai/uploads/test.png"},
+                    "output": {
+                        "model_mesh": {"url": "https://fal.media/files/mesh.glb", "file_size": 900000},
+                        "model_texture": {"url": "https://fal.media/files/texture.png", "file_size": 100000}
+                    },
+                    "task_id": "test-task-123"
+                }
+            
+            client.upload_file_to_fal = Mock(return_value="https://fal.ai/uploads/test.png")
+            client.process_single_image_sync = Mock(side_effect=mock_process_sync)
+            client.submit_job = Mock(return_value=TRIPO_SUCCESS if model_type == "tripo3d" else TRELLIS_SUCCESS)
+            
+            return client
+        
+        mock_factory.side_effect = create_mock_client
+        yield mock_factory
+
 
 # Utility functions for testing
 def create_mock_progress_update(message: str, progress: int):
