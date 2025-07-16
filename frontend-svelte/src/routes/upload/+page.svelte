@@ -96,8 +96,11 @@
   // Helper functions
   function getDefaultParams(schema) {
     const params = {};
-    if (schema && schema.properties) {
-      Object.entries(schema.properties).forEach(([key, prop]) => {
+    // Handle both flat schema and schema with properties wrapper
+    const properties = schema.properties || schema;
+    
+    if (properties) {
+      Object.entries(properties).forEach(([key, prop]) => {
         if (prop.default !== undefined) {
           params[key] = prop.default;
         }
@@ -349,8 +352,58 @@
     <div class="container">
       <div class="upload-wrapper">
         <form on:submit={handleSubmit}>
+          <!-- Quality Selection -->
+          <div class="quality-selection animate-fade-in delay-400">
+            <h3 class="quality-title">Choose Quality</h3>
+            <div class="quality-options">
+              <label class="quality-option {selectedQuality === 'standard' ? 'selected' : ''}">
+                <input 
+                  type="radio" 
+                  name="quality" 
+                  value="standard" 
+                  bind:group={selectedQuality}
+                  class="quality-radio"
+                >
+                <div class="quality-content">
+                  <div class="quality-header">
+                    <span class="quality-name">Standard</span>
+                    <span class="quality-badge">Tripo3D</span>
+                  </div>
+                  <div class="quality-info">
+                    <span class="quality-credits">1 credit per image</span>
+                  </div>
+                </div>
+              </label>
+              
+              <label class="quality-option {selectedQuality === 'max' ? 'selected' : ''}">
+                <input 
+                  type="radio" 
+                  name="quality" 
+                  value="max" 
+                  bind:group={selectedQuality}
+                  class="quality-radio"
+                >
+                <div class="quality-content">
+                  <div class="quality-header">
+                    <span class="quality-name">Max</span>
+                    <span class="quality-badge">Trellis</span>
+                  </div>
+                  <div class="quality-info">
+                    <span class="quality-credits">5 credits per image</span>
+                  </div>
+                </div>
+              </label>
+            </div>
+            <div class="credit-info">
+              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
+              </svg>
+              <span>Credits are deducted per image processed</span>
+            </div>
+          </div>
+
           <!-- Upload Zone -->
-          <div class="upload-zone-wrapper animate-fade-in-up delay-400">
+          <div class="upload-zone-wrapper animate-fade-in-up delay-500">
             <label 
               class="upload-area {dragActive ? 'drag-over' : ''}"
               on:dragover={handleDragOver}
@@ -403,58 +456,9 @@
             </div>
           {/if}
 
-          <!-- Quality Selection -->
-          <div class="quality-selection animate-fade-in delay-600">
-            <h3 class="quality-title">Choose Quality</h3>
-            <div class="quality-options">
-              <label class="quality-option {selectedQuality === 'standard' ? 'selected' : ''}">
-                <input 
-                  type="radio" 
-                  name="quality" 
-                  value="standard" 
-                  bind:group={selectedQuality}
-                  class="quality-radio"
-                >
-                <div class="quality-content">
-                  <div class="quality-header">
-                    <span class="quality-name">Standard</span>
-                    <span class="quality-badge">Tripo3D</span>
-                  </div>
-                  <div class="quality-info">
-                    <span class="quality-credits">0.5 credits per image</span>
-                  </div>
-                </div>
-              </label>
-              
-              <label class="quality-option {selectedQuality === 'max' ? 'selected' : ''}">
-                <input 
-                  type="radio" 
-                  name="quality" 
-                  value="max" 
-                  bind:group={selectedQuality}
-                  class="quality-radio"
-                >
-                <div class="quality-content">
-                  <div class="quality-header">
-                    <span class="quality-name">Max</span>
-                    <span class="quality-badge">Trellis</span>
-                  </div>
-                  <div class="quality-info">
-                    <span class="quality-credits">2 credits per image</span>
-                  </div>
-                </div>
-              </label>
-            </div>
-            <div class="credit-info">
-              <svg width="16" height="16" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/>
-              </svg>
-              <span>Credits are deducted per image processed</span>
-            </div>
-          </div>
 
           <!-- Advanced Options Panel -->
-          <div class="advanced-options animate-fade-in delay-700">
+          <div class="advanced-options animate-fade-in delay-600">
             <button type="button" class="options-toggle" class:active={optionsExpanded} on:click={toggleOptions}>
               <div class="options-toggle-text">
                 <svg width="20" height="20" fill="currentColor" viewBox="0 0 20 20">
@@ -469,8 +473,10 @@
             
             {#if optionsExpanded && currentModelInfo}
               <div class="options-content active" use:scrollReveal>
-                {#if currentModelInfo.param_schema && currentModelInfo.param_schema.properties}
-                  {#each Object.entries(currentModelInfo.param_schema.properties) as [key, prop]}
+                {#if currentModelInfo.param_schema}
+                  {@const schemaProperties = currentModelInfo.param_schema.properties || currentModelInfo.param_schema}
+                  {#if schemaProperties && Object.keys(schemaProperties).length > 0}
+                    {#each Object.entries(schemaProperties) as [key, prop]}
                     <div class="param-control">
                       {#if prop.type === 'boolean'}
                         <label class="param-checkbox-label">
@@ -528,7 +534,10 @@
                         </div>
                       {/if}
                     </div>
-                  {/each}
+                    {/each}
+                  {:else}
+                    <p class="no-params">No advanced settings available for {currentModelName}.</p>
+                  {/if}
                 {:else}
                   <p class="no-params">No advanced settings available for {currentModelName}.</p>
                 {/if}
@@ -537,7 +546,7 @@
           </div>
 
           <!-- Action Section -->
-          <div class="upload-actions animate-fade-in delay-800">
+          <div class="upload-actions animate-fade-in delay-700">
             <div class="upload-actions-primary">
               <Button 
                 type="submit" 

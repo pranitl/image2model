@@ -21,6 +21,11 @@ Always use docker compose not docker-compose
 ## Testing
 When we are making source code changes, we need to ensure we co-develop the test suite so it stays updated!
 
+## Frontend Development Guidelines
+
+- Whenever designing front end components or making updates to front end pages, ensure it's in line with our docs/02-frontend/design documentation
+- Always update docs/02-frontend/ documentation along with frontend changes
+
 ## UI Development Guidelines
 
 ### Visual Consistency Pattern
