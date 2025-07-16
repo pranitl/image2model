@@ -5,6 +5,7 @@ File upload endpoints.
 import os
 import uuid
 import logging
+import json
 from typing import List, Optional
 
 from fastapi import APIRouter, File, HTTPException, UploadFile, Form, Query, Depends, Request
@@ -162,6 +163,8 @@ async def upload(
     request: Request,
     files: List[UploadFile] = File(...),
     face_limit: Optional[int] = Form(None, description="Maximum number of faces for 3D model generation"),
+    model_type: str = Form("tripo3d"),
+    params: Optional[str] = Form(None),
     api_key: str = RequireAuth
 ):
     """
@@ -248,12 +251,20 @@ async def upload(
             for file in uploaded_files
         ]
         
+        # Parse params from JSON string to dictionary
+        task_params = json.loads(params) if params else {}
+        
+        # Add face_limit to params if provided (for backward compatibility)
+        if face_limit is not None:
+            task_params['face_limit'] = face_limit
+        
         # Start background processing task
         # Always use process_batch for consistency (handles both single and multiple files)
         task_result = process_batch.delay(
             job_id=job_id,
             file_paths=file_paths,
-            face_limit=face_limit
+            model_type=model_type,  # Pass model_type
+            params=task_params      # Pass full params dict
         )
         logger.info(f"Started batch processing for {len(file_paths)} files, task_id: {task_result.id}")
         
