@@ -74,6 +74,7 @@ User interaction elements with state management and event handling.
 - **Toast**: Non-blocking notification system
 - **ProgressIndicator**: Multi-step progress visualization
 - **ModelCard**: Interactive 3D model preview cards
+- **Slider**: Enhanced range input with presets and formatting
 
 ### 3. Display Components
 Presentational components for content display.
@@ -226,6 +227,45 @@ Presentational components for content display.
 
 **Slots**:
 - `tile-content`: Additional content for each tile, receives `item` prop
+
+### Slider Component
+**Location**: `src/lib/components/Slider.svelte`
+
+**Purpose**: Enhanced range input control that follows the design system with support for presets, custom formatting, and accessibility features.
+
+**Props**:
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `value` | `number` | `0` | Current value |
+| `min` | `number` | `0` | Minimum value |
+| `max` | `number` | `100` | Maximum value |
+| `step` | `number` | `1` | Step increment |
+| `label` | `string` | `''` | Label text |
+| `description` | `string` | `''` | Helper text below slider |
+| `displayValue` | `string \| null` | `null` | Override display value |
+| `presets` | `Array<{value: number, label: string}>` | `[]` | Preset buttons |
+| `disabled` | `boolean` | `false` | Disable interaction |
+| `showValue` | `boolean` | `true` | Show/hide value display |
+| `valueFormatter` | `Function` | `(val) => val.toLocaleString()` | Value formatter |
+
+**Events**:
+- `change`: Dispatched when value changes with `{detail: {value}}`
+
+**Example**:
+```svelte
+<Slider
+  bind:value={temperature}
+  min={0}
+  max={1}
+  step={0.1}
+  label="Temperature"
+  description="Controls randomness"
+  presets={[
+    { value: 0, label: 'Precise' },
+    { value: 0.7, label: 'Creative' }
+  ]}
+/>
+```
 
 ### Hero Component
 **Location**: `src/lib/components/Hero.svelte`

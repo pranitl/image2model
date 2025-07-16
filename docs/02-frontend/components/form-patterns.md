@@ -270,6 +270,104 @@ function handleDrop(e) {
 </div>
 ```
 
+### Slider Component (Enhanced Range Control)
+
+The `Slider` component provides a reusable, accessible range input that follows the design system guidelines and offers enhanced functionality over native range inputs.
+
+```svelte
+<script>
+  import Slider from '$lib/components/Slider.svelte';
+  
+  let value = 50;
+  let temperature = 0.7;
+  
+  // Handle value changes
+  function handleSliderChange(event) {
+    console.log('New value:', event.detail.value);
+  }
+</script>
+
+<!-- Basic slider -->
+<Slider
+  bind:value
+  min={0}
+  max={100}
+  step={1}
+  label="Progress"
+  description="Adjust the progress value"
+/>
+
+<!-- Slider with presets -->
+<Slider
+  bind:value={temperature}
+  min={0}
+  max={1}
+  step={0.1}
+  label="Temperature"
+  description="Controls randomness in generation"
+  presets={[
+    { value: 0, label: 'Precise' },
+    { value: 0.5, label: 'Balanced' },
+    { value: 0.7, label: 'Creative' },
+    { value: 1, label: 'Random' }
+  ]}
+  on:change={handleSliderChange}
+/>
+
+<!-- Slider with custom display -->
+<Slider
+  bind:value={faceLimit}
+  min={1000}
+  max={50000}
+  step={1000}
+  label="Face Limit"
+  description="Controls model detail level"
+  valueFormatter={(val) => val.toLocaleString()}
+  displayValue={isAuto ? 'Auto' : null}
+/>
+```
+
+#### Component Props
+
+| Prop | Type | Default | Description |
+|------|------|---------|-------------|
+| `value` | number | 0 | Current value |
+| `min` | number | 0 | Minimum value |
+| `max` | number | 100 | Maximum value |
+| `step` | number | 1 | Step increment |
+| `label` | string | '' | Label text |
+| `description` | string | '' | Helper text below slider |
+| `displayValue` | string\|null | null | Override display value |
+| `presets` | Array | [] | Preset buttons [{value, label}] |
+| `disabled` | boolean | false | Disable interaction |
+| `showValue` | boolean | true | Show/hide value display |
+| `valueFormatter` | function | (val) => val.toLocaleString() | Format display value |
+
+#### Events
+
+- `change`: Fired when value changes with `{detail: {value}}`
+
+#### Styling
+
+The Slider component uses CSS custom properties from the design system:
+
+```css
+/* Brand colors used */
+--brand-bright-cyan: #5DADE2;    /* Primary slider color */
+--brand-sky-blue: #3498DB;       /* Hover state */
+--brand-light-gray: #ECF0F1;     /* Track background */
+--brand-dark-charcoal: #3A424A;  /* Label text */
+--blue-100: #D6EAF8;             /* Value badge background */
+```
+
+#### Accessibility Features
+
+- Full keyboard navigation (arrow keys, home/end)
+- ARIA attributes for screen readers
+- Focus states and visual feedback
+- Proper label associations
+- Value announcements
+
 ### Advanced Options Panel
 
 ```svelte
