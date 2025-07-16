@@ -73,6 +73,7 @@
     trellis: null
   };
   let advancedParams = {}; // Dynamic parameters based on selected model
+  let modelsLoaded = false; // Track if models have been loaded
   
   // Constants
   const MAX_FILES = 25;
@@ -90,7 +91,10 @@
   
   // Update advanced params when model changes
   $: if (currentModelInfo && currentModelInfo.param_schema) {
+    console.log('Current model info:', currentModelName, currentModelInfo);
+    console.log('Param schema:', currentModelInfo.param_schema);
     advancedParams = getDefaultParams(currentModelInfo.param_schema);
+    console.log('Advanced params set to:', advancedParams);
   }
   
   // Helper functions
@@ -111,12 +115,18 @@
   
   async function fetchModelParams(modelName) {
     try {
+      console.log(`Fetching params for model: ${modelName}`);
       const response = await api.getModelParams(modelName);
+      console.log(`API response for ${modelName}:`, response);
       if (response.success) {
         modelsInfo[modelName] = response.data;
+        console.log(`Stored model info for ${modelName}:`, modelsInfo[modelName]);
+        // Force reactivity update
+        modelsInfo = modelsInfo;
       }
     } catch (error) {
       console.error(`Failed to fetch params for ${modelName}:`, error);
+      toast.error(`Failed to load parameters for ${modelName}`);
     }
   }
   
@@ -134,10 +144,19 @@
     }
     
     // Fetch model parameters for both models
+    console.log('Fetching model parameters on mount...');
     await Promise.all([
       fetchModelParams('tripo3d'),
       fetchModelParams('trellis')
     ]);
+    
+    // Log the final state
+    console.log('Models info after fetch:', modelsInfo);
+    console.log('Current model:', currentModelName);
+    console.log('Current model info:', currentModelInfo);
+    
+    // Mark models as loaded
+    modelsLoaded = true;
     
     return () => {
       // Cleanup object URLs on component destroy
@@ -279,6 +298,8 @@
       let result;
       try {
         // Call uploadBatch with model type and params
+        console.log('Uploading with model:', currentModelName);
+        console.log('Advanced params:', advancedParams);
         result = await api.uploadBatch(files, currentModelName, advancedParams);
       } catch (uploadError) {
         throw uploadError;
@@ -471,10 +492,20 @@
               </svg>
             </button>
             
-            {#if optionsExpanded && currentModelInfo}
+            {#if optionsExpanded}
               <div class="options-content active" use:scrollReveal>
-                {#if currentModelInfo.param_schema}
+                {#if !modelsLoaded}
+                  <div class="loading-params">
+                    <p>Loading model parameters...</p>
+                  </div>
+                {:else if currentModelInfo && currentModelInfo.param_schema}
                   {@const schemaProperties = currentModelInfo.param_schema.properties || currentModelInfo.param_schema}
+                  <!-- Debug: Show what we have -->
+                  <div style="display: none;">
+                    {console.log('Rendering advanced settings for:', currentModelName)}
+                    {console.log('Schema properties:', schemaProperties)}
+                    {console.log('Number of properties:', schemaProperties ? Object.keys(schemaProperties).length : 0)}
+                  </div>
                   {#if schemaProperties && Object.keys(schemaProperties).length > 0}
                     {#each Object.entries(schemaProperties) as [key, prop]}
                     <div class="param-control">
@@ -887,6 +918,13 @@
   }
   
   :global(.no-params) {
+    text-align: center;
+    color: #666;
+    font-size: 0.875rem;
+    padding: 2rem;
+  }
+  
+  :global(.loading-params) {
     text-align: center;
     color: #666;
     font-size: 0.875rem;

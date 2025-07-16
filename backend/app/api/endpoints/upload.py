@@ -252,11 +252,15 @@ async def upload(
         ]
         
         # Parse params from JSON string to dictionary
+        logger.info(f"Received model_type: {model_type}")
+        logger.info(f"Received params string: {params}")
         task_params = json.loads(params) if params else {}
+        logger.info(f"Parsed params: {task_params}")
         
         # Add face_limit to params if provided (for backward compatibility)
         if face_limit is not None:
             task_params['face_limit'] = face_limit
+            logger.info(f"Added face_limit to params: {face_limit}")
         
         # Start background processing task
         # Always use process_batch for consistency (handles both single and multiple files)
